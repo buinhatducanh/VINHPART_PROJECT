@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Settings, ArrowLeft, Bell, Lock, Palette, Globe, Mail, Save } from 'lucide-react';
+import { toast } from 'sonner';
 import { useState } from 'react';
 
 interface SettingsPageProps {
@@ -22,7 +23,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setSettings(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -31,7 +32,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
   const handleSave = () => {
     console.log('Lưu cài đặt:', settings);
-    alert('Cài đặt đã được lưu thành công!');
+    toast.success('Cài đặt đã được lưu thành công!');
   };
 
   return (
@@ -60,7 +61,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
       </div>
 
       {/* Header */}
-      <motion.div 
+      <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative border-b border-gray-800 bg-black/40 backdrop-blur-xl sticky top-0 z-10"
@@ -75,7 +76,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
             >
               <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors" />
             </motion.button>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl flex items-center justify-center">
                 <Settings className="w-6 h-6 text-white" />
@@ -334,7 +335,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
             >
               Hủy bỏ
             </motion.button>
-            
+
             <motion.button
               onClick={handleSave}
               whileHover={{ scale: 1.02 }}

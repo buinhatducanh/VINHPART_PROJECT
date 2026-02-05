@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Package, Upload, X, ArrowLeft, Save } from 'lucide-react';
+import { toast } from 'sonner';
 import { useState } from 'react';
 
 interface AddProductPageProps {
@@ -44,15 +45,15 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
       });
 
       if (response.ok) {
-        alert('Sản phẩm đã được thêm thành công!');
+        toast.success('Sản phẩm đã được thêm thành công!');
         onBack();
       } else {
         const error = await response.json();
-        alert('Lỗi khi thêm sản phẩm: ' + (error.details || error.error));
+        toast.error('Lỗi khi thêm sản phẩm: ' + (error.details || error.error));
       }
     } catch (error) {
       console.error('Network error:', error);
-      alert('Lỗi kết nối tới server.');
+      toast.error('Lỗi kết nối tới server.');
     }
   };
 

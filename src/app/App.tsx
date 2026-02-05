@@ -8,6 +8,7 @@ import { AdminDashboard } from '@/app/components/AdminDashboard';
 import { BlogDetailPage } from '@/app/components/BlogDetailPage';
 import { BlogListPage } from '@/app/components/BlogListPage';
 import { AddToCartToast } from '@/app/components/AddToCartToast';
+import { Toaster } from '@/app/components/ui/sonner';
 import { Product, CartItem } from '@/app/types';
 
 export default function App() {
@@ -31,7 +32,7 @@ export default function App() {
       }
       return [...prev, { product, quantity: 1 }];
     });
-    
+
     // Show toast notification
     setToastProductName(product.product_name);
     setShowToast(true);
@@ -83,7 +84,7 @@ export default function App() {
         />
       )}
 
-      <AddToCartToast 
+      <AddToCartToast
         show={showToast}
         productName={toastProductName}
         onClose={() => setShowToast(false)}
@@ -128,7 +129,7 @@ export default function App() {
       )}
 
       {currentPage === 'admin' && (
-        <AdminDashboard 
+        <AdminDashboard
           onBackToHome={() => setCurrentPage('landing')}
         />
       )}
@@ -147,6 +148,7 @@ export default function App() {
           onPostClick={handleBlogPostClick}
         />
       )}
+      <Toaster position="top-right" richColors />
     </div>
   );
 }

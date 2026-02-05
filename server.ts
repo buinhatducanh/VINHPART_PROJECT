@@ -49,6 +49,7 @@ app.get('/api/products', async (req, res) => {
                 price: Number(p.price),
                 original_price: Number(p.salePrice || p.price),
                 discount_percentage: 0,
+                stock: p.stock,
                 stock_status: stock_status,
                 description: p.description || '',
                 product_image: p.images && p.images.length > 0 ? p.images[0] : '',
@@ -87,11 +88,15 @@ app.post('/api/products', async (req, res) => {
                 categoryId = existingCats[0].id;
             } else {
                 // Create
-                const slug = category.toLowerCase().replace(/ /g, '-') + '-' + Date.now();
-                // We need an ID. Prisma used CUID. Neon/Postgres might rely on default if set? 
-                // Schema says @default(cuid()). Postgres won't have cuid() function likely unless extension.
-                // We'll generate one in JS.
-                const newCatId = uuidv4(); // Or use nanoid if installed, but uuid is standard-ish
+                const slug = category.toLowerCase()
+                    .replace(/đ/g, 'd')
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
+                    .replace(/[^a-z0-9]/g, '-') // Replace non-alphanumeric with hyphen
+                    .replace(/-+/g, '-') // collapse multiple hyphens
+                    .replace(/^-|-$/g, ''); // trim hyphens
+
+                // We need an ID. 
+                const newCatId = uuidv4();
                 const now = new Date();
                 await client.query(
                     'INSERT INTO categories (id, name, slug, "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5)',
@@ -155,7 +160,8 @@ app.put('/api/products/:id', async (req, res) => {
             price,
             discount_percentage,
             stock,
-            description
+            description,
+            image_url
         } = req.body;
 
         let categoryId;
@@ -188,6 +194,7 @@ app.put('/api/products/:id', async (req, res) => {
         if (description) { query += `, description = $${idx++}`; params.push(description); }
         if (salePrice !== null) { query += `, "salePrice" = $${idx++}`; params.push(salePrice); }
         if (categoryId) { query += `, "categoryId" = $${idx++}`; params.push(categoryId); }
+        if (image_url) { query += `, images = $${idx++}`; params.push([image_url]); }
 
         query += ` WHERE id = $${idx} RETURNING *`;
         params.push(id);
