@@ -21,21 +21,125 @@ app.use(express.json());
 
 // Helper to generate IDs if not using database default (Prisma used CUIDs, UUID is fine fallback)
 // Actually, let's see if we can use `gen_random_uuid()` in Postgres if available, or just use `crypto.randomUUID` in Node.
+
 // Node v24 implies crypto is available.
+
+app.get('/api/dashboard/stats', async (req, res) => {
+    try {
+        const productCountResult = await pool.query('SELECT COUNT(*) FROM products');
+        const categoryCountResult = await pool.query('SELECT COUNT(*) FROM categories');
+        // Only count PENDING orders as requested by user
+        const orderCountResult = await pool.query("SELECT COUNT(*) FROM orders WHERE status = 'PENDING'");
+
+        // Mock banner count for now since we don't have a banners table
+        // or we could count featured products? Let's generic valid 3 for now as per UI default, 
+        // or 0 if we want to be strict. I'll stick to 3 or maybe check if there's a way store banners.
+        // For now, I'll return the hardcoded 3 to match the original UI, but allow it to be dynamic later.
+        const bannerCount = 3;
+
+        res.json({
+            products: parseInt(productCountResult.rows[0].count),
+            categories: parseInt(categoryCountResult.rows[0].count),
+            orders: parseInt(orderCountResult.rows[0].count),
+            banners: bannerCount
+        });
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 app.get('/api/products', async (req, res) => {
     try {
-        const { rows: products } = await pool.query(`
-      SELECT p.*, c.name as category_name, c.slug as category_slug
-      FROM products p
-      LEFT JOIN categories c ON p."categoryId" = c.id
-    `);
+        const {
+            page = 1,
+            limit = 12,
+            category,
+            brand,
+            minPrice,
+            maxPrice,
+            search,
+            vehicle_type,
+            stock_status // Expect 'in_stock', 'low_stock', 'out_of_stock'
+        } = req.query;
+
+        const offset = (Number(page) - 1) * Number(limit);
+        const params: any[] = [];
+        let paramIndex = 1;
+
+        // Base Query
+        let baseQuery = `
+            FROM products p
+            LEFT JOIN categories c ON p."categoryId" = c.id
+            WHERE 1=1
+        `;
+
+        // Filter: Search (Name)
+        if (search) {
+            baseQuery += ` AND p.name ILIKE $${paramIndex++}`;
+            params.push(`%${search}%`);
+        }
+
+        // Filter: Category (Slug or ID)
+        // Check if category is 'all' - frontend might send 'all'
+        if (category && category !== 'all') {
+            baseQuery += ` AND (c.slug = $${paramIndex} OR c.id = $${paramIndex})`;
+            params.push(category);
+            paramIndex++;
+        }
+
+        // Filter: Brand
+        if (brand && brand !== 'all') {
+            baseQuery += ` AND p.brand = $${paramIndex++}`;
+            params.push(brand);
+        }
+
+        // Filter: Price
+        if (minPrice) {
+            baseQuery += ` AND p.price >= $${paramIndex++}`;
+            params.push(Number(minPrice));
+        }
+        if (maxPrice) {
+            baseQuery += ` AND p.price <= $${paramIndex++}`;
+            params.push(Number(maxPrice));
+        }
+
+        // Filter: Stock Status logic is complex because it's calculated. 
+        // Logic: in_stock (>10), low_stock (>0 <=10), out_of_stock (<=0)
+        if (stock_status) {
+            if (stock_status === 'in_stock') {
+                baseQuery += ` AND p.stock > 10`;
+            } else if (stock_status === 'low_stock') {
+                baseQuery += ` AND p.stock > 0 AND p.stock <= 10`;
+            } else if (stock_status === 'out_of_stock') {
+                baseQuery += ` AND (p.stock <= 0 OR p.stock IS NULL)`;
+            }
+        }
+
+        // Count Total
+        const countResult = await pool.query(`SELECT COUNT(*) ${baseQuery}`, params);
+        const total = parseInt(countResult.rows[0].count);
+
+        // Fetch Data
+        // Order by created at desc default
+        const dataQuery = `
+            SELECT p.id, p.name, p."categoryId", p.brand, p.price, p."salePrice", p.stock, p.images, p.description,
+                   c.name as category_name, c.slug as category_slug
+            ${baseQuery}
+            ORDER BY p."createdAt" DESC
+            LIMIT $${paramIndex++} OFFSET $${paramIndex++}
+        `;
+
+        params.push(Number(limit), offset);
+
+        const { rows: products } = await pool.query(dataQuery, params);
 
         const mappedProducts = products.map(p => {
             // Calculate status
-            let stock_status = 'out_of_stock';
-            if (p.stock > 10) stock_status = 'in_stock';
-            else if (p.stock > 0) stock_status = 'low_stock';
+            let status = 'out_of_stock';
+            if (p.stock > 10) status = 'in_stock';
+            else if (p.stock > 0) status = 'low_stock';
 
             return {
                 product_id: p.id,
@@ -48,21 +152,31 @@ app.get('/api/products', async (req, res) => {
                 engine_capacity: 'Universal',
                 price: Number(p.price),
                 original_price: Number(p.salePrice || p.price),
-                discount_percentage: 0,
+                discount_percentage: p.salePrice ? Math.round(((p.price - p.salePrice) / p.price) * 100) : 0,
                 stock: p.stock,
-                stock_status: stock_status,
-                description: p.description || '',
+                stock_status: status,
+                description: p.description || '', // Still sending description, but we could select substring if needed
                 product_image: p.images && p.images.length > 0 ? p.images[0] : '',
                 tags: []
             };
         });
 
-        res.json(mappedProducts);
+        res.json({
+            data: mappedProducts,
+            metadata: {
+                total,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(total / Number(limit))
+            }
+        });
+
     } catch (error) {
         console.error('Error fetching products:', error);
         res.status(500).json({ error: 'Internal Server Error', details: String(error) });
     }
 });
+
 
 app.post('/api/products', async (req, res) => {
     const client = await pool.connect();

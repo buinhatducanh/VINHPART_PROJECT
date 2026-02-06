@@ -24,11 +24,17 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
   const fetchProducts = () => {
     setLoading(true);
-    fetch('http://localhost:3001/api/products')
+    // Request a high limit to get all products for client-side management for now
+    fetch('http://localhost:3001/api/products?limit=1000')
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) setProducts(data);
-        else setProducts([]);
+        if (data && data.data) {
+          setProducts(data.data);
+        } else if (Array.isArray(data)) {
+          setProducts(data);
+        } else {
+          setProducts([]);
+        }
         setLoading(false);
       })
       .catch(err => {

@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
-import { Package, ShoppingCart, Folder, Image, Plus, ClipboardList, Palette, Home, LogOut, Settings, TrendingUp, Edit, FileText, MessageSquare } from 'lucide-react';
-import { useState } from 'react';
+import { Package, ShoppingCart, Folder, Image, Plus, ClipboardList, Home, LogOut, Settings, TrendingUp, Edit, FileText, MessageSquare } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { AddProductPage } from './admin/AddProductPage';
 import { StatisticsPage } from './admin/StatisticsPage';
 import { ManageOrdersPage } from './admin/ManageOrdersPage';
@@ -19,6 +19,21 @@ type AdminPage = 'dashboard' | 'addProduct' | 'manageProducts' | 'manageOrders' 
 export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState<AdminPage>('dashboard');
+  const [dashboardStats, setDashboardStats] = useState({
+    products: 0,
+    orders: 0,
+    categories: 0,
+    banners: 0
+  });
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/dashboard/stats')
+      .then(res => res.json())
+      .then(data => {
+        setDashboardStats(data);
+      })
+      .catch(err => console.error('Error fetching stats:', err));
+  }, []);
 
   // Render the current page
   if (currentPage === 'addProduct') {
@@ -54,37 +69,37 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
   }
 
   const stats = [
-    { 
-      label: 'Sản phẩm', 
-      value: '8', 
-      icon: Package, 
+    {
+      label: 'Sản phẩm',
+      value: dashboardStats.products.toString(),
+      icon: Package,
       color: 'from-blue-500 to-cyan-500',
       gradient: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
       border: 'border-blue-500/50',
       shadow: 'shadow-blue-500/25'
     },
-    { 
-      label: 'Đơn hàng', 
-      value: '0', 
-      icon: ShoppingCart, 
+    {
+      label: 'Đơn hàng chờ xử lý',
+      value: dashboardStats.orders.toString(),
+      icon: ShoppingCart,
       color: 'from-purple-500 to-pink-500',
       gradient: 'bg-gradient-to-br from-purple-500/20 to-pink-500/20',
       border: 'border-purple-500/50',
       shadow: 'shadow-purple-500/25'
     },
-    { 
-      label: 'Danh mục', 
-      value: '5', 
-      icon: Folder, 
+    {
+      label: 'Danh mục',
+      value: dashboardStats.categories.toString(),
+      icon: Folder,
       color: 'from-orange-500 to-yellow-500',
       gradient: 'bg-gradient-to-br from-orange-500/20 to-yellow-500/20',
       border: 'border-orange-500/50',
       shadow: 'shadow-orange-500/25'
     },
-    { 
-      label: 'Banner', 
-      value: '3', 
-      icon: Image, 
+    {
+      label: 'Banner',
+      value: dashboardStats.banners.toString(),
+      icon: Image,
       color: 'from-green-500 to-emerald-500',
       gradient: 'bg-gradient-to-br from-green-500/20 to-emerald-500/20',
       border: 'border-green-500/50',
@@ -133,7 +148,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
       </div>
 
       {/* Header */}
-      <motion.header 
+      <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative border-b border-gray-800 bg-black/40 backdrop-blur-xl"
@@ -142,7 +157,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
           <div className="flex items-center justify-between">
             {/* Logo & Title */}
             <div className="flex items-center gap-4">
-              <motion.div 
+              <motion.div
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 className="relative w-14 h-14"
               >
@@ -162,7 +177,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
                 {/* Glow effect */}
                 <div className="absolute inset-0 bg-red-600/20 rounded-xl blur-xl"></div>
               </motion.div>
-              
+
               <div>
                 <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-red-600 bg-clip-text">
                   VINPART ADMIN
@@ -177,7 +192,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
                 <p className="text-sm font-semibold text-white">admin@vinpart.vn</p>
                 <p className="text-xs text-gray-500">Quản trị viên</p>
               </div>
-              
+
               <motion.button
                 onClick={() => setShowLogoutConfirm(true)}
                 whileHover={{ scale: 1.05 }}
@@ -195,7 +210,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
       {/* Main Content */}
       <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -222,7 +237,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
               <div className={`relative bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl p-6 overflow-hidden hover:border-${stat.border} transition-all duration-300`}>
                 {/* Background gradient on hover */}
                 <div className={`absolute inset-0 ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-                
+
                 {/* Icon with glow */}
                 <div className="relative mb-4">
                   <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center group-hover:shadow-lg ${stat.shadow} transition-all duration-300`}>
@@ -230,7 +245,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
                   </div>
                   <div className={`absolute inset-0 w-14 h-14 bg-gradient-to-br ${stat.color} rounded-xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300`}></div>
                 </div>
-                
+
                 {/* Value */}
                 <div className="relative">
                   <p className="text-4xl font-black text-white mb-1">{stat.value}</p>
@@ -246,7 +261,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
         </div>
 
         {/* Quick Actions */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
@@ -254,13 +269,13 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
         >
           {/* Background effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-red-600/5 to-transparent"></div>
-          
+
           <div className="relative">
             <div className="flex items-center gap-3 mb-6">
               <Settings className="w-6 h-6 text-red-600" />
               <h3 className="text-xl font-bold text-white">Thao tác nhanh</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {quickActions.map((action, index) => (
                 <motion.button
@@ -277,7 +292,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
                     <action.icon className="w-6 h-6" />
                   </div>
                   <span className="text-white font-medium text-sm">{action.label}</span>
-                  
+
                   {/* Arrow indicator */}
                   <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,7 +306,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
         </motion.div>
 
         {/* System Info */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.1 }}
@@ -407,17 +422,17 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
             className="relative bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-md w-full"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 to-transparent rounded-2xl"></div>
-            
+
             <div className="relative">
               <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <LogOut className="w-8 h-8 text-white" />
               </div>
-              
+
               <h3 className="text-2xl font-bold text-white text-center mb-2">Đăng xuất</h3>
               <p className="text-gray-400 text-center mb-6">
                 Bạn có chắc chắn muốn đăng xuất khỏi trang quản trị?
               </p>
-              
+
               <div className="flex gap-3">
                 <motion.button
                   whileHover={{ scale: 1.05 }}

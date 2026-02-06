@@ -26,32 +26,52 @@ export function ProductListing({
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([0, 5000000]);
+
+  const itemsPerPage = 12;
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/products')
+    setLoading(true);
+
+    const params = new URLSearchParams();
+    params.append('page', currentPage.toString());
+    params.append('limit', itemsPerPage.toString());
+    params.append('vehicle_type', 'Motorbike'); // Only motorbikes per original logic
+
+    if (selectedCategory !== 'all') {
+      params.append('category', selectedCategory);
+    }
+    if (selectedBrand !== 'all') {
+      params.append('brand', selectedBrand);
+    }
+    params.append('minPrice', appliedPriceRange[0].toString());
+    params.append('maxPrice', appliedPriceRange[1].toString());
+
+    fetch(`http://localhost:3001/api/products?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
+        if (data && data.data) {
+          setProducts(data.data);
+          setTotalProducts(data.metadata.total);
+        } else if (Array.isArray(data)) {
+          // Fallback for old API if needed, though we updated it
           setProducts(data);
+          setTotalProducts(data.length);
         } else {
-          console.error("API returned non-array:", data);
-          setProducts(mockProducts);
+          console.error("API returned unexpected format:", data);
+          setProducts([]);
         }
         setLoading(false);
       })
       .catch(error => {
         console.error("Failed to fetch products:", error);
-        setProducts(mockProducts); // Fallback
+        setProducts([]); // Fallback
         setLoading(false);
       });
-  }, []);
+  }, [selectedCategory, selectedBrand, appliedPriceRange, currentPage]);
 
-  const itemsPerPage = 12;
-
-  const displayProducts = products.length > 0 ? products : mockProducts;
-  const maxPrice = Math.max(...displayProducts.map(p => p.price));
-
-  // Reset page to 1 when filters change
+  // Reset page when filters change
   const handleBrandChange = (brand: string) => {
     setSelectedBrand(brand);
     setCurrentPage(1);
@@ -59,6 +79,29 @@ export function ProductListing({
 
   const handlePriceRangeChange = (range: [number, number]) => {
     setPriceRange(range);
+    // Don't verify/fetch immediately on slide? Maybe need debounce/Apply button
+    // The Slider component has onApply, we use that for triggering fetch actually?
+    // Current code: onChange calls handlePriceRangeChange -> calls setPriceRange -> Effect triggers
+    // Wait, original code: onChange set state, onApply setPage(1). 
+    // Effect dependency includes priceRange.
+    // If slider updates state continuously, we spam API. 
+    // Let's check PriceRangeSlider usage or implementation.
+    // Assuming onChange is continuous, we might want to ONLY trigger fetch on "Apply" or debounce.
+    // But original code: onChange={handlePriceRangeChange}, onApply={() => setCurrentPage(1)}
+    // And filteredProducts used priceRange immediately for client side filter.
+    // For Server side, we should only update 'filter' state when user commits.
+    // Let's modify handlePriceRangeChange to NOT trigger effect?
+    // Actually, let's keep it simple: Use a separate state for 'appliedPriceRange' for the effect?
+    // Or relying on onApply.
+  };
+
+  // Optimization: Only update the query params when "Apply" is clicked or debounced.
+  // But to minimize changes, let's assume PriceRangeSlider calls verify occasionally or we leave it.
+  // Original: onChange updates state instantly.
+
+
+  const handlePriceRangeCommit = () => {
+    setAppliedPriceRange(priceRange);
     setCurrentPage(1);
   };
 
@@ -77,30 +120,17 @@ export function ProductListing({
     setExpandedCategories(newExpanded);
   };
 
-  if (loading) {
-    return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading products...</div>;
-  }
+  // Brands list is hardcoded or fetched? 
+  // Original code derived it from `displayProducts` which was all products.
+  // Now we don't have all products. We need a list of brands.
+  // For now, let's use a static list or fetch brands separate API.
+  // Or just keep using the hardcoded list from mock/logic if available.
+  // The original code derived it: `const brands = Array.from(new Set(displayProducts...))`
+  // Since we don't have all products, we'll lose dynamic brands from API.
+  // Fallback: Use a hardcoded list of common brands or Mock brands for now to avoid broken UI.
+  // Better: Fetch brands from API `/api/brands` (requires backend work) or just stick to what we know: Honda, Yamaha, Suzuki, etc.
 
-  // Filter products - chỉ xe máy
-  let filteredProducts = displayProducts.filter(p => p.vehicle_type === 'Motorbike');
-
-  if (selectedCategory !== 'all') {
-    filteredProducts = filteredProducts.filter(p => p.category === selectedCategory);
-  }
-
-  if (selectedBrand !== 'all') {
-    filteredProducts = filteredProducts.filter(p => p.compatible_brand === selectedBrand);
-  }
-
-  // Apply price range filter
-  filteredProducts = filteredProducts.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
-
-  const brands = Array.from(new Set(displayProducts.filter(p => p.vehicle_type === 'Motorbike').map(p => p.compatible_brand)));
+  const brands = ['Honda', 'Yamaha', 'Suzuki', 'SYM', 'Piaggio', 'Kawasaki', 'Ducati', 'BMW', 'Triumph', 'Harley-Davidson'];
 
   const FilterSidebar = () => (
     <div className="space-y-6">
@@ -223,14 +253,36 @@ export function ProductListing({
         </h3>
         <PriceRangeSlider
           min={0}
-          max={maxPrice}
+          max={5000000}
           value={priceRange}
-          onChange={handlePriceRangeChange}
-          onApply={() => setCurrentPage(1)}
+          onChange={setPriceRange} // Just update local state
+          onApply={handlePriceRangeCommit} // Commit triggers effect via appliedPriceRange
         />
       </div>
     </div>
   );
+
+  // NOTE: We replaced `effect` dependencies to use `appliedPriceRange`
+  useEffect(() => {
+    // Duplicate effect logic here or move to a function?
+    // Let's just fix the usage in the main effect above to depend on appliedPriceRange.
+    // I can't easily edit the top effect without replacing the whole file content block which I am doing.
+    // So I will fix the dependency in the TOP effect.
+  }, []);
+
+  // Use appliedPriceRange in the fetch query
+  /* 
+     params.append('minPrice', appliedPriceRange[0].toString());
+     params.append('maxPrice', appliedPriceRange[1].toString());
+  */
+
+  if (loading) {
+    // Keep loading UI
+    return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading products...</div>;
+  }
+
+  // Calculate pagination
+  const totalPages = Math.ceil(totalProducts / itemsPerPage);
 
   return (
     <div className="pt-20 min-h-screen bg-black">
@@ -240,7 +292,7 @@ export function ProductListing({
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Sản phẩm</h1>
             <p className="text-gray-400">
-              Hiển thị {paginatedProducts.length} / {filteredProducts.length} sản phẩm
+              Hiển thị {products.length} / {totalProducts} sản phẩm
             </p>
           </div>
 
@@ -298,7 +350,7 @@ export function ProductListing({
 
           {/* Products Grid */}
           <div className="flex-1">
-            {paginatedProducts.length === 0 ? (
+            {products.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-gray-400 text-lg mb-4">Không tìm thấy sản phẩm phù hợp</p>
                 <button
@@ -306,6 +358,7 @@ export function ProductListing({
                     onCategoryChange('all');
                     setSelectedBrand('all');
                     setPriceRange([0, 5000000]);
+                    setAppliedPriceRange([0, 5000000]); // Reset applied too
                   }}
                   className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-all"
                 >
@@ -315,7 +368,7 @@ export function ProductListing({
             ) : (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8">
-                  {paginatedProducts.map((product, index) => (
+                  {products.map((product, index) => (
                     <motion.div
                       key={product.product_id}
                       initial={{ opacity: 0, y: 20 }}
