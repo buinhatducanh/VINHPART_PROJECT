@@ -9,7 +9,8 @@ import { BlogDetailPage } from '@/app/components/BlogDetailPage';
 import { BlogListPage } from '@/app/components/BlogListPage';
 import { AddToCartToast } from '@/app/components/AddToCartToast';
 import { Toaster } from '@/app/components/ui/sonner';
-import { Product, CartItem } from '@/app/types';
+import { toast } from 'sonner';
+import { Product, CartItem, User } from '@/app/types';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'landing' | 'products' | 'cart' | 'checkout' | 'admin' | 'blog-list' | 'blog-detail'>('landing');
@@ -19,6 +20,32 @@ export default function App() {
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [toastProductName, setToastProductName] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+
+  const handleLogin = (loggedInUser: User) => {
+    setUser(loggedInUser);
+    toast.success(`Chào mừng quay lại, ${loggedInUser.name}!`);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setCurrentPage('landing');
+    toast.info('Đã đăng xuất thành công');
+  };
+
+  const handleAdminClick = () => {
+    if (!user) {
+      toast.error('Vui lòng đăng nhập tài khoản Admin để truy cập');
+      return;
+    }
+
+    if (user.role !== 'admin') {
+      toast.error('Bạn không có quyền truy cập trang quản trị');
+      return;
+    }
+
+    setCurrentPage('admin');
+  };
 
   const handleAddToCart = (product: Product) => {
     setCartItems(prev => {
@@ -81,6 +108,9 @@ export default function App() {
           cartCount={totalCartItems}
           onCartClick={() => setCurrentPage('cart')}
           onLogoClick={() => setCurrentPage('landing')}
+          user={user}
+          onLogin={handleLogin}
+          onLogout={handleLogout}
         />
       )}
 
@@ -96,7 +126,7 @@ export default function App() {
           onViewCatalog={() => setCurrentPage('products')}
           onAddToCart={handleAddToCart}
           onBuyNow={handleBuyNow}
-          onAdminClick={() => setCurrentPage('admin')}
+          onAdminClick={handleAdminClick}
           onBlogPostClick={handleBlogPostClick}
           onViewAllPosts={handleViewAllPosts}
         />
@@ -130,7 +160,7 @@ export default function App() {
 
       {currentPage === 'admin' && (
         <AdminDashboard
-          onBackToHome={() => setCurrentPage('landing')}
+          onBackToHome={handleLogout}
         />
       )}
 

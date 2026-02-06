@@ -3,13 +3,18 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthModal } from '@/app/components/AuthModal';
 
+import { User as UserType } from '@/app/types';
+
 interface HeaderProps {
   cartCount: number;
   onCartClick: () => void;
   onLogoClick: () => void;
+  user: UserType | null;
+  onLogin: (user: UserType) => void;
+  onLogout: () => void;
 }
 
-export function Header({ cartCount, onCartClick, onLogoClick }: HeaderProps) {
+export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onLogout }: HeaderProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showFeatureToast, setShowFeatureToast] = useState(false);
@@ -23,10 +28,10 @@ export function Header({ cartCount, onCartClick, onLogoClick }: HeaderProps) {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       // Check if at top
       setIsAtTop(currentScrollY < 50);
-      
+
       // Hiện header khi scroll lên, ẩn khi scroll xuống
       if (currentScrollY < lastScrollY || currentScrollY < 10) {
         setIsVisible(true);
@@ -34,7 +39,7 @@ export function Header({ cartCount, onCartClick, onLogoClick }: HeaderProps) {
         setIsVisible(false);
         setShowAccountMenu(false); // Đóng menu khi ẩn header
       }
-      
+
       setLastScrollY(currentScrollY);
     };
 
@@ -70,11 +75,10 @@ export function Header({ cartCount, onCartClick, onLogoClick }: HeaderProps) {
       initial={{ y: 0 }}
       animate={{ y: isVisible ? 0 : -100 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${ 
-        isAtTop 
-          ? 'bg-transparent border-b border-transparent' 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isAtTop
+          ? 'bg-transparent border-b border-transparent'
           : 'bg-black/95 backdrop-blur-md border-b border-red-600/20 shadow-lg shadow-red-600/10'
-      }`}
+        }`}
     >
       {showFeatureToast && (
         <motion.div
@@ -89,30 +93,30 @@ export function Header({ cartCount, onCartClick, onLogoClick }: HeaderProps) {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo - VINPART Design */}
-          <button 
+          <button
             onClick={onLogoClick}
             className="flex items-center gap-3 group cursor-pointer"
           >
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.08, rotate: 3 }}
               className="relative w-12 h-12 lg:w-16 lg:h-16"
             >
               {/* Outer glow ring - animated pulse */}
               <div className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-800 rounded-xl blur-xl opacity-50 group-hover:opacity-100 transition-all duration-700 animate-pulse"></div>
-              
+
               {/* Secondary glow layer */}
               <div className="absolute inset-0 bg-red-600 rounded-xl blur-2xl opacity-30 group-hover:opacity-60 transition-all duration-500"></div>
-              
+
               {/* Main logo container - premium design */}
               <div className="relative w-full h-full bg-gradient-to-br from-red-600 via-red-700 to-red-900 rounded-xl flex items-center justify-center shadow-2xl shadow-red-600/70 group-hover:shadow-red-500/90 transition-all border-[3px] border-red-500/50 group-hover:border-red-400/70 overflow-hidden">
                 {/* Animated background grid pattern */}
                 <div className="absolute inset-0 opacity-20">
                   <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:10px_10px]"></div>
                 </div>
-                
+
                 {/* Top shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-transparent rounded-xl"></div>
-                
+
                 {/* The "V" Letter - 3D Style */}
                 <div className="relative z-10">
                   <div className="relative">
@@ -123,27 +127,27 @@ export function Header({ cartCount, onCartClick, onLogoClick }: HeaderProps) {
                     {/* Top highlight */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/3 bg-white/40 blur-md rounded-full"></div>
                   </div>
-                  
+
                   {/* Accent dot indicator */}
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gradient-to-b from-red-400 to-red-600 rounded-full shadow-lg shadow-red-500/80 animate-pulse"></div>
                 </div>
-                
+
                 {/* Corner accent borders - futuristic */}
                 <div className="absolute top-0 left-0 w-4 h-4 border-t-[3px] border-l-[3px] border-white/50 rounded-tl-xl"></div>
                 <div className="absolute top-0 right-0 w-4 h-4 border-t-[3px] border-r-[3px] border-white/50 rounded-tr-xl"></div>
                 <div className="absolute bottom-0 left-0 w-4 h-4 border-b-[3px] border-l-[3px] border-white/50 rounded-bl-xl"></div>
                 <div className="absolute bottom-0 right-0 w-4 h-4 border-b-[3px] border-r-[3px] border-white/50 rounded-br-xl"></div>
-                
+
                 {/* Sparkle effect */}
                 <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-white rounded-full opacity-90 shadow-lg shadow-white/60 animate-pulse"></div>
               </div>
-              
+
               {/* Outer border frame */}
               <div className="absolute inset-0 rounded-xl border-2 border-red-400/30 group-hover:border-red-300/50 transition-all"></div>
             </motion.div>
-            
+
             <div className="hidden md:block">
-              <motion.div 
+              <motion.div
                 className="text-base lg:text-xl font-black tracking-wide relative"
                 whileHover={{ x: 2 }}
               >
@@ -197,33 +201,55 @@ export function Header({ cartCount, onCartClick, onLogoClick }: HeaderProps) {
                     exit={{ opacity: 0, y: -10 }}
                     className="absolute right-0 top-full mt-2 w-48 bg-gray-900 border border-gray-800 rounded-lg shadow-xl overflow-hidden"
                   >
-                    <button 
-                      onClick={() => {
-                        setAuthMode('login');
-                        setShowAuthModal(true);
-                        setShowAccountMenu(false);
-                      }}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white"
-                    >
-                      Đăng nhập
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setAuthMode('signup');
-                        setShowAuthModal(true);
-                        setShowAccountMenu(false);
-                      }}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white"
-                    >
-                      Đăng ký
-                    </button>
-                    <div className="border-t border-gray-800"></div>
-                    <button className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-gray-400" onClick={handleFeatureClick}>
-                      Tài khoản
-                    </button>
-                    <button className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-gray-400" onClick={handleFeatureClick}>
-                      Đơn hàng
-                    </button>
+                    {user ? (
+                      // Logged In Menu
+                      <>
+                        <div className="px-4 py-3 border-b border-gray-800">
+                          <p className="text-white font-bold">{user.name}</p>
+                          <p className="text-xs text-gray-500">{user.email}</p>
+                        </div>
+                        <button className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white" onClick={handleFeatureClick}>
+                          Tài khoản của tôi
+                        </button>
+                        <button className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white" onClick={handleFeatureClick}>
+                          Đơn mua
+                        </button>
+                        <div className="border-t border-gray-800"></div>
+                        <button
+                          onClick={() => {
+                            onLogout();
+                            setShowAccountMenu(false);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-red-500 font-medium"
+                        >
+                          Đăng xuất
+                        </button>
+                      </>
+                    ) : (
+                      // Guest Menu
+                      <>
+                        <button
+                          onClick={() => {
+                            setAuthMode('login');
+                            setShowAuthModal(true);
+                            setShowAccountMenu(false);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white"
+                        >
+                          Đăng nhập
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAuthMode('signup');
+                            setShowAuthModal(true);
+                            setShowAccountMenu(false);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white"
+                        >
+                          Đăng ký
+                        </button>
+                      </>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -255,10 +281,11 @@ export function Header({ cartCount, onCartClick, onLogoClick }: HeaderProps) {
         </div>
       </div>
 
-      <AuthModal 
+      <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         initialMode={authMode}
+        onLogin={onLogin}
       />
     </motion.header>
   );

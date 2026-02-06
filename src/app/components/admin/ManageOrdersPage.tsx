@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { ClipboardList, ArrowLeft, Eye, Truck, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ManageOrdersPageProps {
   onBack: () => void;
@@ -18,55 +18,16 @@ interface Order {
 
 export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  // Mock orders data
-  const orders: Order[] = [
-    {
-      id: '1',
-      orderNumber: 'ORD-2024-001',
-      customerName: 'Nguyễn Văn A',
-      date: '2024-02-04',
-      total: 2450000,
-      status: 'delivered',
-      items: 3
-    },
-    {
-      id: '2',
-      orderNumber: 'ORD-2024-002',
-      customerName: 'Trần Thị B',
-      date: '2024-02-03',
-      total: 1850000,
-      status: 'shipped',
-      items: 2
-    },
-    {
-      id: '3',
-      orderNumber: 'ORD-2024-003',
-      customerName: 'Lê Văn C',
-      date: '2024-02-03',
-      total: 3200000,
-      status: 'processing',
-      items: 5
-    },
-    {
-      id: '4',
-      orderNumber: 'ORD-2024-004',
-      customerName: 'Phạm Thị D',
-      date: '2024-02-02',
-      total: 980000,
-      status: 'pending',
-      items: 1
-    },
-    {
-      id: '5',
-      orderNumber: 'ORD-2024-005',
-      customerName: 'Hoàng Văn E',
-      date: '2024-02-01',
-      total: 4500000,
-      status: 'cancelled',
-      items: 4
-    },
-  ];
+  useEffect(() => {
+    fetch('http://localhost:3001/api/orders')
+      .then(res => res.json())
+      .then(data => {
+        setOrders(data);
+      })
+      .catch(err => console.error('Error fetching orders:', err));
+  }, []);
 
   const statusConfig = {
     pending: {
@@ -143,7 +104,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
       </div>
 
       {/* Header */}
-      <motion.div 
+      <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative border-b border-gray-800 bg-black/40 backdrop-blur-xl sticky top-0 z-10"
@@ -159,7 +120,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
               >
                 <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors" />
               </motion.button>
-              
+
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center">
                   <ClipboardList className="w-6 h-6 text-white" />
@@ -186,11 +147,10 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
         >
           <button
             onClick={() => setSelectedStatus('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              selectedStatus === 'all'
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedStatus === 'all'
                 ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-600/25'
                 : 'text-gray-400 hover:text-white hover:bg-gray-800'
-            }`}
+              }`}
           >
             Tất cả ({orders.length})
           </button>
@@ -200,11 +160,10 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
               <button
                 key={key}
                 onClick={() => setSelectedStatus(key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                  selectedStatus === key
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${selectedStatus === key
                     ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-600/25'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                }`}
+                  }`}
               >
                 <config.icon className="w-4 h-4" />
                 {config.label} ({count})
@@ -235,17 +194,17 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
                       <p className="text-xs text-gray-500 mb-1">Mã đơn hàng</p>
                       <p className="text-white font-bold">{order.orderNumber}</p>
                     </div>
-                    
+
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Khách hàng</p>
                       <p className="text-white font-semibold">{order.customerName}</p>
                     </div>
-                    
+
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Ngày đặt</p>
                       <p className="text-white">{new Date(order.date).toLocaleDateString('vi-VN')}</p>
                     </div>
-                    
+
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Tổng tiền</p>
                       <p className="text-white font-bold">{formatCurrency(order.total)}</p>
