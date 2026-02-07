@@ -28,13 +28,15 @@
                 "./src/*"
             ]
         },
-        /* Node.js types - THIS FIXES THE 'process' ERROR */
+        /* Node.js types */
         "types": [
             "node"
         ]
     },
     "include": [
         "src",
+        "backend",
+        "scripts",
         "prisma.config.ts",
         "vite.config.ts"
     ],
