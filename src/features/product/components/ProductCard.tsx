@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { ShoppingCart, Zap } from 'lucide-react';
-import { Product } from '@/types';
-import { productImages } from '@/data/productImages';
+import { Product } from '@/shared/types';
+import { productImages } from '@/shared/data/productImages';
 import { useState } from 'react';
 
 interface ProductCardProps {

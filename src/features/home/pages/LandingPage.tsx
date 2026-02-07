@@ -1,11 +1,18 @@
 import { motion } from 'motion/react';
 import { Shield, Zap, Truck, RefreshCw, Star, Calendar, Eye, ArrowRight } from 'lucide-react';
-import { ProductCard } from '@/components/ProductCard';
-import { mockProducts } from '@/data/mockProducts';
-import { mockSEOPosts } from '@/data/mockSEOPosts';
-import { mockReviews } from '@/data/mockReviews';
-import { Product } from '@/types';
+import { ProductCard } from '@/features/product/components/ProductCard';
+import { mockProducts } from '@/shared/data/mockProducts';
+import { mockSEOPosts } from '@/shared/data/mockSEOPosts';
+import { mockReviews } from '@/shared/data/mockReviews';
+import { Product } from '@/shared/types';
 import { useState } from 'react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/shared/components/ui/carousel";
 
 interface LandingPageProps {
   onShopNow: () => void;
@@ -18,7 +25,7 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ onShopNow, onViewCatalog, onAddToCart, onBuyNow, onAdminClick, onBlogPostClick, onViewAllPosts }: LandingPageProps) {
-  const featuredProducts = mockProducts.filter(p => p.vehicle_type === 'Motorbike').slice(0, 4);
+  const featuredProducts = mockProducts.filter(p => p.vehicle_type === 'Motorbike').slice(0, 10);
   const latestPosts = mockSEOPosts.filter(p => p.status === 'published').slice(0, 3);
   // Lấy top 3 reviews được approved và ưu tiên cao
   const topReviews = mockReviews
@@ -217,22 +224,30 @@ export function LandingPage({ onShopNow, onViewCatalog, onAddToCart, onBuyNow, o
             <p className="text-gray-400">Được tin dùng bởi hàng nghìn khách hàng</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product, index) => (
-              <motion.div
-                key={product.product_id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <ProductCard
-                  product={product}
-                  onAddToCart={onAddToCart}
-                  onBuyNow={onBuyNow}
-                />
-              </motion.div>
-            ))}
+          <div className="mx-auto max-w-5xl px-4 lg:px-0">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {featuredProducts.map((product) => (
+                  <CarouselItem key={product.product_id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
+                    <div className="h-full">
+                      <ProductCard
+                        product={product}
+                        onAddToCart={onAddToCart}
+                        onBuyNow={onBuyNow}
+                      />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex -left-12 bg-gray-800 border-gray-700 text-white hover:bg-red-600 hover:border-red-600" />
+              <CarouselNext className="hidden md:flex -right-12 bg-gray-800 border-gray-700 text-white hover:bg-red-600 hover:border-red-600" />
+            </Carousel>
           </div>
         </div>
       </section>

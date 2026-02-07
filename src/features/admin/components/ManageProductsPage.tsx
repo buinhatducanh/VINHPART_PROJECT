@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Package, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
-import { Product } from '@/types';
+import { Product } from '@/shared/types';
 
 interface ManageProductsPageProps {
   onBack: () => void;

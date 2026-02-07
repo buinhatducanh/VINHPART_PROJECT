@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, ShoppingCart, Sparkles } from 'lucide-react';
+import { Check, ShoppingCart, Sparkles, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface AddToCartToastProps {
@@ -71,7 +71,7 @@ export function AddToCartToast({ show, productName, onClose }: AddToCartToastPro
           >
             {/* Glow effect */}
             <div className="absolute inset-0 bg-green-400 rounded-xl blur-xl opacity-30 -z-10"></div>
-            
+
             <div className="flex items-center gap-3">
               {/* Success icon with ripple */}
               <motion.div

@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { Folder, ArrowLeft, Search, Edit, Trash2, Plus, ChevronRight, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
-import { Category } from '@/types';
+import { Category } from '@/shared/types';
 
 interface ManageCategoriesPageProps {
   onBack: () => void;

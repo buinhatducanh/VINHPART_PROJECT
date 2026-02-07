@@ -1,9 +1,9 @@
 import { Search, ShoppingCart, User, Menu } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AuthModal } from '@/components/AuthModal';
+import { AuthModal } from '@/features/auth/components/AuthModal';
 
-import { User as UserType } from '@/types';
+import { User as UserType } from '@/shared/types';
 
 interface HeaderProps {
   cartCount: number;

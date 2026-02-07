@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Calendar, Eye, Search } from 'lucide-react';
-import { SEOPost } from '@/types';
-import { mockSEOPosts } from '@/data/mockSEOPosts';
-import { Input } from '@/components/ui/input';
-import { SEO } from '@/components/SEO';
+import { SEOPost } from '@/shared/types';
+import { mockSEOPosts } from '@/shared/data/mockSEOPosts';
+import { Input } from '@/shared/components/ui/input';
+import { SEO } from '@/shared/components/SEO';
 
 interface BlogListPageProps {
   onBack: () => void;

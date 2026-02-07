@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
-import { ArrowLeft, CreditCard, Truck, Shield, CheckCircle2 } from 'lucide-react';
-import { CartItem } from '@/types';
-import { productImages } from '@/data/productImages';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowLeft, CheckCircle2, CreditCard, Truck, Shield, MapPin, Wallet, ChevronRight } from 'lucide-react';
+import { CartItem } from '@/shared/types';
+import { productImages } from '@/shared/data/productImages';
 
 interface CheckoutPageProps {
   cartItems: CartItem[];

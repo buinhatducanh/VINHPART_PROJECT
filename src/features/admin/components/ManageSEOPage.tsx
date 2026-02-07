@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Eye, Calendar } from 'lucide-react';
 import { useState } from 'react';
-import { SEOPost } from '@/types';
+import { SEOPost } from '@/shared/types';
 
 interface ManageSEOPageProps {
   onBack: () => void;

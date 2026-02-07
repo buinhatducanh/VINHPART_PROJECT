@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { MessageSquare, ArrowLeft, Search, Edit, Trash2, Star, Check, X, ArrowUp, ArrowDown, User, Calendar } from 'lucide-react';
 import { useState } from 'react';
-import { Review } from '@/types';
+import { Review } from '@/shared/types';
 
 interface ManageReviewsPageProps {
   onBack: () => void;

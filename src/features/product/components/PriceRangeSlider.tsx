@@ -1,5 +1,7 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
+
 import { RotateCcw } from 'lucide-react';
 
 interface PriceRangeSliderProps {
@@ -24,14 +26,14 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
       return `${(price / 1000000).toFixed(1)} triệu`;
     }
     if (price >= 1000) {
-      return `${(price / 1000).toFixed(0)}k`;
+      return `${(price / 1000).toFixed(0)} k`;
     }
     return formatPrice(price);
   };
 
   const calculateValue = useCallback((clientX: number) => {
     if (!sliderRef.current) return null;
-    
+
     const rect = sliderRef.current.getBoundingClientRect();
     const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     return Math.round(min + percent * (max - min));
@@ -47,7 +49,7 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
 
   const handlePointerMove = useCallback((e: PointerEvent) => {
     if (!isDraggingRef.current) return;
-    
+
     const newValue = calculateValue(e.clientX);
     if (newValue === null) return;
 
@@ -72,7 +74,7 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
     if (isDragging) {
       window.addEventListener('pointermove', handlePointerMove);
       window.addEventListener('pointerup', handlePointerUp);
-      
+
       return () => {
         window.removeEventListener('pointermove', handlePointerMove);
         window.removeEventListener('pointerup', handlePointerUp);
@@ -122,11 +124,11 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
           {/* Track Background */}
           <div className="h-2.5 bg-gradient-to-r from-gray-800 via-gray-750 to-gray-800 rounded-full relative shadow-inner border border-gray-700/50">
             {/* Active Range with glow */}
-            <div 
+            <div
               className="absolute inset-y-0 bg-gradient-to-r from-red-600 via-red-500 to-red-600 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.6)]"
               style={{
-                left: `${minPercent}%`,
-                right: `${100 - maxPercent}%`
+                left: `${minPercent}% `,
+                right: `${100 - maxPercent}% `
               }}
             >
               {/* Inner glow */}
@@ -137,10 +139,10 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
           {/* Min Thumb */}
           <motion.div
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 cursor-grab active:cursor-grabbing touch-none z-10"
-            style={{ left: `${minPercent}%` }}
+            style={{ left: `${minPercent}% ` }}
             onPointerDown={handlePointerDown('min')}
             whileHover={{ scale: 1.2 }}
-            animate={{ 
+            animate={{
               scale: isDragging === 'min' ? 1.3 : 1,
             }}
           >
@@ -159,10 +161,10 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
           {/* Max Thumb */}
           <motion.div
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 cursor-grab active:cursor-grabbing touch-none z-10"
-            style={{ left: `${maxPercent}%` }}
+            style={{ left: `${maxPercent}% ` }}
             onPointerDown={handlePointerDown('max')}
             whileHover={{ scale: 1.2 }}
-            animate={{ 
+            animate={{
               scale: isDragging === 'max' ? 1.3 : 1,
             }}
           >

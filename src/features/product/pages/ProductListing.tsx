@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Filter, X, ChevronRight } from 'lucide-react';
-import { ProductCard } from '@/components/ProductCard';
-import { PriceRangeSlider } from '@/components/PriceRangeSlider';
-import { mockProducts, hierarchicalCategories } from '@/data/mockProducts';
-import { Product } from '@/types';
+import { ProductCard } from '@/features/product/components/ProductCard';
+import { PriceRangeSlider } from '@/features/product/components/PriceRangeSlider';
+import { mockProducts, hierarchicalCategories } from '@/shared/data/mockProducts';
+import { Product } from '@/shared/types';
 
 interface ProductListingProps {
   selectedCategory: string;

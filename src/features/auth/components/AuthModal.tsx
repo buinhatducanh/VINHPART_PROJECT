@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Mail, Lock, User as UserIcon, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 
-import { User } from '@/types';
+import { User } from '@/shared/types';
 
 interface AuthModalProps {
   isOpen: boolean;

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Calendar, Eye, User } from 'lucide-react';
-import { SEOPost } from '@/types';
-import { mockSEOPosts } from '@/data/mockSEOPosts';
-import { Button } from '@/components/ui/button';
-import { SEO } from '@/components/SEO';
+import { SEOPost } from '@/shared/types';
+import { mockSEOPosts } from '@/shared/data/mockSEOPosts';
+import { Button } from '@/shared/components/ui/button';
+import { SEO } from '@/shared/components/SEO';
 
 interface BlogDetailPageProps {
   postId: string;

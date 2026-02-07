@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { Header } from '@/components/Header';
-import { LandingPage } from '@/pages/LandingPage';
-import { ProductListing } from '@/pages/ProductListing';
-import { CartPage } from '@/pages/CartPage';
-import { CheckoutPage } from '@/pages/CheckoutPage';
-import { AdminDashboard } from '@/pages/AdminDashboard';
-import { BlogDetailPage } from '@/pages/BlogDetailPage';
-import { BlogListPage } from '@/pages/BlogListPage';
-import { AddToCartToast } from '@/components/AddToCartToast';
-import { Toaster } from '@/components/ui/sonner';
+import { Header } from '@/shared/components/layout/Header';
+import { LandingPage } from '@/features/home/pages/LandingPage';
+import { ProductListing } from '@/features/product/pages/ProductListing';
+import { CartPage } from '@/features/cart/pages/CartPage';
+import { CheckoutPage } from '@/features/checkout/pages/CheckoutPage';
+import { AdminDashboard } from '@/features/admin/pages/AdminDashboard';
+import { BlogDetailPage } from '@/features/blog/pages/BlogDetailPage';
+import { BlogListPage } from '@/features/blog/pages/BlogListPage';
+import { AddToCartToast } from '@/features/cart/components/AddToCartToast';
+import { Toaster } from '@/shared/components/ui/sonner';
 import { toast } from 'sonner';
-import { Product, CartItem, User } from '@/types';
+import { Product, CartItem, User } from '@/shared/types';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'landing' | 'products' | 'cart' | 'checkout' | 'admin' | 'blog-list' | 'blog-detail'>('landing');
