@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Eye, User } from 'lucide-react';
 import { SEOPost } from '@/types';
 import { mockSEOPosts } from '@/data/mockSEOPosts';
 import { Button } from '@/components/ui/button';
+import { SEO } from '@/components/SEO';
 
 interface BlogDetailPageProps {
   postId: string;
@@ -56,6 +57,14 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
+      <SEO
+        title={post.title}
+        description={post.meta_description || post.excerpt}
+        image={post.featured_image || '/favicon.svg'}
+        url={window.location.href}
+        type="article"
+      />
+
       <div className="max-w-4xl mx-auto">
         {/* Back button */}
         <motion.button
@@ -138,102 +147,38 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mt-16 pt-8 border-t border-gray-800"
+            className="border-t border-gray-800 pt-12"
           >
-            <h2 className="text-2xl font-bold mb-6">Bài viết liên quan</h2>
-            <div className="grid md:grid-cols-3 gap-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Bài viết liên quan</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedPosts.map((relatedPost) => (
-                <motion.div
+                <div
                   key={relatedPost.id}
-                  whileHover={{ y: -5 }}
                   onClick={() => onPostClick(relatedPost.id)}
-                  className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden cursor-pointer hover:border-red-500/50 transition-all group"
+                  className="bg-gray-900/50 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-red-500/50 transition-all group"
                 >
-                  {relatedPost.featured_image && (
-                    <div className="relative h-40 overflow-hidden">
-                      <img
-                        src={relatedPost.featured_image}
-                        alt={relatedPost.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
+                  <div className="h-40 overflow-hidden">
+                    <img
+                      src={relatedPost.featured_image || '/placeholder-image.jpg'}
+                      alt={relatedPost.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
                   <div className="p-4">
-                    <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-red-500 transition-colors">
+                    <h3 className="text-white font-semibold mb-2 line-clamp-2 group-hover:text-red-400 transition-colors">
                       {relatedPost.title}
                     </h3>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <Eye className="w-3 h-3" />
-                      <span>{relatedPost.view_count.toLocaleString('vi-VN')}</span>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <Calendar className="w-3 h-3" />
+                      <span>{formatDate(relatedPost.published_at || '')}</span>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </motion.div>
         )}
       </div>
-
-      <style>{`
-        .article-content h1 {
-          font-size: 2rem;
-          font-weight: bold;
-          margin: 2rem 0 1rem;
-          color: #fff;
-          line-height: 1.3;
-        }
-        .article-content h2 {
-          font-size: 1.5rem;
-          font-weight: bold;
-          margin: 1.5rem 0 1rem;
-          color: #f3f4f6;
-          line-height: 1.4;
-        }
-        .article-content h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          margin: 1.25rem 0 0.75rem;
-          color: #e5e7eb;
-        }
-        .article-content p {
-          margin: 1rem 0;
-          line-height: 1.8;
-        }
-        .article-content ul, .article-content ol {
-          margin: 1rem 0;
-          padding-left: 2rem;
-        }
-        .article-content li {
-          margin: 0.5rem 0;
-          line-height: 1.6;
-        }
-        .article-content strong {
-          color: #fff;
-          font-weight: 600;
-        }
-        .article-content table {
-          width: 100%;
-          margin: 1.5rem 0;
-          border-collapse: collapse;
-        }
-        .article-content th, .article-content td {
-          border: 1px solid #374151;
-          padding: 0.75rem;
-          text-align: left;
-        }
-        .article-content th {
-          background: #1f2937;
-          font-weight: 600;
-          color: #fff;
-        }
-        .article-content blockquote {
-          border-left: 4px solid #ef4444;
-          padding-left: 1rem;
-          margin: 1.5rem 0;
-          font-style: italic;
-          color: #9ca3af;
-        }
-      `}</style>
     </div>
   );
 }

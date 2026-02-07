@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Eye, Search } from 'lucide-react';
 import { SEOPost } from '@/types';
 import { mockSEOPosts } from '@/data/mockSEOPosts';
 import { Input } from '@/components/ui/input';
+import { SEO } from '@/components/SEO';
 
 interface BlogListPageProps {
   onBack: () => void;
@@ -40,6 +41,10 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
+      <SEO
+        title="Tin Tức & Kiến Thức"
+        description="Cập nhật những tin tức mới nhất về xe máy, phụ tùng và hướng dẫn bảo dưỡng từ VINHPART."
+      />
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
@@ -87,8 +92,8 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
             <button
               onClick={() => setSortBy('latest')}
               className={`px-4 py-2 rounded-lg transition-all ${sortBy === 'latest'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-900/50 text-gray-400 hover:text-white border border-gray-800'
+                ? 'bg-red-500 text-white'
+                : 'bg-gray-900/50 text-gray-400 hover:text-white border border-gray-800'
                 }`}
             >
               Mới nhất
@@ -96,8 +101,8 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
             <button
               onClick={() => setSortBy('popular')}
               className={`px-4 py-2 rounded-lg transition-all ${sortBy === 'popular'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-900/50 text-gray-400 hover:text-white border border-gray-800'
+                ? 'bg-red-500 text-white'
+                : 'bg-gray-900/50 text-gray-400 hover:text-white border border-gray-800'
                 }`}
             >
               Phổ biến
