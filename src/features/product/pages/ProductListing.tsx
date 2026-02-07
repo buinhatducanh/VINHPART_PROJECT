@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Filter, X, ChevronRight } from 'lucide-react';
 import { ProductCard } from '@/features/product/components/ProductCard';
 import { PriceRangeSlider } from '@/features/product/components/PriceRangeSlider';
-import { mockProducts, hierarchicalCategories } from '@/shared/data/mockProducts';
+import { hierarchicalCategories } from '@/shared/data/mockProducts';
 import { Product } from '@/shared/types';
 
 interface ProductListingProps {
@@ -76,29 +76,6 @@ export function ProductListing({
     setSelectedBrand(brand);
     setCurrentPage(1);
   };
-
-  const handlePriceRangeChange = (range: [number, number]) => {
-    setPriceRange(range);
-    // Don't verify/fetch immediately on slide? Maybe need debounce/Apply button
-    // The Slider component has onApply, we use that for triggering fetch actually?
-    // Current code: onChange calls handlePriceRangeChange -> calls setPriceRange -> Effect triggers
-    // Wait, original code: onChange set state, onApply setPage(1). 
-    // Effect dependency includes priceRange.
-    // If slider updates state continuously, we spam API. 
-    // Let's check PriceRangeSlider usage or implementation.
-    // Assuming onChange is continuous, we might want to ONLY trigger fetch on "Apply" or debounce.
-    // But original code: onChange={handlePriceRangeChange}, onApply={() => setCurrentPage(1)}
-    // And filteredProducts used priceRange immediately for client side filter.
-    // For Server side, we should only update 'filter' state when user commits.
-    // Let's modify handlePriceRangeChange to NOT trigger effect?
-    // Actually, let's keep it simple: Use a separate state for 'appliedPriceRange' for the effect?
-    // Or relying on onApply.
-  };
-
-  // Optimization: Only update the query params when "Apply" is clicked or debounced.
-  // But to minimize changes, let's assume PriceRangeSlider calls verify occasionally or we leave it.
-  // Original: onChange updates state instantly.
-
 
   const handlePriceRangeCommit = () => {
     setAppliedPriceRange(priceRange);

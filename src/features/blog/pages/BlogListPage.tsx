@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Calendar, Eye, Search } from 'lucide-react';
-import { SEOPost } from '@/shared/types';
 import { mockSEOPosts } from '@/shared/data/mockSEOPosts';
 import { Input } from '@/shared/components/ui/input';
 import { SEO } from '@/shared/components/SEO';

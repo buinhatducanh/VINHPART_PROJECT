@@ -3,7 +3,7 @@ import { pool } from '../db';
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
     try {
         const query = `
             SELECT o.id, o."orderNumber", o."customerName", o."createdAt", o."totalAmount", o.status,

@@ -3,7 +3,7 @@ import { pool } from '../db';
 
 const router = express.Router();
 
-router.get('/stats', async (req, res) => {
+router.get('/stats', async (_req, res) => {
     try {
         const productCountResult = await pool.query('SELECT COUNT(*) FROM products');
         const categoryCountResult = await pool.query('SELECT COUNT(*) FROM categories');

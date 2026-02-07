@@ -36,9 +36,7 @@
     "include": [
         "src",
         "backend",
-        "scripts",
-        "prisma.config.ts",
-        "vite.config.ts"
+        "scripts"
     ],
     "references": [
         {

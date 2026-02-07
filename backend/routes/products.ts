@@ -14,7 +14,6 @@ router.get('/', async (req, res) => {
             minPrice,
             maxPrice,
             search,
-            vehicle_type,
             stock_status // Expect 'in_stock', 'low_stock', 'out_of_stock'
         } = req.query;
 

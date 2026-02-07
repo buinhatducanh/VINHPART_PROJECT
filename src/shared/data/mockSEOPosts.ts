@@ -1,4 +1,4 @@
-import { SEOPost } from '@/types';
+import { SEOPost } from '@/shared/types';
 
 export const mockSEOPosts: SEOPost[] = [
   {

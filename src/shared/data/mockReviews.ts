@@ -1,4 +1,4 @@
-import { Review } from '@/types';
+import { Review } from '@/shared/types';
 
 export const mockReviews: Review[] = [
   {

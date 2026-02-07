@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle2, CreditCard, Truck, Shield, MapPin, Wallet, ChevronRight } from 'lucide-react';
+import { motion } from 'motion/react';
+import { ArrowLeft, CheckCircle2, CreditCard, Truck, Shield } from 'lucide-react';
 import { CartItem } from '@/shared/types';
 import { productImages } from '@/shared/data/productImages';
 

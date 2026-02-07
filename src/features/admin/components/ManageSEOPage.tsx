@@ -65,8 +65,8 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
   const [posts, setPosts] = useState<SEOPost[]>(mockSEOPosts);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
-  const [editingPost, setEditingPost] = useState<SEOPost | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [_editingPost, setEditingPost] = useState<SEOPost | null>(null);
+  const [_showAddModal, setShowAddModal] = useState(false);
 
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

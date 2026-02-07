@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+
+import { motion } from 'motion/react';
 import { CartItem } from '@/shared/types';
 import { productImages } from '@/shared/data/productImages';
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
 
 interface CartPageProps {
   cartItems: CartItem[];

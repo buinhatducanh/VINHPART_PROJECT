@@ -494,7 +494,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                         // It calculates status from stock but DOES NOT return stock count in the mapped object.
                         // THIS IS A BUG/LIMITATION. I cannot edit stock count if I don't have it.
                         // usage: stock_status
-                        onChange={(e) => {
+                        onChange={(_e) => {
                           // This will fail if I can't store it.
                           // I need to add stock to Product type and Server response.
                           // For now, let's just allow editing stock_status?

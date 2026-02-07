@@ -110,9 +110,9 @@ export function ManageCategoriesPage({ onBack }: ManageCategoriesPageProps) {
   const [categories, setCategories] = useState<Category[]>(mockCategories);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['cat-1', 'cat-2']));
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedParent, setSelectedParent] = useState<string | null>(null);
+  const [_editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [_showAddModal, setShowAddModal] = useState(false);
+  const [_selectedParent, setSelectedParent] = useState<string | null>(null);
 
   // Lấy danh mục con
   const getChildren = (parentId: string | null): Category[] => {

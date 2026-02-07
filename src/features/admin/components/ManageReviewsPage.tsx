@@ -99,7 +99,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
   const [filterRating, setFilterRating] = useState<number | 'all'>('all');
   const [reviews, setReviews] = useState<Review[]>(mockReviews);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
-  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [_editingReview, setEditingReview] = useState<Review | null>(null);
 
   const filteredReviews = reviews
     .filter(review => {

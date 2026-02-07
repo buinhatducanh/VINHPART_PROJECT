@@ -1,4 +1,4 @@
-import { Product, Category } from '@/types';
+import { Product, Category } from '@/shared/types';
 
 // Cấu trúc danh mục phân cấp (chỉ xe máy)
 export const hierarchicalCategories = [

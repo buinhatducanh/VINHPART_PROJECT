@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, ShoppingCart, Sparkles, X } from 'lucide-react';
+import { Check, ShoppingCart, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface AddToCartToastProps {
