@@ -56,6 +56,9 @@ model Product {
 
   @@index([categoryId])
   @@index([slug])
+  @@index([brand])
+  @@index([price])
+  @@index([name])
   @@map("products")
 }
 

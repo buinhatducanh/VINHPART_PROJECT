@@ -558,8 +558,8 @@ async function main() {
         data: {
             email: 'admin@vinhpart.vn',
             name: 'Admin VinhPart',
-            // password: admin123 (PBKDF2 format: salt:hash)
-            password: '9c0d507f230a41ca8643c1d544533a73:f3bc5d45889ec4165d066edfc530344803fc895e156c6a05a6ad1fd4e37ad26bd0b170c44b33728056e20641c51c69a792b0b11cf4b8a16f8e2dea012d32',
+            // password: admin123 (Generated 2026-02-08)
+            password: 'eac12dbbc58891c557034414c59cf6b7:a2b04ca31a760d827315ac80a37fad48e23b2f43a477a493e19ebcd1c6856267dc057f1ca43324b65677147b2ef7e6630290be65dc9761d0ada8493f1531d00d',
             role: 'ADMIN',
         },
     });
