@@ -20,6 +20,7 @@ export function ProductListing({
   onBuyNow
 }: ProductListingProps) {
   const [showMobileFilter, setShowMobileFilter] = useState(false);
+  const [maxPrice, setMaxPrice] = useState(5000000); // Dynamic max price
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000]);
   const [selectedBrand, setSelectedBrand] = useState<string>('all');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -70,6 +71,24 @@ export function ProductListing({
         setLoading(false);
       });
   }, [selectedCategory, selectedBrand, appliedPriceRange, currentPage]);
+
+  // Fetch max price on mount
+  useEffect(() => {
+    fetch('http://localhost:3001/api/products/max-price')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.maxPrice) {
+          const max = Math.ceil(data.maxPrice / 100000) * 100000; // Round up to nearest 100k
+          setMaxPrice(max);
+          setPriceRange([0, max]);
+          setAppliedPriceRange([0, max]);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to fetch max price:', error);
+        // Keep default 5M if API fails
+      });
+  }, []);
 
   // Reset page when filters change
   const handleBrandChange = (brand: string) => {
@@ -230,7 +249,7 @@ export function ProductListing({
         </h3>
         <PriceRangeSlider
           min={0}
-          max={5000000}
+          max={maxPrice}
           value={priceRange}
           onChange={setPriceRange} // Just update local state
           onApply={handlePriceRangeCommit} // Commit triggers effect via appliedPriceRange
@@ -334,8 +353,8 @@ export function ProductListing({
                   onClick={() => {
                     onCategoryChange('all');
                     setSelectedBrand('all');
-                    setPriceRange([0, 5000000]);
-                    setAppliedPriceRange([0, 5000000]); // Reset applied too
+                    setPriceRange([0, maxPrice]);
+                    setAppliedPriceRange([0, maxPrice]); // Reset applied too
                   }}
                   className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-all"
                 >

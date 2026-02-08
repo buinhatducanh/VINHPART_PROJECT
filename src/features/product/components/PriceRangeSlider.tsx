@@ -12,10 +12,16 @@ interface PriceRangeSliderProps {
   onApply?: () => void;
 }
 
-export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSliderProps) {
+export function PriceRangeSlider({ min, max, value, onChange, onApply }: PriceRangeSliderProps) {
   const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef<'min' | 'max' | null>(null);
+  const valueRef = useRef(value);
+
+  // Keep valueRef in sync with value
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price);
@@ -53,14 +59,16 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
     const newValue = calculateValue(e.clientX);
     if (newValue === null) return;
 
+    const currentValue = valueRef.current;
+
     if (isDraggingRef.current === 'min') {
-      const newMin = Math.min(newValue, value[1] - 100000);
-      onChange([Math.max(min, newMin), value[1]]);
+      const newMin = Math.min(newValue, currentValue[1] - 100000);
+      onChange([Math.max(min, newMin), currentValue[1]]);
     } else {
-      const newMax = Math.max(newValue, value[0] + 100000);
-      onChange([value[0], Math.min(max, newMax)]);
+      const newMax = Math.max(newValue, currentValue[0] + 100000);
+      onChange([currentValue[0], Math.min(max, newMax)]);
     }
-  }, [calculateValue, value, onChange, min, max]);
+  }, [calculateValue, onChange, min, max]);
 
   const handlePointerUp = useCallback((e: PointerEvent) => {
     if (isDraggingRef.current) {
@@ -84,6 +92,10 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
 
   const handleReset = () => {
     onChange([min, max]);
+    if (onApply) {
+      // Use setTimeout to ensure the onChange state update happens first
+      setTimeout(() => onApply(), 0);
+    }
   };
 
   const minPercent = ((value[0] - min) / (max - min)) * 100;
@@ -99,15 +111,15 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
 
       {/* Current Price Range Display */}
       <div className="mb-6 text-center">
-        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-red-600/10 to-red-500/10 border border-red-600/30 rounded-xl px-6 py-3">
-          <div className="flex flex-col items-end">
+        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600/10 to-red-500/10 border border-red-600/30 rounded-xl px-4 py-3 max-w-full">
+          <div className="flex flex-col items-end min-w-0 flex-1">
             <span className="text-xs text-gray-400 font-medium mb-0.5">TỪ</span>
-            <span className="text-lg font-black text-red-500">{formatPrice(value[0])}đ</span>
+            <span className="text-base font-black text-red-500 break-all">{formatPrice(value[0])}đ</span>
           </div>
-          <div className="w-px h-10 bg-gradient-to-b from-transparent via-red-600/50 to-transparent"></div>
-          <div className="flex flex-col items-start">
+          <div className="w-px h-10 bg-gradient-to-b from-transparent via-red-600/50 to-transparent flex-shrink-0"></div>
+          <div className="flex flex-col items-start min-w-0 flex-1">
             <span className="text-xs text-gray-400 font-medium mb-0.5">ĐẾN</span>
-            <span className="text-lg font-black text-red-500">{formatPrice(value[1])}đ</span>
+            <span className="text-base font-black text-red-500 break-all">{formatPrice(value[1])}đ</span>
           </div>
         </div>
       </div>
@@ -120,7 +132,29 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
 
       {/* Slider */}
       <div className="mb-8">
-        <div className="relative pb-2" ref={sliderRef}>
+        {/* Click on track to jump */}
+        <div
+          className="relative pb-2 cursor-pointer"
+          ref={sliderRef}
+          onClick={(e) => {
+            if (isDragging) return; // Don't handle clicks while dragging
+            const newValue = calculateValue(e.clientX);
+            if (newValue === null) return;
+
+            // Determine which thumb is closer and move it
+            const distToMin = Math.abs(newValue - value[0]);
+            const distToMax = Math.abs(newValue - value[1]);
+
+            if (distToMin < distToMax) {
+              const newMin = Math.min(newValue, value[1] - 100000);
+              onChange([Math.max(min, newMin), value[1]]);
+            } else {
+              const newMax = Math.max(newValue, value[0] + 100000);
+              onChange([value[0], Math.min(max, newMax)]);
+            }
+          }}
+        >
+
           {/* Track Background */}
           <div className="h-2.5 bg-gradient-to-r from-gray-800 via-gray-750 to-gray-800 rounded-full relative shadow-inner border border-gray-700/50">
             {/* Active Range with glow */}
@@ -146,13 +180,13 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
               scale: isDragging === 'min' ? 1.3 : 1,
             }}
           >
-            <div className="relative pointer-events-none">
+            <div className="relative">
               {/* Outer glow ring */}
-              <div className="absolute inset-0 bg-red-600 rounded-full blur-xl opacity-60 scale-150"></div>
+              <div className="absolute inset-0 bg-red-600 rounded-full blur-xl opacity-60 scale-150 pointer-events-none"></div>
               {/* Middle glow */}
-              <div className="absolute inset-0 bg-red-500 rounded-full blur-md opacity-80 scale-125"></div>
+              <div className="absolute inset-0 bg-red-500 rounded-full blur-md opacity-80 scale-125 pointer-events-none"></div>
               {/* Thumb */}
-              <div className="relative w-7 h-7 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-full shadow-2xl shadow-red-600/80 border-[3px] border-white/20 pointer-events-auto" >
+              <div className="relative w-7 h-7 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-full shadow-2xl shadow-red-600/80 border-[3px] border-white/20" >
                 <div className="absolute inset-[3px] bg-gradient-to-br from-red-400/50 to-transparent rounded-full"></div>
               </div>
             </div>
@@ -168,13 +202,13 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
               scale: isDragging === 'max' ? 1.3 : 1,
             }}
           >
-            <div className="relative pointer-events-none">
+            <div className="relative">
               {/* Outer glow ring */}
-              <div className="absolute inset-0 bg-red-600 rounded-full blur-xl opacity-60 scale-150"></div>
+              <div className="absolute inset-0 bg-red-600 rounded-full blur-xl opacity-60 scale-150 pointer-events-none"></div>
               {/* Middle glow */}
-              <div className="absolute inset-0 bg-red-500 rounded-full blur-md opacity-80 scale-125"></div>
+              <div className="absolute inset-0 bg-red-500 rounded-full blur-md opacity-80 scale-125 pointer-events-none"></div>
               {/* Thumb */}
-              <div className="relative w-7 h-7 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-full shadow-2xl shadow-red-600/80 border-[3px] border-white/20 pointer-events-auto" >
+              <div className="relative w-7 h-7 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-full shadow-2xl shadow-red-600/80 border-[3px] border-white/20" >
                 <div className="absolute inset-[3px] bg-gradient-to-br from-red-400/50 to-transparent rounded-full"></div>
               </div>
             </div>
@@ -182,16 +216,28 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
         </div>
       </div>
 
-      {/* Reset Button */}
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={handleReset}
-        className="w-full py-3.5 bg-gradient-to-r from-gray-800 via-gray-750 to-gray-800 border-2 border-gray-700 text-gray-300 font-bold rounded-lg hover:bg-gradient-to-r hover:from-gray-700 hover:via-gray-650 hover:to-gray-700 hover:border-gray-600 transition-all flex items-center justify-center gap-2 group"
-      >
-        <RotateCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-        <span>Xoá lọc</span>
-      </motion.button>
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleReset}
+          className="flex-1 py-3.5 bg-gradient-to-r from-gray-800 via-gray-750 to-gray-800 border-2 border-gray-700 text-gray-300 font-bold rounded-lg hover:bg-gradient-to-r hover:from-gray-700 hover:via-gray-650 hover:to-gray-700 hover:border-gray-600 transition-all flex items-center justify-center gap-2 group"
+        >
+          <RotateCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+          <span>Xoá lọc</span>
+        </motion.button>
+        {onApply && (
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onApply}
+            className="flex-1 py-3.5 bg-gradient-to-r from-red-600 via-red-500 to-red-600 border-2 border-red-500 text-white font-bold rounded-lg hover:from-red-700 hover:via-red-600 hover:to-red-700 hover:border-red-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/50"
+          >
+            <span>Áp dụng</span>
+          </motion.button>
+        )}
+      </div>
     </div>
   );
 }
