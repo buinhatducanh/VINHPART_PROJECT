@@ -342,6 +342,7 @@ export function ProductListing({
                 <button
                   onClick={() => {
                     onCategoryChange('all');
+                    if (onSearchQueryChange) onSearchQueryChange('');
                     setSelectedBrand('all');
                     setPriceRange([0, maxPrice]);
                     setAppliedPriceRange([0, maxPrice]); // Reset applied too
