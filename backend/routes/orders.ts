@@ -1,27 +1,28 @@
 import express from 'express';
-import { pool } from '../db';
+import prisma from '../prisma';
 
 const router = express.Router();
 
 router.get('/', async (_req, res) => {
     try {
-        const query = `
-            SELECT o.id, o."orderNumber", o."customerName", o."createdAt", o."totalAmount", o.status,
-                   (SELECT COUNT(*) FROM order_items oi WHERE oi."orderId" = o.id) as items_count
-            FROM orders o
-            ORDER BY o."createdAt" DESC
-        `;
-        const { rows } = await pool.query(query);
+        const orders = await prisma.order.findMany({
+            include: {
+                items: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
 
         // Map to match frontend interface
-        const mappedOrders = rows.map(order => ({
+        const mappedOrders = orders.map(order => ({
             id: order.id,
             orderNumber: order.orderNumber,
             customerName: order.customerName,
             date: order.createdAt,
             total: Number(order.totalAmount),
             status: order.status.toLowerCase(), // Frontend expects lowercase
-            items: parseInt(order.items_count)
+            items: order.items.length
         }));
 
         res.json(mappedOrders);
