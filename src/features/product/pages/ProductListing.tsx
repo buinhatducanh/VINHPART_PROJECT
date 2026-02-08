@@ -12,13 +12,17 @@ interface ProductListingProps {
   onCategoryChange: (category: string) => void;
   onAddToCart: (product: Product) => void;
   onBuyNow: (product: Product) => void;
+  searchQuery?: string;
+  onSearchQueryChange?: (query: string) => void;
 }
 
 export function ProductListing({
   selectedCategory,
   onCategoryChange,
   onAddToCart,
-  onBuyNow
+  onBuyNow,
+  searchQuery = '',
+  onSearchQueryChange
 }: ProductListingProps) {
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000]);
@@ -58,6 +62,7 @@ export function ProductListing({
     maxPrice: appliedPriceRange[1],
     sortBy: sortBy !== 'default' ? sortBy : undefined,
     vehicle_type: 'Motorbike',
+    search: searchQuery || undefined,
   });
 
   const products = productsData?.data || [];
@@ -337,6 +342,7 @@ export function ProductListing({
                 <button
                   onClick={() => {
                     onCategoryChange('all');
+                    if (onSearchQueryChange) onSearchQueryChange('');
                     setSelectedBrand('all');
                     setPriceRange([0, maxPrice]);
                     setAppliedPriceRange([0, maxPrice]); // Reset applied too
