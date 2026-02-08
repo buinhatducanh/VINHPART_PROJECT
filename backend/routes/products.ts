@@ -1,5 +1,6 @@
 import express from 'express';
 import prisma from '../prisma';
+import { deleteImage } from '../lib/cloudinary';
 
 const router = express.Router();
 
@@ -237,7 +238,28 @@ router.put('/:id', async (req, res) => {
         if (price) data.price = parseFloat(price);
         if (stock !== undefined) data.stock = parseInt(stock);
         if (description) data.description = description;
-        if (image_url) data.images = [image_url];
+
+        if (image_url) {
+            // Fetch existing to delete old image
+            const existingProduct = await prisma.product.findUnique({
+                where: { id },
+                select: { images: true }
+            });
+
+            if (existingProduct && existingProduct.images && existingProduct.images.length > 0) {
+                const oldUrl = existingProduct.images[0];
+                if (oldUrl && oldUrl !== image_url && oldUrl.includes('cloudinary')) {
+                    const parts = oldUrl.split('/');
+                    const filename = parts.pop();
+                    const folder = parts.pop();
+                    if (filename && folder) {
+                        const publicId = `${folder}/${filename.split('.')[0]}`;
+                        await deleteImage(publicId);
+                    }
+                }
+            }
+            data.images = [image_url];
+        }
 
         if (discount_percentage !== undefined) {
             const basePrice = price ? parseFloat(price) : 0; // Ideally should fetch existing if not provided
@@ -273,9 +295,28 @@ router.put('/:id', async (req, res) => {
 });
 
 
+
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
+        const product = await prisma.product.findUnique({
+            where: { id },
+            select: { images: true }
+        });
+
+        if (product && product.images && product.images.length > 0) {
+            for (const imageUrl of product.images) {
+                // Extract public_id: folder/filename (no extension)
+                const parts = imageUrl.split('/');
+                const filename = parts.pop();
+                const folder = parts.pop();
+                if (filename && folder) {
+                    const publicId = `${folder}/${filename.split('.')[0]}`;
+                    await deleteImage(publicId);
+                }
+            }
+        }
+
         await prisma.product.delete({
             where: { id }
         });
