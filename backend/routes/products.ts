@@ -26,7 +26,8 @@ router.get('/', async (req, res) => {
             minPrice,
             maxPrice,
             search,
-            stock_status // Expect 'in_stock', 'low_stock', 'out_of_stock'
+            stock_status,
+            sortBy
         } = req.query;
 
         const offset = (Number(page) - 1) * Number(limit);
@@ -84,12 +85,20 @@ router.get('/', async (req, res) => {
         const countResult = await pool.query(`SELECT COUNT(*) ${baseQuery}`, params);
         const total = parseInt(countResult.rows[0].count);
 
+        // Determine ORDER BY
+        let orderBy = 'p."createdAt" DESC';
+        if (sortBy === 'price_asc') {
+            orderBy = 'p.price ASC';
+        } else if (sortBy === 'price_desc') {
+            orderBy = 'p.price DESC';
+        }
+
         // Fetch Data
         const dataQuery = `
             SELECT p.id, p.name, p."categoryId", p.brand, p.price, p."salePrice", p.stock, p.images, p.description,
                    c.name as category_name, c.slug as category_slug
             ${baseQuery}
-            ORDER BY p."createdAt" DESC
+            ORDER BY ${orderBy}
             LIMIT $${paramIndex++} OFFSET $${paramIndex++}
         `;
 

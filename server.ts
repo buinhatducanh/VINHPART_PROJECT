@@ -226,8 +226,13 @@ app.get('/api/products', async (req, res) => {
 
         // Filter: Category (Slug or ID)
         // Check if category is 'all' - frontend might send 'all'
+        // Also include products from subcategories when parent category is selected
         if (category && category !== 'all') {
-            baseQuery += ` AND (c.slug = $${paramIndex} OR c.id = $${paramIndex})`;
+            baseQuery += ` AND (
+                c.slug = $${paramIndex} OR c.id = $${paramIndex} 
+                OR c."parentId" = $${paramIndex}
+                OR c."parentId" IN (SELECT id FROM categories WHERE slug = $${paramIndex})
+            )`;
             params.push(category);
             paramIndex++;
         }

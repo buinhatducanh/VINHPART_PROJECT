@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Filter, X, ChevronRight } from 'lucide-react';
+import { Filter, X, ChevronRight, ArrowUpDown, TrendingUp, TrendingDown } from 'lucide-react';
 import { ProductCard } from '@/features/product/components/ProductCard';
 import { PriceRangeSlider } from '@/features/product/components/PriceRangeSlider';
 import { hierarchicalCategories } from '@/shared/data/mockProducts';
 import { Product } from '@/shared/types';
+import { useProducts, useMaxPrice } from '@/hooks/useQueries';
 
 interface ProductListingProps {
   selectedCategory: string;
@@ -20,75 +21,47 @@ export function ProductListing({
   onBuyNow
 }: ProductListingProps) {
   const [showMobileFilter, setShowMobileFilter] = useState(false);
-  const [maxPrice, setMaxPrice] = useState(5000000); // Dynamic max price
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000]);
   const [selectedBrand, setSelectedBrand] = useState<string>('all');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc'>('default');
   const [currentPage, setCurrentPage] = useState(1);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalProducts, setTotalProducts] = useState(0);
   const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([0, 5000000]);
 
   const itemsPerPage = 12;
 
-  useEffect(() => {
-    setLoading(true);
-
-    const params = new URLSearchParams();
-    params.append('page', currentPage.toString());
-    params.append('limit', itemsPerPage.toString());
-    params.append('vehicle_type', 'Motorbike'); // Only motorbikes per original logic
-
-    if (selectedCategory !== 'all') {
-      params.append('category', selectedCategory);
+  // Use React Query for max price - cached for 30 minutes
+  const { data: maxPriceData } = useMaxPrice();
+  const maxPrice = useMemo(() => {
+    if (maxPriceData) {
+      return Math.ceil(maxPriceData / 100000) * 100000;
     }
-    if (selectedBrand !== 'all') {
-      params.append('brand', selectedBrand);
-    }
-    params.append('minPrice', appliedPriceRange[0].toString());
-    params.append('maxPrice', appliedPriceRange[1].toString());
+    return 5000000;
+  }, [maxPriceData]);
 
-    fetch(`http://localhost:3001/api/products?${params.toString()}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.data) {
-          setProducts(data.data);
-          setTotalProducts(data.metadata.total);
-        } else if (Array.isArray(data)) {
-          // Fallback for old API if needed, though we updated it
-          setProducts(data);
-          setTotalProducts(data.length);
-        } else {
-          console.error("API returned unexpected format:", data);
-          setProducts([]);
-        }
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error("Failed to fetch products:", error);
-        setProducts([]); // Fallback
-        setLoading(false);
-      });
-  }, [selectedCategory, selectedBrand, appliedPriceRange, currentPage]);
-
-  // Fetch max price on mount
+  // Initialize price range when max price is loaded
   useEffect(() => {
-    fetch('http://localhost:3001/api/products/max-price')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.maxPrice) {
-          const max = Math.ceil(data.maxPrice / 100000) * 100000; // Round up to nearest 100k
-          setMaxPrice(max);
-          setPriceRange([0, max]);
-          setAppliedPriceRange([0, max]);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to fetch max price:', error);
-        // Keep default 5M if API fails
-      });
-  }, []);
+    if (maxPriceData) {
+      const max = Math.ceil(maxPriceData / 100000) * 100000;
+      setPriceRange([0, max]);
+      setAppliedPriceRange([0, max]);
+    }
+  }, [maxPriceData]);
+
+  // Use React Query for products - auto cached and deduped
+  const { data: productsData, isLoading: loading } = useProducts({
+    page: currentPage,
+    limit: itemsPerPage,
+    category: selectedCategory !== 'all' ? selectedCategory : undefined,
+    brand: selectedBrand !== 'all' ? selectedBrand : undefined,
+    minPrice: appliedPriceRange[0],
+    maxPrice: appliedPriceRange[1],
+    sortBy: sortBy !== 'default' ? sortBy : undefined,
+    vehicle_type: 'Motorbike',
+  });
+
+  const products = productsData?.data || [];
+  const totalProducts = productsData?.metadata?.total || 0;
 
   // Reset page when filters change
   const handleBrandChange = (brand: string) => {
@@ -258,20 +231,6 @@ export function ProductListing({
     </div>
   );
 
-  // NOTE: We replaced `effect` dependencies to use `appliedPriceRange`
-  useEffect(() => {
-    // Duplicate effect logic here or move to a function?
-    // Let's just fix the usage in the main effect above to depend on appliedPriceRange.
-    // I can't easily edit the top effect without replacing the whole file content block which I am doing.
-    // So I will fix the dependency in the TOP effect.
-  }, []);
-
-  // Use appliedPriceRange in the fetch query
-  /* 
-     params.append('minPrice', appliedPriceRange[0].toString());
-     params.append('maxPrice', appliedPriceRange[1].toString());
-  */
-
   if (loading) {
     // Keep loading UI
     return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading products...</div>;
@@ -284,7 +243,7 @@ export function ProductListing({
     <div className="pt-20 min-h-screen bg-black">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Sản phẩm</h1>
             <p className="text-gray-400">
@@ -292,14 +251,40 @@ export function ProductListing({
             </p>
           </div>
 
-          {/* Mobile Filter Toggle */}
-          <button
-            onClick={() => setShowMobileFilter(true)}
-            className="lg:hidden flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg"
-          >
-            <Filter className="w-4 h-4" />
-            Lọc
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Sort by Price */}
+            <div className="flex items-center bg-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setSortBy('default')}
+                className={`p-2 rounded-md transition-all ${sortBy === 'default' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                title="Mặc định"
+              >
+                <ArrowUpDown className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setSortBy('price_asc')}
+                className={`p-2 rounded-md transition-all ${sortBy === 'price_asc' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                title="Giá tăng dần"
+              >
+                <TrendingUp className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setSortBy('price_desc')}
+                className={`p-2 rounded-md transition-all ${sortBy === 'price_desc' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                title="Giá giảm dần"
+              >
+                <TrendingDown className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Mobile Filter Toggle */}
+            <button
+              onClick={() => setShowMobileFilter(true)}
+              className="lg:hidden flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg"
+            >
+              <Filter className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-8">
