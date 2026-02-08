@@ -3,7 +3,9 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthModal } from '@/features/auth/components/AuthModal';
 
-import { User as UserType } from '@/shared/types';
+import { User as UserType, Product } from '@/shared/types';
+import { productApi } from '@/lib/api';
+import { productImages } from '@/shared/data/productImages';
 
 interface HeaderProps {
   cartCount: number;
@@ -12,9 +14,11 @@ interface HeaderProps {
   user: UserType | null;
   onLogin: (user: UserType) => void;
   onLogout: () => void;
+  onSearch?: (query: string) => void;
 }
 
-export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onLogout }: HeaderProps) {
+export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onLogout, onSearch }: HeaderProps) {
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showFeatureToast, setShowFeatureToast] = useState(false);
@@ -23,7 +27,14 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
   const [isAtTop, setIsAtTop] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+
+  // Search suggestions state
+  const [suggestions, setSuggestions] = useState<Product[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,16 +64,52 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
       if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
         setShowAccountMenu(false);
       }
+
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
     };
 
-    if (showAccountMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showAccountMenu]);
+  }, [showAccountMenu, showSuggestions]);
+
+  // Debounced search for suggestions
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          const response = await productApi.getProducts({
+            search: searchQuery,
+            limit: 5
+          });
+          setSuggestions(response.data);
+          setShowSuggestions(true);
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
+          setSuggestions([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSuggestionClick = (product: Product) => {
+    setSearchQuery(product.product_name);
+    setShowSuggestions(false);
+    if (onSearch) {
+      onSearch(product.product_name);
+    }
+  };
 
   const handleFeatureClick = () => {
     setShowAccountMenu(false);
@@ -165,15 +212,83 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
 
           {/* Search Bar - Desktop */}
           <div className="hidden md:flex flex-1 max-w-xl mx-8">
-            <div className={`relative w-full transition-all ${searchFocused ? 'scale-105' : ''}`}>
+            <div className={`relative w-full transition-all ${searchFocused ? 'scale-105' : ''}`} ref={searchContainerRef}>
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Tìm kiếm phụ tùng, tên xe..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim() && onSearch) {
+                    onSearch(searchQuery.trim());
+                    setShowSuggestions(false);
+                  }
+                }}
                 className="w-full bg-gray-900 border border-gray-800 rounded-lg pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
+                onFocus={() => {
+                  setSearchFocused(true);
+                  if (searchQuery.trim().length >= 2) {
+                    setShowSuggestions(true);
+                  }
+                }}
+                onBlur={() => {
+                  setSearchFocused(false);
+                  // Don't hide immediately to allow clicking on suggestions
+                }}
               />
+
+              {/* Search Suggestions Dropdown */}
+              <AnimatePresence>
+                {showSuggestions && (searchQuery.trim().length >= 2) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-800 rounded-lg shadow-xl overflow-hidden z-50"
+                  >
+                    {isSearching ? (
+                      <div className="p-4 text-center text-gray-400">
+                        <div className="animate-spin w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+                        Đang tìm kiếm...
+                      </div>
+                    ) : suggestions.length > 0 ? (
+                      <div className="py-2">
+                        {suggestions.map((product) => (
+                          <button
+                            key={product.product_id}
+                            onClick={() => handleSuggestionClick(product)}
+                            className="w-full text-left px-4 py-3 hover:bg-gray-800 transition-colors flex items-center gap-3 group"
+                          >
+                            <div className="w-10 h-10 rounded-md bg-gray-800 overflow-hidden flex-shrink-0">
+                              <img
+                                src={productImages[product.product_id] || product.product_image}
+                                alt={product.product_name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/40';
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <p className="text-white font-medium text-sm group-hover:text-red-500 transition-colors line-clamp-1">
+                                {product.product_name}
+                              </p>
+                              <p className="text-gray-500 text-xs">
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-gray-500 text-sm">
+                        Không tìm thấy sản phẩm nào
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 

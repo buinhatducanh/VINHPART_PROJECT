@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Mail, Lock, User as UserIcon, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { User } from '@/shared/types';
 
@@ -63,7 +64,9 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
     }
   };
 
-  return (
+
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -316,6 +319,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
           </div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

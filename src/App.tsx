@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { productApi } from '@/lib/api';
 import { Header } from '@/shared/components/layout/Header';
 import { LandingPage } from '@/features/home/pages/LandingPage';
 import { ProductListing } from '@/features/product/pages/ProductListing';
@@ -34,6 +35,7 @@ export default function App() {
   const [showToast, setShowToast] = useState(false);
   const [toastProductName, setToastProductName] = useState('');
   const [user, setUser] = useState<User | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser);
@@ -58,6 +60,26 @@ export default function App() {
     }
 
     setCurrentPage('admin');
+  };
+
+  const handleSearch = async (query: string) => {
+    try {
+      // Check if products exist for this query
+      const response = await productApi.getProducts({
+        search: query,
+        limit: 1 // We only need to know if ANY exist
+      });
+
+      if (response.metadata.total > 0) {
+        setSearchQuery(query);
+        setCurrentPage('products');
+      } else {
+        toast.info(`Không tìm thấy sản phẩm nào phù hợp với từ khóa "${query}"`);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      toast.error('Đã có lỗi xảy ra khi tìm kiếm');
+    }
   };
 
   const handleAddToCart = (product: Product) => {
@@ -121,10 +143,14 @@ export default function App() {
           <Header
             cartCount={totalCartItems}
             onCartClick={() => setCurrentPage('cart')}
-            onLogoClick={() => setCurrentPage('landing')}
+            onLogoClick={() => {
+              setSearchQuery('');
+              setCurrentPage('landing');
+            }}
             user={user}
             onLogin={handleLogin}
             onLogout={handleLogout}
+            onSearch={handleSearch}
           />
         )}
 
@@ -152,6 +178,8 @@ export default function App() {
             onCategoryChange={setSelectedCategory}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
           />
         )}
 
