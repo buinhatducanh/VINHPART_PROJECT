@@ -9,24 +9,41 @@ const pool = new pg.Pool({
 
 async function check() {
     try {
-        // Check columns in categories table
-        const cols = await pool.query(`
-      SELECT column_name, data_type 
-      FROM information_schema.columns 
-      WHERE table_name = 'categories'
+        console.log('=== HIERARCHY CHECK ===');
+
+        // Check Parent Categories
+        const parents = await pool.query(`
+        SELECT id, name, slug FROM categories WHERE "parentId" IS NULL ORDER BY name
     `);
-        console.log('=== COLUMNS IN categories TABLE ===');
-        console.table(cols.rows);
+        console.log(`\nFound ${parents.rows.length} Parent Categories:`);
+        console.table(parents.rows);
 
-        // Check categories data
-        const cats = await pool.query('SELECT * FROM categories LIMIT 10');
-        console.log('\n=== CATEGORIES DATA ===');
-        console.table(cats.rows);
+        // Check Child Categories with Parent Name
+        const children = await pool.query(`
+        SELECT c.id, c.name, c.slug, p.name as parent_name 
+        FROM categories c 
+        LEFT JOIN categories p ON c."parentId" = p.id 
+        WHERE c."parentId" IS NOT NULL 
+        ORDER BY p.name, c.name
+    `);
+        console.log(`\nFound ${children.rows.length} Child Categories:`);
+        console.table(children.rows);
 
-        // Check products categoryId
-        const prods = await pool.query('SELECT id, name, "categoryId" FROM products LIMIT 5');
-        console.log('\n=== PRODUCTS DATA ===');
-        console.table(prods.rows);
+        // Check Products with Full Category Path
+        const products = await pool.query(`
+        SELECT 
+            p.name as product_name, 
+            c.name as category, 
+            parent.name as parent_category
+        FROM products p
+        LEFT JOIN categories c ON p."categoryId" = c.id
+        LEFT JOIN categories parent ON c."parentId" = parent.id
+        ORDER BY parent.name, c.name, p.name
+        LIMIT 20
+    `);
+
+        console.log(`\nSample Products with Hierarchy (First 20):`);
+        console.table(products.rows);
 
     } catch (e: any) {
         console.error('Error:', e.message);

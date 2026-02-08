@@ -5,7 +5,7 @@ import { pool } from '../db';
 const router = express.Router();
 
 // Get max price - MUST BE BEFORE '/' route
-router.get('/max-price', async (req, res) => {
+router.get('/max-price', async (_req, res) => {
     try {
         const result = await pool.query('SELECT MAX(price) as max_price FROM products WHERE "isActive" = true');
         const maxPrice = result.rows[0]?.max_price || 5000000;
@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
     try {
         const {
             page = 1,
-            limit = 12,
+            limit = 20,
             category,
             brand,
             minPrice,
@@ -49,7 +49,11 @@ router.get('/', async (req, res) => {
 
         // Filter: Category (Slug or ID)
         if (category && category !== 'all') {
-            baseQuery += ` AND (c.slug = $${paramIndex} OR c.id = $${paramIndex})`;
+            baseQuery += ` AND (
+                c.slug = $${paramIndex} OR c.id = $${paramIndex} 
+                OR c."parentId" = $${paramIndex}
+                OR c."parentId" IN (SELECT id FROM categories WHERE slug = $${paramIndex})
+            )`;
             params.push(category);
             paramIndex++;
         }
