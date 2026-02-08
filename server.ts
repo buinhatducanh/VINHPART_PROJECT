@@ -181,6 +181,18 @@ app.get('/api/orders', async (req, res) => {
     }
 });
 
+// Get max price from all products - MUST BE BEFORE /api/products
+app.get('/api/products/max-price', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT MAX(price) as max_price FROM products WHERE "isActive" = true');
+        const maxPrice = result.rows[0]?.max_price || 5000000;
+        res.json({ maxPrice: Number(maxPrice) });
+    } catch (error) {
+        console.error('Error fetching max price:', error);
+        res.status(500).json({ error: 'Internal Server Error', maxPrice: 5000000 });
+    }
+});
+
 app.get('/api/products', async (req, res) => {
     try {
         const {
