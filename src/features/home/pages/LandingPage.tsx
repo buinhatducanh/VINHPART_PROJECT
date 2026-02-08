@@ -150,7 +150,7 @@ export function LandingPage({ onShopNow, onViewCatalog, onAddToCart, onBuyNow, o
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 1 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2"
+            className="absolute top-100 left-1/2 -translate-x-1/2"
           >
             <motion.div
               animate={{ y: [0, 10, 0] }}
@@ -167,52 +167,70 @@ export function LandingPage({ onShopNow, onViewCatalog, onAddToCart, onBuyNow, o
       <section className="py-20 bg-gradient-to-b from-black to-gray-900">
         <div className="container mx-auto px-4">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial="hidden"
+            whileInView="show"
             viewport={{ once: true }}
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.12,
+                },
+              },
+            }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
           >
             {[
               {
                 icon: Shield,
                 title: 'Chính hãng 100%',
-                description: 'Bảo hành đầy đủ, nguồn gốc rõ ràng'
+                description: 'Bảo hành đầy đủ, nguồn gốc rõ ràng',
               },
               {
                 icon: Zap,
                 title: 'Phù hợp từng loại xe',
-                description: 'Tư vấn chính xác theo hãng & model'
+                description: 'Tư vấn chính xác theo hãng & model',
               },
               {
                 icon: Truck,
                 title: 'Giao hàng nhanh',
-                description: 'Miễn phí vận chuyển đơn > 500k'
+                description: 'Miễn phí vận chuyển đơn > 500k',
               },
               {
                 icon: RefreshCw,
                 title: 'Đổi trả dễ dàng',
-                description: '30 ngày đổi trả không điều kiện'
-              }
+                description: '30 ngày đổi trả không điều kiện',
+              },
             ].map((benefit, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-                className="bg-gray-900 border border-gray-800 rounded-lg p-6 text-center hover:border-red-600/50 transition-all group"
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  show: {
+                    opacity: 1,
+                    y: 0,
+                    transition: { duration: 0.4, ease: 'easeOut' },
+                  },
+                }}
+                whileHover={{ scale: 1.03 }}
+                className="bg-gray-900 border border-gray-800 rounded-lg p-6 text-center hover:border-red-600/50 transition-colors group"
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg group-hover:shadow-red-600/50 transition-all">
+                <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg group-hover:shadow-red-600/40 transition-shadow">
                   <benefit.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">{benefit.title}</h3>
-                <p className="text-gray-400 text-sm">{benefit.description}</p>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {benefit.title}
+                </h3>
+                <p className="text-gray-400 text-sm">
+                  {benefit.description}
+                </p>
               </motion.div>
             ))}
           </motion.div>
         </div>
       </section>
+
 
       {/* Featured Products */}
       <section className="py-20 bg-gray-900">
@@ -231,15 +249,26 @@ export function LandingPage({ onShopNow, onViewCatalog, onAddToCart, onBuyNow, o
 
           <div className="mx-auto max-w-5xl px-4 lg:px-0">
             <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              className="w-full"
-            >
+                opts={{
+                  align: "start",
+                  loop: true,
+                  duration: 10,
+                  dragFree: true,
+                }}
+              >
               <CarouselContent className="-ml-2 md:-ml-4">
                 {featuredProducts.map((product) => (
-                  <CarouselItem key={product.product_id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
+                 <CarouselItem
+                    key={product.product_id}
+                    className="
+                      pl-2 md:pl-4 
+                      md:basis-1/2 lg:basis-1/4
+                      transition-transform
+                      duration-250
+                      ease-out
+                      hover:scale-[1.03]
+                    "
+                  >
                     <div className="h-full">
                       <ProductCard
                         product={product}
@@ -274,23 +303,43 @@ export function LandingPage({ onShopNow, onViewCatalog, onAddToCart, onBuyNow, o
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {latestPosts.map((post, index) => (
-              <motion.article
-                key={post.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="group bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-red-600/50 transition-all cursor-pointer"
-                onClick={() => onBlogPostClick && onBlogPostClick(post.id)}
-              >
+            <motion.article
+                  key={post.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="
+                    group
+                    bg-gray-900
+                    border border-gray-800
+                    rounded-xl
+                    overflow-hidden
+                    cursor-pointer
+                    transition-[transform,box-shadow,border-color]
+                    duration-200
+                    hover:scale-[1.02]
+                    hover:border-red-600/40
+                    hover:shadow-lg
+                    hover:shadow-red-600/20
+                  "
+                   >
+
+
                 {/* Featured Image */}
                 <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={post.featured_image}
-                    alt={post.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
+                <img
+                  src={post.featured_image}
+                  alt={post.title}
+                  className="
+                    w-full h-full object-cover
+                    group-hover:scale-105
+                    transition-transform
+                    duration-500
+                    ease-out
+                  "
+                />
+
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
                 </div>
 
