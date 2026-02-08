@@ -28,7 +28,7 @@ export function ProductListing({
   const [currentPage, setCurrentPage] = useState(1);
   const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([0, 5000000]);
 
-  const itemsPerPage = 12;
+  const itemsPerPage = 20;
 
   // Use React Query for max price - cached for 30 minutes
   const { data: maxPriceData } = useMaxPrice();
