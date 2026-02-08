@@ -13,6 +13,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/shared/components/ui/carousel";
+import { Modal } from '@/shared/components/ui/Modal';
+import { modalContents, ModalContentType } from '@/shared/data/modalContent';
 
 interface LandingPageProps {
   onShopNow: () => void;
@@ -32,12 +34,15 @@ export function LandingPage({ onShopNow, onViewCatalog, onAddToCart, onBuyNow, o
     .filter(r => r.status === 'approved' && r.is_verified_purchase)
     .sort((a, b) => b.priority - a.priority || b.helpful_count - a.helpful_count)
     .slice(0, 3);
-  const [showFeatureToast, setShowFeatureToast] = useState(false);
+  const [activeModal, setActiveModal] = useState<ModalContentType | null>(null);
 
-  const handleFeatureClick = (e: React.MouseEvent) => {
+  const handleModalOpen = (modalType: ModalContentType) => (e: React.MouseEvent) => {
     e.preventDefault();
-    setShowFeatureToast(true);
-    setTimeout(() => setShowFeatureToast(false), 3000);
+    setActiveModal(modalType);
+  };
+
+  const handleModalClose = () => {
+    setActiveModal(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -50,15 +55,15 @@ export function LandingPage({ onShopNow, onViewCatalog, onAddToCart, onBuyNow, o
 
   return (
     <div className="pt-16 lg:pt-20">
-      {showFeatureToast && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="fixed top-24 left-1/2 -translate-x-1/2 bg-gray-900 border border-gray-700 text-white px-6 py-3 rounded-lg shadow-xl z-50"
+      {/* Modal */}
+      {activeModal && (
+        <Modal
+          isOpen={true}
+          onClose={handleModalClose}
+          title={modalContents[activeModal].title}
         >
-          Tính năng đang được cải tiến
-        </motion.div>
+          {modalContents[activeModal].content}
+        </Modal>
       )}
 
       {/* Hero Section */}
@@ -426,25 +431,25 @@ export function LandingPage({ onShopNow, onViewCatalog, onAddToCart, onBuyNow, o
             <div>
               <h3 className="text-white font-bold mb-4">Về chúng tôi</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#" onClick={handleFeatureClick} className="hover:text-red-600 transition-colors">Giới thiệu</a></li>
-                <li><a href="#" onClick={handleFeatureClick} className="hover:text-red-600 transition-colors">Liên hệ</a></li>
-                <li><a href="#" onClick={handleFeatureClick} className="hover:text-red-600 transition-colors">Tuyển dụng</a></li>
+                <li><a href="#" onClick={handleModalOpen('about')} className="hover:text-red-600 transition-colors">Giới thiệu</a></li>
+                <li><a href="#" onClick={handleModalOpen('contact')} className="hover:text-red-600 transition-colors">Liên hệ</a></li>
+                <li><a href="#" onClick={handleModalOpen('recruitment')} className="hover:text-red-600 transition-colors">Tuyển dụng</a></li>
               </ul>
             </div>
             <div>
               <h3 className="text-white font-bold mb-4">Chính sách</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#" onClick={handleFeatureClick} className="hover:text-red-600 transition-colors">Chính sách bảo hành</a></li>
-                <li><a href="#" onClick={handleFeatureClick} className="hover:text-red-600 transition-colors">Chính sách đổi trả</a></li>
-                <li><a href="#" onClick={handleFeatureClick} className="hover:text-red-600 transition-colors">Chính sách vận chuyển</a></li>
+                <li><a href="#" onClick={handleModalOpen('warranty')} className="hover:text-red-600 transition-colors">Chính sách bảo hành</a></li>
+                <li><a href="#" onClick={handleModalOpen('return')} className="hover:text-red-600 transition-colors">Chính sách đổi trả</a></li>
+                <li><a href="#" onClick={handleModalOpen('shipping')} className="hover:text-red-600 transition-colors">Chính sách vận chuyển</a></li>
               </ul>
             </div>
             <div>
               <h3 className="text-white font-bold mb-4">Hỗ trợ</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#" onClick={handleFeatureClick} className="hover:text-red-600 transition-colors">Hướng dẫn mua hàng</a></li>
-                <li><a href="#" onClick={handleFeatureClick} className="hover:text-red-600 transition-colors">Câu hỏi thường gặp</a></li>
-                <li><a href="#" onClick={handleFeatureClick} className="hover:text-red-600 transition-colors">Thanh toán</a></li>
+                <li><a href="#" onClick={handleModalOpen('shopping-guide')} className="hover:text-red-600 transition-colors">Hướng dẫn mua hàng</a></li>
+                <li><a href="#" onClick={handleModalOpen('faq')} className="hover:text-red-600 transition-colors">Câu hỏi thường gặp</a></li>
+                <li><a href="#" onClick={handleModalOpen('payment')} className="hover:text-red-600 transition-colors">Thanh toán</a></li>
               </ul>
             </div>
             <div>
