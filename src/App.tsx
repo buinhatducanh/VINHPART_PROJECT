@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from '@/shared/components/layout/Header';
 import { LandingPage } from '@/features/home/pages/LandingPage';
 import { ProductListing } from '@/features/product/pages/ProductListing';
@@ -11,6 +12,18 @@ import { AddToCartToast } from '@/features/cart/components/AddToCartToast';
 import { Toaster } from '@/shared/components/ui/sonner';
 import { toast } from 'sonner';
 import { Product, CartItem, User } from '@/shared/types';
+
+// Create QueryClient with default options
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes default
+      gcTime: 10 * 60 * 1000, // 10 minutes cache
+      refetchOnWindowFocus: false, // Disable refetch on window focus
+      retry: 2, // Retry failed requests twice
+    },
+  },
+});
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'landing' | 'products' | 'cart' | 'checkout' | 'admin' | 'blog-list' | 'blog-detail'>('landing');
@@ -101,84 +114,86 @@ export default function App() {
   const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Only show Header for non-admin pages */}
-      {currentPage !== 'admin' && (
-        <Header
-          cartCount={totalCartItems}
-          onCartClick={() => setCurrentPage('cart')}
-          onLogoClick={() => setCurrentPage('landing')}
-          user={user}
-          onLogin={handleLogin}
-          onLogout={handleLogout}
-        />
-      )}
+    <QueryClientProvider client={queryClient}>
+      <div className="min-h-screen bg-black text-white">
+        {/* Only show Header for non-admin pages */}
+        {currentPage !== 'admin' && (
+          <Header
+            cartCount={totalCartItems}
+            onCartClick={() => setCurrentPage('cart')}
+            onLogoClick={() => setCurrentPage('landing')}
+            user={user}
+            onLogin={handleLogin}
+            onLogout={handleLogout}
+          />
+        )}
 
-      <AddToCartToast
-        show={showToast}
-        productName={toastProductName}
-        onClose={() => setShowToast(false)}
-      />
-
-      {currentPage === 'landing' && (
-        <LandingPage
-          onShopNow={() => setCurrentPage('products')}
-          onViewCatalog={() => setCurrentPage('products')}
-          onAddToCart={handleAddToCart}
-          onBuyNow={handleBuyNow}
-          onAdminClick={handleAdminClick}
-          onBlogPostClick={handleBlogPostClick}
-          onViewAllPosts={handleViewAllPosts}
+        <AddToCartToast
+          show={showToast}
+          productName={toastProductName}
+          onClose={() => setShowToast(false)}
         />
-      )}
 
-      {currentPage === 'products' && (
-        <ProductListing
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          onAddToCart={handleAddToCart}
-          onBuyNow={handleBuyNow}
-        />
-      )}
+        {currentPage === 'landing' && (
+          <LandingPage
+            onShopNow={() => setCurrentPage('products')}
+            onViewCatalog={() => setCurrentPage('products')}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            onAdminClick={handleAdminClick}
+            onBlogPostClick={handleBlogPostClick}
+            onViewAllPosts={handleViewAllPosts}
+          />
+        )}
 
-      {currentPage === 'cart' && (
-        <CartPage
-          cartItems={cartItems}
-          onUpdateQuantity={handleUpdateQuantity}
-          onBackToShopping={() => setCurrentPage('products')}
-          onCheckout={handleCheckoutFromCart}
-        />
-      )}
+        {currentPage === 'products' && (
+          <ProductListing
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+          />
+        )}
 
-      {currentPage === 'checkout' && (
-        <CheckoutPage
-          cartItems={checkoutProduct ? [{ product: checkoutProduct, quantity: 1 }] : cartItems}
-          onBackToCart={() => setCurrentPage('cart')}
-          onBackToShopping={() => setCurrentPage('products')}
-        />
-      )}
+        {currentPage === 'cart' && (
+          <CartPage
+            cartItems={cartItems}
+            onUpdateQuantity={handleUpdateQuantity}
+            onBackToShopping={() => setCurrentPage('products')}
+            onCheckout={handleCheckoutFromCart}
+          />
+        )}
 
-      {currentPage === 'admin' && (
-        <AdminDashboard
-          onBackToHome={handleLogout}
-        />
-      )}
+        {currentPage === 'checkout' && (
+          <CheckoutPage
+            cartItems={checkoutProduct ? [{ product: checkoutProduct, quantity: 1 }] : cartItems}
+            onBackToCart={() => setCurrentPage('cart')}
+            onBackToShopping={() => setCurrentPage('products')}
+          />
+        )}
 
-      {currentPage === 'blog-list' && (
-        <BlogListPage
-          onBack={() => setCurrentPage('landing')}
-          onPostClick={handleBlogPostClick}
-        />
-      )}
+        {currentPage === 'admin' && (
+          <AdminDashboard
+            onBackToHome={handleLogout}
+          />
+        )}
 
-      {currentPage === 'blog-detail' && currentBlogPostId && (
-        <BlogDetailPage
-          postId={currentBlogPostId}
-          onBack={() => setCurrentPage('landing')}
-          onPostClick={handleBlogPostClick}
-        />
-      )}
-      <Toaster position="top-right" richColors />
-    </div>
+        {currentPage === 'blog-list' && (
+          <BlogListPage
+            onBack={() => setCurrentPage('landing')}
+            onPostClick={handleBlogPostClick}
+          />
+        )}
+
+        {currentPage === 'blog-detail' && currentBlogPostId && (
+          <BlogDetailPage
+            postId={currentBlogPostId}
+            onBack={() => setCurrentPage('landing')}
+            onPostClick={handleBlogPostClick}
+          />
+        )}
+        <Toaster position="top-right" richColors />
+      </div>
+    </QueryClientProvider>
   );
 }
