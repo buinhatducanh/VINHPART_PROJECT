@@ -108,22 +108,25 @@ model Post {
   title           String
   slug            String     @unique
   excerpt         String?
-  content         String     @db.Text
+  content         String
   featuredImage   String?
   metaTitle       String?
   metaDescription String?
   ogImage         String?
-  status          PostStatus @default(DRAFT)
   publishedAt     DateTime?
   viewCount       Int        @default(0)
   authorId        String?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
+  status          PostStatus @default(DRAFT)
   author          User?      @relation(fields: [authorId], references: [id])
 
   @@index([slug])
   @@index([status])
   @@index([publishedAt])
+  @@index([publishedAt], map: "idx_posts_publishedat")
+  @@index([slug], map: "idx_posts_slug")
+  @@index([status], map: "idx_posts_status")
   @@map("posts")
 }
 

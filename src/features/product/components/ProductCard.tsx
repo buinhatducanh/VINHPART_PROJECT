@@ -31,7 +31,7 @@ export function ProductCard({ product, onAddToCart, onBuyNow }: ProductCardProps
       {/* Product Image */}
       <div className="relative aspect-square bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
         <img
-          src={productImages[product.product_id]}
+          src={product.product_image || productImages[product.product_id] || '/placeholder-product.jpg'}
           alt={product.product_name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />

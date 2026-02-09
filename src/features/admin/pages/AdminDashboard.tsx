@@ -3,6 +3,7 @@ import { AddProductPage } from '../components/AddProductPage';
 import { StatisticsPage } from '../components/StatisticsPage';
 import { ManageOrdersPage } from '../components/ManageOrdersPage';
 import { ManageProductsPage } from '../components/ManageProductsPage';
+import { ManagePostsPage } from '../components/ManagePostsPage';
 import { SettingsPage } from '../components/SettingsPage';
 import { ManageSEOPage } from '../components/ManageSEOPage';
 import { ManageCategoriesPage } from '../components/ManageCategoriesPage';
@@ -70,6 +71,10 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
 
   if (currentPage === 'manageReviews') {
     return <ManageReviewsPage onBack={() => setCurrentPage('dashboard')} />;
+  }
+
+  if (currentPage === 'managePosts') {
+    return <ManagePostsPage onBack={() => setCurrentPage('dashboard')} />;
   }
 
   return (
