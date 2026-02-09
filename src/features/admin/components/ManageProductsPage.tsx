@@ -2,7 +2,7 @@
 import { motion } from 'motion/react';
 import { Package, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Product } from '@/shared/types';
 
 interface ManageProductsPageProps {
@@ -16,6 +16,81 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // ✅ Cloudinary Widget Ref for image upload
+  const widgetRef = useRef<any>(null);
+
+  // ✅ Ref to track latest editingProduct (fix closure stale issue)
+  const editingProductRef = useRef<Product | null>(null);
+
+  // Sync ref with state
+  useEffect(() => {
+    editingProductRef.current = editingProduct;
+  }, [editingProduct]);
+
+  // ✅ Initialize Cloudinary widget
+  useEffect(() => {
+    if ((window as any).cloudinary) {
+      widgetRef.current = (window as any).cloudinary.createUploadWidget(
+        {
+          cloudName: (import.meta as any).env.VITE_CLOUDINARY_CLOUD_NAME || 'dmz66rbbk',
+          uploadPreset: 'vinhpart_products_preset',
+          sources: ['local', 'url', 'camera'],
+          multiple: false,
+          folder: 'vinhpart_products',
+          resourceType: 'image',
+          clientAllowedFormats: ['png', 'jpg', 'jpeg', 'webp'],
+          maxFileSize: 10000000,
+          maxImageWidth: 2000,
+          maxImageHeight: 2000,
+          cropping: true,
+          croppingAspectRatio: 1,
+          showSkipCropButton: true,
+          styles: {
+            palette: {
+              window: "#1f2937",
+              windowBorder: "#374151",
+              tabIcon: "#ef4444",
+              menuIcons: "#9ca3af",
+              textDark: "#111827",
+              textLight: "#f3f4f6",
+              link: "#ef4444",
+              action: "#ef4444",
+              inactiveTabIcon: "#6b7280",
+              error: "#dc2626",
+              inProgress: "#f59e0b",
+              complete: "#10b981",
+              sourceBg: "#111827"
+            }
+          }
+        },
+        (error: any, result: any) => {
+          // Debug: Log tất cả events
+          console.log('Cloudinary event (Edit):', result?.event, result);
+
+          if (!error && result && result.event === "success") {
+            const url = result.info.secure_url;
+            console.log('✅ Upload success (Edit):', url);
+
+            // ✅ FIX: Use ref to avoid stale closure
+            const current = editingProductRef.current;
+            console.log('Current editing product ID:', current?.product_id);
+
+            if (current) {
+              setEditingProduct({ ...current, product_image: url });
+              console.log('📸 Updated editingProduct with new image:', url);
+              toast.success('Ảnh đã được tải lên thành công!');
+            } else {
+              console.warn('⚠️ No product being edited');
+            }
+          } else if (error) {
+            console.error('❌ Upload error (Edit):', error);
+            toast.error('Lỗi khi tải ảnh lên: ' + error.message);
+          }
+        }
+      );
+    }
+  }, []); // ✅ FIX: Only initialize once on mount, not on every edit
 
   // Fetch products on mount
   useEffect(() => {
@@ -77,20 +152,24 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   const handleSaveEdit = async () => {
     if (editingProduct) {
       try {
+        // ✅ FIX: Send proper data structure matching API expectations
         const res = await fetch(`http://localhost:3001/api/products/${editingProduct.product_id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            ...editingProduct,
+            product_name: editingProduct.product_name,
+            brand: editingProduct.compatible_brand,
+            category: editingProduct.sub_category,
+            price: editingProduct.price,
+            discount_percentage: editingProduct.discount_percentage,
+            stock: editingProduct.stock,
+            description: editingProduct.description,
             image_url: editingProduct.product_image
           })
         });
 
         if (res.ok) {
           await res.json(); // Consume body
-          // Update local state is tricky because API returns generic object, but we map it. 
-          // Simplest is to refetch or manually update if we know structure matches.
-          // Let's refetch to be safe and consistent
           fetchProducts();
           setEditingProduct(null);
           toast.success("Cập nhật thành công");
@@ -241,8 +320,21 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                     {/* Product Info */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-16 h-16 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                          <Package className="w-8 h-8 text-gray-600" />
+                        <div className="w-16 h-16 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
+                          {product.product_image ? (
+                            <img
+                              src={product.product_image}
+                              alt={product.product_name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64?text=No+Image';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-8 h-8 text-gray-600" />
+                            </div>
+                          )}
                         </div>
                         <div>
                           <p className="text-white font-semibold line-clamp-1">
@@ -384,6 +476,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                   <div className="aspect-square bg-gray-800/50 rounded-xl overflow-hidden border-2 border-dashed border-gray-700 flex items-center justify-center relative group">
                     {editingProduct.product_image ? (
                       <img
+                        key={editingProduct.product_image} // ✅ Force re-render when URL changes
                         src={editingProduct.product_image}
                         alt="Preview"
                         className="w-full h-full object-cover"
@@ -409,6 +502,22 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                       className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-600/50 transition-all"
                     />
                   </div>
+
+                  {/* Upload Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (widgetRef.current) {
+                        widgetRef.current.open();
+                      } else {
+                        toast.error('Widget chưa tải xong');
+                      }
+                    }}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Tải ảnh lên từ máy
+                  </button>
                 </div>
 
                 {/* Right Col: Details */}
@@ -482,34 +591,13 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                       <label className="block text-sm font-semibold text-gray-300 mb-2">Tồn kho</label>
                       <input
                         type="number"
-                        value={(editingProduct as any).stock || 0}
-                        // Wait, Product type doesn't have stock count, only stock_status.
-                        // But API returns it? Let's check server.ts... SELECT p.* ... p.stock is selected.
-                        // Frontend Product type needs stock field?
-                        // Let's assume editingProduct has it even if TS complains, or cast it.
-                        // Actually, I should check Types. Product interface has stock_status but NOT stock number? 
-                        // Mapped product in server.ts line 52: stock_status, but NO stock number.
-                        // WAIT. Server.ts map does NOT return stock number!
-                        // Line 49: price, 50: original_price, 52: stock_status...
-                        // It calculates status from stock but DOES NOT return stock count in the mapped object.
-                        // THIS IS A BUG/LIMITATION. I cannot edit stock count if I don't have it.
-                        // usage: stock_status
-                        onChange={(_e) => {
-                          // This will fail if I can't store it.
-                          // I need to add stock to Product type and Server response.
-                          // For now, let's just allow editing stock_status?
-                          // User wants to update product properly. Stock count is important.
-                          // I will add stock to Product Type in next step or ignore for now and fix server first?
-                          // I'll skip stock count input for now and stick to stock_status to avoid breaking things, 
-                          // OR I can use a 'any' cast.
-                          // Let's stick to status dropdown as per existing code, 
-                          // BUT user probably wants to set quantity.
-                          // Given the constraints, I will keep the stock_status dropdown for now
-                          // and focus on image/layout.
-                        }}
-                        disabled
-                        placeholder="N/A"
-                        className="w-full px-4 py-3 bg-gray-800/30 border border-gray-700 rounded-lg text-gray-500 cursor-not-allowed"
+                        value={editingProduct.stock || 0}
+                        onChange={(e) => setEditingProduct({
+                          ...editingProduct,
+                          stock: parseInt(e.target.value) || 0
+                        })}
+                        placeholder="0"
+                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20"
                       />
                     </div>
                   </div>

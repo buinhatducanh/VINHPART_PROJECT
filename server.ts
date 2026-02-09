@@ -289,6 +289,11 @@ app.get('/api/products', async (req, res) => {
             if (p.stock > 10) status = 'in_stock';
             else if (p.stock > 0) status = 'low_stock';
 
+            // Calculate actual sale price and discount
+            const actualPrice = p.salePrice ? Number(p.salePrice) : Number(p.price);
+            const originalPrice = Number(p.price);
+            const discountPercent = p.salePrice ? Math.round(((originalPrice - Number(p.salePrice)) / originalPrice) * 100) : 0;
+
             return {
                 product_id: p.id,
                 product_name: p.name,
@@ -298,12 +303,12 @@ app.get('/api/products', async (req, res) => {
                 compatible_brand: p.brand || 'Honda',
                 compatible_model: 'Universal',
                 engine_capacity: 'Universal',
-                price: Number(p.price),
-                original_price: Number(p.salePrice || p.price),
-                discount_percentage: p.salePrice ? Math.round(((p.price - p.salePrice) / p.price) * 100) : 0,
-                stock: p.stock,
+                price: actualPrice,  // Giá hiển thị (sau giảm giá)
+                original_price: originalPrice,  // Giá gốc
+                discount_percentage: discountPercent,
+                stock: p.stock,  // ✅ FIX: Thêm stock number
                 stock_status: status,
-                description: p.description || '', // Still sending description, but we could select substring if needed
+                description: p.description || '',
                 product_image: p.images && p.images.length > 0 ? p.images[0] : '',
                 tags: []
             };
@@ -372,6 +377,7 @@ app.post('/api/products', async (req, res) => {
         const now = new Date();
         const slug = product_name.toLowerCase().replace(/ /g, '-') + '-' + Date.now();
         const images = image_url ? [image_url] : [];
+        // ✅ FIX: Tính salePrice đúng - salePrice là giá sau giảm
         const salePrice = discount_percent ? parseFloat(price) * (1 - parseFloat(discount_percent) / 100) : null;
 
         // Insert product
@@ -415,6 +421,15 @@ app.put('/api/products/:id', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
+
+        // ✅ FIX: Fetch existing product first for validation and default values
+        const existingResult = await client.query('SELECT * FROM products WHERE id = $1', [id]);
+        if (existingResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        const existing = existingResult.rows[0];
+
         const {
             product_name,
             brand,
@@ -430,21 +445,17 @@ app.put('/api/products/:id', async (req, res) => {
         if (category) {
             const { rows: cats } = await client.query('SELECT id FROM categories WHERE name = $1', [category]);
             if (cats.length > 0) categoryId = cats[0].id;
-            // If not found, ignore or handle? For update, maybe ignore if not exact match or create?
-            // Let's ignore creation for now to keep it simple, or reuse explicit create logic.
         }
 
-        // Build dynamic update
-        // This is manual manual. 
-        // Let's just update fields we know.
+        // ✅ FIX: Calculate salePrice using existing price if not provided
         let salePrice = null;
         if (discount_percentage !== undefined) {
-            salePrice = parseFloat(price) * (1 - parseFloat(discount_percentage) / 100);
+            const basePrice = price ? parseFloat(price) : parseFloat(existing.price);
+            salePrice = basePrice * (1 - parseFloat(discount_percentage) / 100);
         }
 
         const now = new Date();
 
-        // We'll verify column accessibility 
         let query = `UPDATE products SET "updatedAt" = $1`;
         const params: any[] = [now];
         let idx = 2;
@@ -477,7 +488,11 @@ app.put('/api/products/:id', async (req, res) => {
 app.delete('/api/products/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        await pool.query('DELETE FROM products WHERE id = $1', [id]);
+        // ✅ FIX: Use RETURNING to verify deletion
+        const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting product:', error);

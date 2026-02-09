@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { productApi } from '@/lib/api';
 import { Header } from '@/shared/components/layout/Header';
@@ -37,13 +37,32 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // ✅ FIX: Restore user from localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('vinhpart_user');
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        console.log('Restored user from localStorage:', parsedUser.email);
+      } catch (error) {
+        console.error('Failed to parse saved user:', error);
+        localStorage.removeItem('vinhpart_user');
+      }
+    }
+  }, []);
+
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser);
+    // ✅ FIX: Save user to localStorage
+    localStorage.setItem('vinhpart_user', JSON.stringify(loggedInUser));
     toast.success(`Chào mừng quay lại, ${loggedInUser.name}!`);
   };
 
   const handleLogout = () => {
     setUser(null);
+    // ✅ FIX: Clear user from localStorage
+    localStorage.removeItem('vinhpart_user');
     setCurrentPage('landing');
     toast.info('Đã đăng xuất thành công');
   };
