@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Calendar, Eye, Search } from 'lucide-react';
-import { mockSEOPosts } from '@/shared/data/mockSEOPosts';
 import { Input } from '@/shared/components/ui/input';
 import { SEO } from '@/shared/components/SEO';
 
@@ -11,22 +10,41 @@ interface BlogListPageProps {
 }
 
 export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest');
 
+  // Fetch published posts from API
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/api/posts?status=PUBLISHED');
+        if (res.ok) {
+          const data = await res.json();
+          setPosts(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch posts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
+
   // Filter and sort posts
-  const filteredPosts = mockSEOPosts
-    .filter(post => post.status === 'published')
+  const filteredPosts = posts
     .filter(post =>
       searchQuery === '' ||
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+      (post.excerpt && post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()))
     )
     .sort((a, b) => {
       if (sortBy === 'latest') {
-        return new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime();
+        return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime();
       } else {
-        return b.view_count - a.view_count;
+        return b.viewCount - a.viewCount;
       }
     });
 
@@ -130,10 +148,10 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
                 className="bg-gray-900/30 border border-gray-800 rounded-lg overflow-hidden cursor-pointer hover:border-red-500/50 transition-all group hover:shadow-lg hover:shadow-red-500/10"
               >
                 {/* Featured Image */}
-                {post.featured_image && (
+                {post.featuredImage && (
                   <div className="relative h-48 overflow-hidden">
                     <img
-                      src={post.featured_image}
+                      src={post.featuredImage}
                       alt={post.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -154,11 +172,11 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
                   <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-800">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-3 h-3" />
-                      <span>{post.published_at ? formatDate(post.published_at) : 'N/A'}</span>
+                      <span>{post.publishedAt ? formatDate(post.publishedAt) : 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Eye className="w-3 h-3" />
-                      <span>{post.view_count.toLocaleString('vi-VN')}</span>
+                      <span>{post.viewCount.toLocaleString('vi-VN')}</span>
                     </div>
                   </div>
                 </div>
@@ -174,7 +192,7 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
           transition={{ delay: 0.3 }}
           className="mt-8 text-center text-gray-500 text-sm"
         >
-          Hiển thị {filteredPosts.length} / {mockSEOPosts.filter(p => p.status === 'published').length} bài viết
+          Hiển thị {filteredPosts.length} / {posts.length} bài viết
         </motion.div>
       </div>
     </div>

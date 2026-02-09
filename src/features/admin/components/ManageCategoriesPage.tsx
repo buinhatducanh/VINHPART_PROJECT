@@ -1,118 +1,55 @@
 import { motion } from 'motion/react';
 import { Folder, ArrowLeft, Search, Edit, Trash2, Plus, ChevronRight, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Category } from '@/shared/types';
+import { toast } from 'sonner';
 
 interface ManageCategoriesPageProps {
   onBack: () => void;
 }
 
-// Mock data với cấu trúc phân cấp
-const mockCategories: Category[] = [
-  // Danh mục gốc
-  {
-    id: 'cat-1',
-    name: 'Dàn máy điện',
-    parent_id: null,
-    description: 'Các bộ phận điện tử và dây điện',
-    order: 1,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  },
-  {
-    id: 'cat-2',
-    name: 'Hệ thống phanh',
-    parent_id: null,
-    description: 'Các bộ phận liên quan đến phanh',
-    order: 2,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  },
-  {
-    id: 'cat-3',
-    name: 'Động cơ',
-    parent_id: null,
-    description: 'Các bộ phận động cơ',
-    order: 3,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  },
-  // Danh mục con của "Dàn máy điện"
-  {
-    id: 'cat-1-1',
-    name: 'Đèn xe',
-    parent_id: 'cat-1',
-    description: 'Đèn pha, đèn hậu, đèn xi nhan',
-    order: 1,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  },
-  {
-    id: 'cat-1-2',
-    name: 'Acquy & Bình điện',
-    parent_id: 'cat-1',
-    description: 'Bình ắc quy các loại',
-    order: 2,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  },
-  {
-    id: 'cat-1-3',
-    name: 'Dây điện',
-    parent_id: 'cat-1',
-    description: 'Dây điện và cụm dây',
-    order: 3,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  },
-  // Danh mục con của "Đèn xe"
-  {
-    id: 'cat-1-1-1',
-    name: 'Đèn LED',
-    parent_id: 'cat-1-1',
-    description: 'Đèn LED tiết kiệm năng lượng',
-    order: 1,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  },
-  {
-    id: 'cat-1-1-2',
-    name: 'Đèn Halogen',
-    parent_id: 'cat-1-1',
-    description: 'Đèn halogen truyền thống',
-    order: 2,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  },
-  // Danh mục con của "Hệ thống phanh"
-  {
-    id: 'cat-2-1',
-    name: 'Má phanh',
-    parent_id: 'cat-2',
-    description: 'Má phanh đĩa và tang trống',
-    order: 1,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  },
-  {
-    id: 'cat-2-2',
-    name: 'Dầu phanh',
-    parent_id: 'cat-2',
-    description: 'Dầu phanh các loại',
-    order: 2,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  },
-];
-
 export function ManageCategoriesPage({ onBack }: ManageCategoriesPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['cat-1', 'cat-2']));
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [_editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [_showAddModal, setShowAddModal] = useState(false);
   const [_selectedParent, setSelectedParent] = useState<string | null>(null);
+
+  // Fetch categories from API
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:3001/api/categories');
+      if (res.ok) {
+        const data = await res.json();
+        // Map API response to frontend Category type
+        const mapped = data.map((cat: any) => ({
+          id: cat.id,
+          name: cat.name,
+          parent_id: cat.parentId,
+          description: cat.description,
+          order: 0,
+          created_at: cat.createdAt,
+          updated_at: cat.updatedAt
+        }));
+        setCategories(mapped);
+      } else {
+        toast.error('Không thể tải danh mục');
+      }
+    } catch (error) {
+      console.error('Fetch categories error:', error);
+      toast.error('Lỗi kết nối');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Lấy danh mục con
   const getChildren = (parentId: string | null): Category[] => {
@@ -138,20 +75,25 @@ export function ManageCategoriesPage({ onBack }: ManageCategoriesPageProps) {
   };
 
   // Xóa danh mục
-  const handleDelete = (id: string) => {
-    // Xóa cả danh mục con
-    const idsToDelete = new Set([id]);
-    const findChildren = (parentId: string) => {
-      const children = categories.filter(cat => cat.parent_id === parentId);
-      children.forEach(child => {
-        idsToDelete.add(child.id);
-        findChildren(child.id);
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/categories/${id}`, {
+        method: 'DELETE'
       });
-    };
-    findChildren(id);
 
-    setCategories(categories.filter(cat => !idsToDelete.has(cat.id)));
-    setShowDeleteConfirm(null);
+      if (res.ok) {
+        await fetchCategories();
+        toast.success('Đã xóa danh mục');
+      } else {
+        const error = await res.json();
+        toast.error(error.error || 'Không thể xóa danh mục');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Lỗi kết nối');
+    } finally {
+      setShowDeleteConfirm(null);
+    }
   };
 
   // Render danh mục đệ quy

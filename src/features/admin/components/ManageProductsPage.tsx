@@ -550,8 +550,8 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                     <div>
                       <label className="block text-sm font-semibold text-gray-300 mb-2">Danh mục</label>
                       <select
-                        value={editingProduct.category} // Note: This is storing the name now based on previous fixes
-                        onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                        value={editingProduct.sub_category}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, sub_category: e.target.value })}
                         className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20"
                       >
                         <option value="">Chọn danh mục</option>
