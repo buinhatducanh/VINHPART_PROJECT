@@ -10,6 +10,15 @@ interface ProductCardProps {
   onBuyNow: (product: Product) => void;
 }
 
+// ✅ Helper to optimize Cloudinary image URLs
+const optimizeCloudinaryUrl = (url: string | undefined, width = 400) => {
+  if (!url || !url.includes('cloudinary.com')) return url || '/placeholder-product.jpg';
+
+  // Insert optimization params after '/upload/'
+  // q_auto = auto quality, f_auto = auto format (webp), w_X = resize width
+  return url.replace('/upload/', `/upload/q_auto,f_auto,w_${width},c_scale/`);
+};
+
 export function ProductCard({ product, onAddToCart, onBuyNow }: ProductCardProps) {
   const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
 
@@ -31,8 +40,9 @@ export function ProductCard({ product, onAddToCart, onBuyNow }: ProductCardProps
       {/* Product Image */}
       <div className="relative aspect-square bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
         <img
-          src={productImages[product.product_id]}
+          src={optimizeCloudinaryUrl(product.product_image, 400)}
           alt={product.product_name}
+          loading="lazy"
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
 
@@ -113,7 +123,7 @@ export function ProductCard({ product, onAddToCart, onBuyNow }: ProductCardProps
           {product.discount_percentage ? (
             <div className="flex flex-col gap-1">
               <div className="text-gray-400 text-sm line-through">
-                {formatPrice(product.price / (1 - product.discount_percentage / 100))}
+                {formatPrice(product.original_price || (product.price / (1 - product.discount_percentage / 100)))}
               </div>
               <div className="text-red-500 text-xl font-black">
                 {formatPrice(product.price)}

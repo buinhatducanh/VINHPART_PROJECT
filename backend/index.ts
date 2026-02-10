@@ -6,6 +6,7 @@ import dashboardRoutes from './routes/dashboard';
 import orderRoutes from './routes/orders';
 import productRoutes from './routes/products';
 import uploadRoutes from './routes/upload';
+import postsRoutes from './routes/posts';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/posts', postsRoutes);
 
 app.listen(port, () => {
     console.log(`API Server running at http://localhost:${port}`);

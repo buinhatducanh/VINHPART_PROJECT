@@ -45,6 +45,7 @@ export const QUICK_ACTIONS_CONFIG: QuickActionConfig[] = [
     { label: 'Xem đơn hàng mới', icon: ClipboardList, color: 'text-purple-400', hoverColor: 'hover:bg-purple-500/10', targetPage: 'manageOrders' },
     { label: 'Thống kê doanh thu', icon: TrendingUp, color: 'text-green-400', hoverColor: 'hover:bg-green-500/10', targetPage: 'statistics' },
     { label: 'Quản lý sản phẩm', icon: Edit, color: 'text-orange-400', hoverColor: 'hover:bg-orange-500/10', targetPage: 'manageProducts' },
+    { label: 'Quản lý bài viết', icon: FileText, color: 'text-green-400', hoverColor: 'hover:bg-green-500/10', targetPage: 'managePosts' },
     { label: 'Quản lý bài viết SEO', icon: FileText, color: 'text-purple-400', hoverColor: 'hover:bg-purple-500/10', targetPage: 'manageSEO' },
     { label: 'Quản lý danh mục', icon: Folder, color: 'text-yellow-400', hoverColor: 'hover:bg-yellow-500/10', targetPage: 'manageCategories' },
     { label: 'Quản lý đánh giá', icon: MessageSquare, color: 'text-cyan-400', hoverColor: 'hover:bg-cyan-500/10', targetPage: 'manageReviews' },

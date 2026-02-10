@@ -107,8 +107,18 @@ router.get('/', async (req, res) => {
                 skip,
                 take,
                 orderBy,
-                include: {
-                    category: true
+                // ✅ Optimized: Only select needed fields, no JOIN
+                select: {
+                    id: true,
+                    name: true,
+                    brand: true,
+                    price: true,
+                    salePrice: true,
+                    stock: true,
+                    images: true,
+                    description: true,
+                    categoryId: true,
+                    isActive: true
                 }
             })
         ]);
@@ -121,8 +131,8 @@ router.get('/', async (req, res) => {
             return {
                 product_id: p.id,
                 product_name: p.name,
-                category: p.category?.slug || 'parts',
-                sub_category: p.category?.name || 'General',
+                category: 'parts', // Default, can be looked up separately if needed
+                sub_category: 'General',
                 vehicle_type: 'Motorbike',
                 compatible_brand: p.brand || 'Honda',
                 compatible_model: 'Universal',

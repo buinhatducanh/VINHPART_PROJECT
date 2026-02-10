@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Calendar, Eye, User } from 'lucide-react';
-import { SEOPost } from '@/shared/types';
-import { mockSEOPosts } from '@/shared/data/mockSEOPosts';
 import { Button } from '@/shared/components/ui/button';
 import { SEO } from '@/shared/components/SEO';
 
@@ -13,24 +11,35 @@ interface BlogDetailPageProps {
 }
 
 export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPageProps) {
-  const [post, setPost] = useState<SEOPost | null>(null);
-  const [relatedPosts, setRelatedPosts] = useState<SEOPost[]>([]);
+  const [post, setPost] = useState<any | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Tìm bài viết theo ID
-    const foundPost = mockSEOPosts.find(p => p.id === postId);
-    if (foundPost) {
-      setPost(foundPost);
+    const fetchPost = async () => {
+      try {
+        // Fetch post by slug (postId is actually slug in this case)
+        const res = await fetch(`http://localhost:3001/api/posts/${postId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setPost(data);
 
-      // Tăng view count (trong thực tế sẽ gọi API)
-      foundPost.view_count += 1;
-
-      // Lấy 3 bài viết liên quan (khác bài hiện tại)
-      const related = mockSEOPosts
-        .filter(p => p.id !== postId && p.status === 'published')
-        .slice(0, 3);
-      setRelatedPosts(related);
-    }
+          // Fetch related posts
+          const relatedRes = await fetch('http://localhost:3001/api/posts?status=PUBLISHED&limit=4');
+          if (relatedRes.ok) {
+            const relatedData = await relatedRes.json();
+            // Filter out current post and limit to 3
+            const filtered = relatedData.filter((p: any) => p.slug !== postId).slice(0, 3);
+            setRelatedPosts(filtered);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch post:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPost();
   }, [postId]);
 
   const formatDate = (dateString: string) => {
@@ -59,8 +68,8 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
     <div className="min-h-screen pt-24 pb-16 px-4">
       <SEO
         title={post.title}
-        description={post.meta_description || post.excerpt}
-        image={post.featured_image || '/favicon.svg'}
+        description={post.metaDescription || post.excerpt}
+        image={post.featuredImage || '/favicon.svg'}
         url={window.location.href}
         type="article"
       />
@@ -78,14 +87,14 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
         </motion.button>
 
         {/* Featured image */}
-        {post.featured_image && (
+        {post.featuredImage && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="relative h-[400px] rounded-lg overflow-hidden mb-8"
           >
             <img
-              src={post.featured_image}
+              src={post.featuredImage}
               alt={post.title}
               className="w-full h-full object-cover"
             />
@@ -108,15 +117,15 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4" />
-              <span>{post.author}</span>
+              <span>Admin</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span>{post.published_at ? formatDate(post.published_at) : 'Chưa xuất bản'}</span>
+              <span>{post.publishedAt ? formatDate(post.publishedAt) : 'Chưa xuất bản'}</span>
             </div>
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4" />
-              <span>{post.view_count.toLocaleString('vi-VN')} lượt xem</span>
+              <span>{post.viewCount.toLocaleString('vi-VN')} lượt xem</span>
             </div>
           </div>
         </motion.div>
@@ -159,7 +168,7 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
                 >
                   <div className="h-40 overflow-hidden">
                     <img
-                      src={relatedPost.featured_image || '/placeholder-image.jpg'}
+                      src={relatedPost.featuredImage || '/placeholder-image.jpg'}
                       alt={relatedPost.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -170,7 +179,7 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
                     </h3>
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                       <Calendar className="w-3 h-3" />
-                      <span>{formatDate(relatedPost.published_at || '')}</span>
+                      <span>{formatDate(relatedPost.publishedAt || '')}</span>
                     </div>
                   </div>
                 </div>

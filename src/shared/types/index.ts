@@ -10,7 +10,7 @@ export interface Product {
   price: number;
   original_price?: number; // Giá gốc trước khi giảm
   discount_percentage?: number; // % giảm giá
-  stock?: number;
+  stock: number;  // ✅ FIX: Required field, not optional
   stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
   description: string;
   product_image: string;

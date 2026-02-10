@@ -1,7 +1,4 @@
-import { useState } from 'react';
-import { mockProducts } from '@/shared/data/mockProducts';
-import { mockSEOPosts } from '@/shared/data/mockSEOPosts';
-import { mockReviews } from '@/shared/data/mockReviews';
+import { useState, useEffect } from 'react';
 import { Product } from '@/shared/types';
 import { Modal } from '@/shared/components/ui/Modal';
 import { modalContents, ModalContentType } from '@/shared/data/modalContent';
@@ -34,13 +31,42 @@ export function LandingPage({
   onBlogPostClick,
   onViewAllPosts,
 }: LandingPageProps) {
-  // Data
-  const featuredProducts = mockProducts.filter(p => p.vehicle_type === 'Motorbike').slice(0, 10);
-  const latestPosts = mockSEOPosts.filter(p => p.status === 'published').slice(0, 3);
-  const topReviews = mockReviews
-    .filter(r => r.status === 'approved' && r.is_verified_purchase)
-    .sort((a, b) => b.priority - a.priority || b.helpful_count - a.helpful_count)
-    .slice(0, 3);
+  // State for data from API
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [latestPosts, setLatestPosts] = useState<any[]>([]);
+  const [topReviews, setTopReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data from APIs
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch products (limit 10, can add filters later)
+        const productsRes = await fetch('http://localhost:3001/api/products?limit=10');
+        if (productsRes.ok) {
+          const productsData = await productsRes.json();
+          // Handle API response structure: {data: [], metadata: {...}}
+          const productsList = productsData.data || productsData.products || productsData || [];
+          setFeaturedProducts(Array.isArray(productsList) ? productsList : []);
+        }
+
+        // Fetch published blog posts (limit 3)
+        const postsRes = await fetch('http://localhost:3001/api/posts?status=PUBLISHED&limit=3');
+        if (postsRes.ok) {
+          const postsData = await postsRes.json();
+          setLatestPosts(postsData);
+        }
+
+        // Reviews - keep empty for now (can implement later)
+        setTopReviews([]);
+      } catch (error) {
+        console.error('Failed to fetch landing page data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Modal State
   const [activeModal, setActiveModal] = useState<ModalContentType | null>(null);
