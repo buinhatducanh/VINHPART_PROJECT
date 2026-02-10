@@ -1,138 +1,107 @@
 import { motion } from 'motion/react';
 import { MessageSquare, ArrowLeft, Search, Edit, Trash2, Star, Check, X, ArrowUp, ArrowDown, User, Calendar } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Review } from '@/shared/types';
 
 interface ManageReviewsPageProps {
   onBack: () => void;
 }
 
-// Mock data
-const mockReviews: Review[] = [
-  {
-    id: 'review-1',
-    product_id: 'prod-1',
-    product_name: 'Đèn LED trước Honda SH 2020',
-    customer_name: 'Nguyễn Văn A',
-    customer_email: 'nguyenvana@email.com',
-    rating: 5,
-    title: 'Sản phẩm rất tốt, sáng đẹp',
-    content: 'Đèn sáng hơn nhiều so với đèn zin, lắp vào vừa khít, chất lượng tốt. Rất đáng tiền. Sẽ ủng hộ shop lần sau.',
-    images: ['https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400'],
-    status: 'approved',
-    is_verified_purchase: true,
-    priority: 10,
-    helpful_count: 24,
-    created_at: '2025-01-15T10:30:00Z',
-    updated_at: '2025-01-15T11:00:00Z',
-  },
-  {
-    id: 'review-2',
-    product_id: 'prod-2',
-    product_name: 'Má phanh Yamaha Exciter 150',
-    customer_name: 'Trần Thị B',
-    customer_email: 'tranthib@email.com',
-    rating: 4,
-    title: 'Chất lượng ổn, giá hợp lý',
-    content: 'Má phanh êm, không kêu. Độ bền chưa test được nhưng nhìn chất lượng ok. Giá cả phải chăng.',
-    status: 'approved',
-    is_verified_purchase: true,
-    priority: 5,
-    helpful_count: 12,
-    created_at: '2025-01-20T14:20:00Z',
-    updated_at: '2025-01-20T15:00:00Z',
-  },
-  {
-    id: 'review-3',
-    product_id: 'prod-1',
-    product_name: 'Đèn LED trước Honda SH 2020',
-    customer_name: 'Lê Văn C',
-    customer_email: 'levanc@email.com',
-    rating: 3,
-    title: 'Bình thường',
-    content: 'Sản phẩm ok nhưng giao hàng hơi lâu. Đèn sáng được nhưng không đặc biệt lắm.',
-    status: 'pending',
-    is_verified_purchase: false,
-    priority: 0,
-    helpful_count: 3,
-    created_at: '2025-02-01T09:15:00Z',
-    updated_at: '2025-02-01T09:15:00Z',
-  },
-  {
-    id: 'review-4',
-    product_id: 'prod-3',
-    product_name: 'Nhớt Motul 5000 10W40',
-    customer_name: 'Phạm Thị D',
-    customer_email: 'phamthid@email.com',
-    rating: 5,
-    title: 'Nhớt chính hãng, xe chạy êm hơn',
-    content: 'Xe chạy êm hơn hẳn, chính hãng 100%. Giá có hơi cao nhưng chất lượng xứng đáng. Sẽ mua lại.',
-    images: ['https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400', 'https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400'],
-    status: 'approved',
-    is_verified_purchase: true,
-    priority: 8,
-    helpful_count: 18,
-    created_at: '2025-01-25T16:45:00Z',
-    updated_at: '2025-01-25T17:00:00Z',
-  },
-  {
-    id: 'review-5',
-    product_id: 'prod-4',
-    product_name: 'Lốp Michelin City Grip',
-    customer_name: 'Hoàng Văn E',
-    customer_email: 'hoangvane@email.com',
-    rating: 2,
-    title: 'Không như mong đợi',
-    content: 'Lốp hơi cứng, bám đường không tốt lắm. Có thể do xe tôi không phù hợp.',
-    status: 'rejected',
-    is_verified_purchase: false,
-    priority: 0,
-    helpful_count: 1,
-    created_at: '2025-01-28T11:20:00Z',
-    updated_at: '2025-01-28T12:00:00Z',
-  },
-];
+
 
 export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [filterRating, setFilterRating] = useState<number | 'all'>('all');
-  const [reviews, setReviews] = useState<Review[]>(mockReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [_editingReview, setEditingReview] = useState<Review | null>(null);
 
-  const filteredReviews = reviews
-    .filter(review => {
-      const matchesSearch = review.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        review.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        review.content.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || review.status === filterStatus;
-      const matchesRating = filterRating === 'all' || review.rating === filterRating;
-      return matchesSearch && matchesStatus && matchesRating;
-    })
-    .sort((a, b) => b.priority - a.priority || new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  // Fetch reviews
+  const fetchReviews = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (filterStatus !== 'all') params.append('status', filterStatus);
+      if (filterRating !== 'all') params.append('rating', filterRating.toString());
 
-  const handleDelete = (id: string) => {
-    setReviews(reviews.filter(review => review.id !== id));
-    setShowDeleteConfirm(null);
+      const res = await fetch(`http://localhost:3001/api/reviews?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch reviews:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleApprove = (id: string) => {
-    setReviews(reviews.map(review =>
-      review.id === id ? { ...review, status: 'approved' as const, updated_at: new Date().toISOString() } : review
-    ));
+  useEffect(() => {
+    fetchReviews();
+  }, [filterStatus, filterRating]);
+
+  // Filter only by search query on client side since backend handles status/rating
+  const filteredReviews = reviews.filter(review =>
+    review.product_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    review.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    review.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    review.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/reviews/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setReviews(reviews.filter(review => review.id !== id));
+        setShowDeleteConfirm(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete review', error);
+    }
   };
 
-  const handleReject = (id: string) => {
-    setReviews(reviews.map(review =>
-      review.id === id ? { ...review, status: 'rejected' as const, updated_at: new Date().toISOString() } : review
-    ));
+  const updateReviewStatus = async (id: string, status: 'approved' | 'rejected') => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/reviews/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setReviews(reviews.map(r => r.id === id ? { ...r, status: updated.status, updated_at: updated.updated_at } : r));
+      }
+    } catch (error) {
+      console.error('Failed to update status', error);
+    }
   };
 
-  const handleChangePriority = (id: string, delta: number) => {
-    setReviews(reviews.map(review =>
-      review.id === id ? { ...review, priority: Math.max(0, review.priority + delta) } : review
-    ));
+  const handleApprove = (id: string) => updateReviewStatus(id, 'approved');
+  const handleReject = (id: string) => updateReviewStatus(id, 'rejected');
+
+  const handleChangePriority = async (id: string, delta: number) => {
+    const review = reviews.find(r => r.id === id);
+    if (!review) return;
+
+    const newPriority = Math.max(0, review.priority + delta);
+
+    try {
+      const res = await fetch(`http://localhost:3001/api/reviews/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priority: newPriority })
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setReviews(reviews.map(r => r.id === id ? { ...r, priority: updated.priority, updated_at: updated.updated_at } : r));
+      }
+    } catch (error) {
+      console.error('Failed to update priority', error);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -330,7 +299,9 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
 
         {/* Reviews List */}
         <div className="space-y-4">
-          {filteredReviews.map((review, index) => {
+          {loading ? (
+            <div className="text-center py-12 text-gray-400">Đang tải đánh giá...</div>
+          ) : filteredReviews.map((review, index) => {
             const badge = getStatusBadge(review.status);
             return (
               <motion.div
