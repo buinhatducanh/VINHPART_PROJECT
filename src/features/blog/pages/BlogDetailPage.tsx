@@ -134,6 +134,10 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
               src={post.featuredImage}
               alt={post.title}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/placeholder-blog.svg';
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
           </motion.div>
@@ -208,6 +212,7 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
                       src={relatedPost.featuredImage || '/placeholder-image.jpg'}
                       alt={relatedPost.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      onError={(e) => { e.currentTarget.src = '/placeholder-blog.jpg'; }}
                     />
                   </div>
                   <div className="p-4">

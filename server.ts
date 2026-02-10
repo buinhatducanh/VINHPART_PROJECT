@@ -4,6 +4,7 @@ import pg from 'pg';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
+import path from 'path';
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ const pool = new Pool({
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Helper to generate IDs if not using database default (Prisma used CUIDs, UUID is fine fallback)
 // Actually, let's see if we can use `gen_random_uuid()` in Postgres if available, or just use `crypto.randomUUID` in Node.

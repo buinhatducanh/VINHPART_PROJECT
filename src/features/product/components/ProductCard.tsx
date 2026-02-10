@@ -1,7 +1,6 @@
 import { motion } from 'motion/react';
 import { ShoppingCart, Zap } from 'lucide-react';
 import { Product } from '@/shared/types';
-import { productImages } from '@/shared/data/productImages';
 import { useState } from 'react';
 
 interface ProductCardProps {
@@ -11,12 +10,28 @@ interface ProductCardProps {
 }
 
 // ✅ Helper to optimize Cloudinary image URLs
-const optimizeCloudinaryUrl = (url: string | undefined, width = 400) => {
-  if (!url || !url.includes('cloudinary.com')) return url || '/placeholder-product.jpg';
+// ✅ Helper to optimize Cloudinary image URLs or handle local paths
+const formatImageUrl = (url: string | undefined, width = 400) => {
+  if (!url) return '/placeholder-product.svg';
 
-  // Insert optimization params after '/upload/'
-  // q_auto = auto quality, f_auto = auto format (webp), w_X = resize width
-  return url.replace('/upload/', `/upload/q_auto,f_auto,w_${width},c_scale/`);
+  // Cloudinary
+  if (url.includes('cloudinary.com')) {
+    return url.replace('/upload/', `/upload/q_auto,f_auto,w_${width},c_scale/`);
+  }
+
+  // External URL
+  if (url.startsWith('http')) {
+    return url;
+  }
+
+  // Local URL (starts with / or just filename)
+  const baseUrl = 'http://localhost:3001';
+  if (url.startsWith('/')) {
+    return `${baseUrl}${url}`;
+  }
+
+  // Just filename, assume in uploads
+  return `${baseUrl}/uploads/${url}`;
 };
 
 export function ProductCard({ product, onAddToCart, onBuyNow }: ProductCardProps) {
@@ -40,10 +55,14 @@ export function ProductCard({ product, onAddToCart, onBuyNow }: ProductCardProps
       {/* Product Image */}
       <div className="relative aspect-square bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
         <img
-          src={optimizeCloudinaryUrl(product.product_image, 400)}
+          src={formatImageUrl(product.product_image, 400)}
           alt={product.product_name}
           loading="lazy"
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder-product.svg';
+          }}
         />
 
         {/* Overlay gradient */}
