@@ -100,11 +100,13 @@ export function LandingPage({
         products={featuredProducts}
         onAddToCart={onAddToCart}
         onBuyNow={onBuyNow}
+        isLoading={loading}
       />
       <LatestPostsSection
         posts={latestPosts}
         onBlogPostClick={onBlogPostClick}
         onViewAllPosts={onViewAllPosts}
+        isLoading={loading}
       />
       <CustomerReviewsSection reviews={topReviews} />
       <CTASection onShopNow={onShopNow} />

@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { ArrowLeft, Calendar, Eye, User } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { SEO } from '@/shared/components/SEO';
+import { Skeleton } from '@/shared/components/ui/skeleton';
 
 interface BlogDetailPageProps {
   postId: string;
@@ -18,6 +19,7 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
   useEffect(() => {
     const fetchPost = async () => {
       try {
+        setLoading(true); // Ensure loading is true on id change
         // Fetch post by slug (postId is actually slug in this case)
         const res = await fetch(`http://localhost:3001/api/posts/${postId}`);
         if (res.ok) {
@@ -32,9 +34,12 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
             const filtered = relatedData.filter((p: any) => p.slug !== postId).slice(0, 3);
             setRelatedPosts(filtered);
           }
+        } else {
+          setPost(null);
         }
       } catch (error) {
         console.error('Failed to fetch post:', error);
+        setPost(null);
       } finally {
         setLoading(false);
       }
@@ -49,6 +54,38 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
       day: 'numeric'
     });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Back button skeleton */}
+          <Skeleton className="w-24 h-8 bg-gray-800 mb-6" />
+
+          {/* Image skeleton */}
+          <Skeleton className="w-full h-[400px] bg-gray-800 rounded-lg mb-8" />
+
+          {/* Title skeleton */}
+          <Skeleton className="w-3/4 h-12 bg-gray-800 mb-4" />
+
+          {/* Meta skeleton */}
+          <div className="flex gap-4 mb-8">
+            <Skeleton className="w-20 h-4 bg-gray-800" />
+            <Skeleton className="w-32 h-4 bg-gray-800" />
+            <Skeleton className="w-24 h-4 bg-gray-800" />
+          </div>
+
+          {/* Content skeleton */}
+          <div className="space-y-4">
+            <Skeleton className="w-full h-4 bg-gray-800" />
+            <Skeleton className="w-full h-4 bg-gray-800" />
+            <Skeleton className="w-5/6 h-4 bg-gray-800" />
+            <Skeleton className="w-full h-4 bg-gray-800" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -163,7 +200,7 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
               {relatedPosts.map((relatedPost) => (
                 <div
                   key={relatedPost.id}
-                  onClick={() => onPostClick(relatedPost.id)}
+                  onClick={() => onPostClick(relatedPost.slug)}
                   className="bg-gray-900/50 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-red-500/50 transition-all group"
                 >
                   <div className="h-40 overflow-hidden">

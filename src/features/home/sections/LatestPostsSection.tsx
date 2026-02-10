@@ -4,6 +4,7 @@ import { formatDate, FADE_IN_VARIANTS } from '../constants';
 
 interface BlogPost {
     id: string;
+    slug: string;
     title: string;
     excerpt: string;
     featured_image?: string;
@@ -11,13 +12,21 @@ interface BlogPost {
     view_count: number;
 }
 
+import { BlogPostSkeleton } from '@/shared/components/skeletons/BlogPostSkeleton';
+
+// ... interface BlogPost ...
+
 interface LatestPostsSectionProps {
     posts: BlogPost[];
     onBlogPostClick?: (postId: string) => void;
     onViewAllPosts?: () => void;
+    isLoading?: boolean;
 }
 
-export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts }: LatestPostsSectionProps) {
+export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts, isLoading }: LatestPostsSectionProps) {
+    // Generate dummy items for skeleton loading
+    const skeletonItems = Array(3).fill(0);
+
     return (
         <section className="py-20 bg-black">
             <div className="container mx-auto px-4">
@@ -34,15 +43,20 @@ export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts }: L
                 </motion.div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {posts.map((post) => (
-                        <motion.article
-                            key={post.id}
-                            initial={{ opacity: 0, y: 12 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.35, ease: "easeOut" }}
-                            onClick={() => onBlogPostClick?.(post.id)}
-                            className="
+                    {isLoading ? (
+                        skeletonItems.map((_, index) => (
+                            <BlogPostSkeleton key={`skeleton-${index}`} />
+                        ))
+                    ) : (
+                        posts.map((post) => (
+                            <motion.article
+                                key={post.id}
+                                initial={{ opacity: 0, y: 12 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.35, ease: "easeOut" }}
+                                onClick={() => onBlogPostClick?.(post.slug)}
+                                className="
                 group
                 bg-gray-900
                 border border-gray-800
@@ -56,52 +70,53 @@ export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts }: L
                 hover:shadow-lg
                 hover:shadow-red-600/20
               "
-                        >
-                            {/* Featured Image */}
-                            <div className="relative h-48 overflow-hidden">
-                                <img
-                                    src={post.featured_image || '/placeholder-image.jpg'}
-                                    alt={post.title}
-                                    className="
+                            >
+                                {/* Featured Image */}
+                                <div className="relative h-48 overflow-hidden">
+                                    <img
+                                        src={post.featured_image || '/placeholder-image.jpg'}
+                                        alt={post.title}
+                                        className="
                     w-full h-full object-cover
                     group-hover:scale-105
                     transition-transform
                     duration-500
                     ease-out
                   "
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
-                            </div>
-
-                            {/* Content */}
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-red-500 transition-colors">
-                                    {post.title}
-                                </h3>
-                                <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                                    {post.excerpt}
-                                </p>
-
-                                {/* Meta Info */}
-                                <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                                    <div className="flex items-center gap-1">
-                                        <Calendar className="w-3 h-3" />
-                                        <span>{formatDate(post.published_at || new Date().toISOString())}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <Eye className="w-3 h-3" />
-                                        <span>{post.view_count} lượt xem</span>
-                                    </div>
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
                                 </div>
 
-                                {/* Read More Button */}
-                                <button className="flex items-center gap-2 text-red-500 font-semibold text-sm group-hover:gap-3 transition-all">
-                                    <span>Đọc thêm</span>
-                                    <ArrowRight className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </motion.article>
-                    ))}
+                                {/* Content */}
+                                <div className="p-6">
+                                    <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-red-500 transition-colors">
+                                        {post.title}
+                                    </h3>
+                                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                                        {post.excerpt}
+                                    </p>
+
+                                    {/* Meta Info */}
+                                    <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                                        <div className="flex items-center gap-1">
+                                            <Calendar className="w-3 h-3" />
+                                            <span>{formatDate(post.published_at || new Date().toISOString())}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <Eye className="w-3 h-3" />
+                                            <span>{post.view_count} lượt xem</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Read More Button */}
+                                    <button className="flex items-center gap-2 text-red-500 font-semibold text-sm group-hover:gap-3 transition-all">
+                                        <span>Đọc thêm</span>
+                                        <ArrowRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </motion.article>
+                        ))
+                    )}
                 </div>
 
                 {/* View All Posts Button */}

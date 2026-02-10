@@ -10,13 +10,19 @@ import {
     CarouselPrevious,
 } from "@/shared/components/ui/carousel";
 
+import { ProductCardSkeleton } from '@/shared/components/skeletons/ProductCardSkeleton';
+
 interface FeaturedProductsSectionProps {
     products: Product[];
     onAddToCart: (product: Product) => void;
     onBuyNow: (product: Product) => void;
+    isLoading?: boolean;
 }
 
-export function FeaturedProductsSection({ products, onAddToCart, onBuyNow }: FeaturedProductsSectionProps) {
+export function FeaturedProductsSection({ products, onAddToCart, onBuyNow, isLoading }: FeaturedProductsSectionProps) {
+    // Generate dummy items for skeleton loading
+    const skeletonItems = Array(4).fill(0);
+
     return (
         <section className="py-20 bg-gray-900">
             <div className="container mx-auto px-4">
@@ -35,27 +41,40 @@ export function FeaturedProductsSection({ products, onAddToCart, onBuyNow }: Fea
                 <div className="mx-auto max-w-5xl px-4 lg:px-0">
                     <Carousel opts={CAROUSEL_OPTIONS}>
                         <CarouselContent className="-ml-2 md:-ml-4">
-                            {products.map((product) => (
-                                <CarouselItem
-                                    key={product.product_id}
-                                    className="
-                    pl-2 md:pl-4 
-                    md:basis-1/2 lg:basis-1/4
-                    transition-transform
-                    duration-250
-                    ease-out
-                    hover:scale-[1.03]
-                  "
-                                >
-                                    <div className="h-full">
-                                        <ProductCard
-                                            product={product}
-                                            onAddToCart={onAddToCart}
-                                            onBuyNow={onBuyNow}
-                                        />
-                                    </div>
-                                </CarouselItem>
-                            ))}
+                            {isLoading ? (
+                                skeletonItems.map((_, index) => (
+                                    <CarouselItem
+                                        key={`skeleton-${index}`}
+                                        className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4"
+                                    >
+                                        <div className="h-full">
+                                            <ProductCardSkeleton />
+                                        </div>
+                                    </CarouselItem>
+                                ))
+                            ) : (
+                                products.map((product) => (
+                                    <CarouselItem
+                                        key={product.product_id}
+                                        className="
+                                            pl-2 md:pl-4 
+                                            md:basis-1/2 lg:basis-1/4
+                                            transition-transform
+                                            duration-250
+                                            ease-out
+                                            hover:scale-[1.03]
+                                          "
+                                    >
+                                        <div className="h-full">
+                                            <ProductCard
+                                                product={product}
+                                                onAddToCart={onAddToCart}
+                                                onBuyNow={onBuyNow}
+                                            />
+                                        </div>
+                                    </CarouselItem>
+                                ))
+                            )}
                         </CarouselContent>
                         <CarouselPrevious className="hidden md:flex -left-12 bg-gray-800 border-gray-700 text-white hover:bg-red-600 hover:border-red-600" />
                         <CarouselNext className="hidden md:flex -right-12 bg-gray-800 border-gray-700 text-white hover:bg-red-600 hover:border-red-600" />

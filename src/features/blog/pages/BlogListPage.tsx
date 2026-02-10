@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { ArrowLeft, Calendar, Eye, Search } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
 import { SEO } from '@/shared/components/SEO';
+import { BlogPostSkeleton } from '@/shared/components/skeletons/BlogPostSkeleton';
 
 interface BlogListPageProps {
   onBack: () => void;
@@ -55,6 +56,9 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
       day: 'numeric'
     });
   };
+
+  // Generate skeleton items
+  const skeletonItems = Array(6).fill(0);
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
@@ -128,7 +132,13 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
         </motion.div>
 
         {/* Posts Grid */}
-        {filteredPosts.length === 0 ? (
+        {loading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {skeletonItems.map((_, index) => (
+              <BlogPostSkeleton key={`skeleton-${index}`} />
+            ))}
+          </div>
+        ) : filteredPosts.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -144,7 +154,7 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                onClick={() => onPostClick(post.id)}
+                onClick={() => onPostClick(post.slug)}
                 className="bg-gray-900/30 border border-gray-800 rounded-lg overflow-hidden cursor-pointer hover:border-red-500/50 transition-all group hover:shadow-lg hover:shadow-red-500/10"
               >
                 {/* Featured Image */}

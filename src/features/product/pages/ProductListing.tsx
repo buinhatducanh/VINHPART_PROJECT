@@ -6,6 +6,7 @@ import { PriceRangeSlider } from '@/features/product/components/PriceRangeSlider
 import { hierarchicalCategories } from '@/shared/data/mockProducts';
 import { Product } from '@/shared/types';
 import { useProducts, useMaxPrice } from '@/hooks/useQueries';
+import { ProductCardSkeleton } from '@/shared/components/skeletons/ProductCardSkeleton';
 
 interface ProductListingProps {
   selectedCategory: string;
@@ -93,16 +94,6 @@ export function ProductListing({
     }
     setExpandedCategories(newExpanded);
   };
-
-  // Brands list is hardcoded or fetched? 
-  // Original code derived it from `displayProducts` which was all products.
-  // Now we don't have all products. We need a list of brands.
-  // For now, let's use a static list or fetch brands separate API.
-  // Or just keep using the hardcoded list from mock/logic if available.
-  // The original code derived it: `const brands = Array.from(new Set(displayProducts...))`
-  // Since we don't have all products, we'll lose dynamic brands from API.
-  // Fallback: Use a hardcoded list of common brands or Mock brands for now to avoid broken UI.
-  // Better: Fetch brands from API `/api/brands` (requires backend work) or just stick to what we know: Honda, Yamaha, Suzuki, etc.
 
   const brands = ['Honda', 'Yamaha', 'Suzuki', 'SYM', 'Piaggio', 'Kawasaki', 'Ducati', 'BMW', 'Triumph', 'Harley-Davidson'];
 
@@ -236,13 +227,11 @@ export function ProductListing({
     </div>
   );
 
-  if (loading) {
-    // Keep loading UI
-    return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading products...</div>;
-  }
-
   // Calculate pagination
   const totalPages = Math.ceil(totalProducts / itemsPerPage);
+
+  // Generate skeleton items
+  const skeletonItems = Array(8).fill(0);
 
   return (
     <div className="pt-20 min-h-screen bg-black">
@@ -252,7 +241,7 @@ export function ProductListing({
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Sản phẩm</h1>
             <p className="text-gray-400">
-              Hiển thị {products.length} / {totalProducts} sản phẩm
+              {loading ? 'Đang tải...' : `Hiển thị ${products.length} / ${totalProducts} sản phẩm`}
             </p>
           </div>
 
@@ -336,7 +325,13 @@ export function ProductListing({
 
           {/* Products Grid */}
           <div className="flex-1">
-            {products.length === 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8">
+                {skeletonItems.map((_, index) => (
+                  <ProductCardSkeleton key={`skeleton-${index}`} />
+                ))}
+              </div>
+            ) : products.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-gray-400 text-lg mb-4">Không tìm thấy sản phẩm phù hợp</p>
                 <button
@@ -345,7 +340,7 @@ export function ProductListing({
                     if (onSearchQueryChange) onSearchQueryChange('');
                     setSelectedBrand('all');
                     setPriceRange([0, maxPrice]);
-                    setAppliedPriceRange([0, maxPrice]); // Reset applied too
+                    setAppliedPriceRange([0, maxPrice]);
                   }}
                   className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-all"
                 >
@@ -371,7 +366,7 @@ export function ProductListing({
                   ))}
                 </div>
 
-                {/* Enhanced Pagination */}
+                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     {/* First Page Button */}
