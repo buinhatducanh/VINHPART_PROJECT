@@ -5,8 +5,12 @@ import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const { Pool } = pg;
 const app = express();
