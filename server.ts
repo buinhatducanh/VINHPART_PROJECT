@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { v2 as cloudinary } from 'cloudinary';
+
 
 dotenv.config();
 
@@ -1093,8 +1095,33 @@ app.delete('/api/posts/:id', async (req, res) => {
 });
 
 
+// ============================================
+// UPLOAD API (Cloudinary Signature)
+// ============================================
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+app.get('/api/upload/signature', (req, res) => {
+    try {
+        const params = req.query;
+        const signature = cloudinary.utils.api_sign_request(
+            params as Record<string, any>,
+            process.env.CLOUDINARY_API_SECRET!
+        );
+        res.json({ signature });
+    } catch (error) {
+        console.error('Error generating signature:', error);
+        res.status(500).json({ error: 'Failed to generate signature' });
+    }
+});
+
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
+
     app.use(express.static(path.join(__dirname, 'dist')));
 
     // Handle React routing, return all requests to React app
