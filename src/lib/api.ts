@@ -1,10 +1,10 @@
-import { Product } from '@/shared/types';
+import { Product, SEOPost } from '@/shared/types';
 
 // API configuration
 export const API_BASE_URL = 'http://localhost:3001/api';
 
 // Re-export Product type for convenience
-export type { Product };
+export type { Product, SEOPost };
 
 export interface ProductsResponse {
     data: Product[];
@@ -124,5 +124,50 @@ export const dashboardApi = {
         const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
         if (!response.ok) throw new Error('Failed to fetch stats');
         return response.json();
+    },
+};
+
+// Posts API
+export const postApi = {
+    getPosts: async (status?: string, limit: number = 50): Promise<SEOPost[]> => {
+        let url = `${API_BASE_URL}/posts?limit=${limit}`;
+        if (status && status !== 'all') url += `&status=${status}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch posts');
+        return response.json();
+    },
+
+    getPost: async (slug: string): Promise<SEOPost> => {
+        const response = await fetch(`${API_BASE_URL}/posts/${slug}`);
+        if (!response.ok) throw new Error('Failed to fetch post');
+        return response.json();
+    },
+
+    createPost: async (data: Partial<SEOPost>): Promise<SEOPost> => {
+        const response = await fetch(`${API_BASE_URL}/posts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to create post');
+        return response.json();
+    },
+
+    updatePost: async (id: string, data: Partial<SEOPost>): Promise<SEOPost> => {
+        const response = await fetch(`${API_BASE_URL}/posts/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to update post');
+        return response.json();
+    },
+
+    deletePost: async (id: string): Promise<void> => {
+        const response = await fetch(`${API_BASE_URL}/posts/${id}`, {
+            method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Failed to delete post');
     },
 };
