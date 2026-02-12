@@ -201,6 +201,11 @@ app.get('/api/products/max-price', async (req, res) => {
 
 app.get('/api/products', async (req, res) => {
     try {
+        // DEBUG LOGGING
+        const dbUrl = process.env.DATABASE_URL || 'undefined';
+        const maskedUrl = dbUrl.replace(/:[^:@]*@/, ':****@');
+        console.log(`[DEBUG] /api/products hit. DB URL: ${maskedUrl}`);
+
         const {
             page = 1,
             limit = 12,
@@ -287,7 +292,14 @@ app.get('/api/products', async (req, res) => {
 
         params.push(Number(limit), offset);
 
+
         const { rows: products } = await pool.query(dataQuery, params);
+
+        console.log(`[DEBUG] Fetched ${products.length} products`);
+        if (products.length > 0) {
+            console.log(`[DEBUG] First product image: ${JSON.stringify(products[0].images)}`);
+        }
+
 
         const mappedProducts = products.map(p => {
             // Calculate status
