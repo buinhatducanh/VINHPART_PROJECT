@@ -19,7 +19,7 @@ const port = 3001;
 // Use connection string from environment
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: process.env.DB_SSL === 'false' ? undefined : { rejectUnauthorized: false }
 });
 
 app.use(cors());
@@ -1080,6 +1080,20 @@ app.delete('/api/posts/:id', async (req, res) => {
     }
 });
 
+
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, 'dist')));
+
+    // Handle React routing, return all requests to React app
+    app.get(/.*/, (req, res) => {
+        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    });
+}
+
+
 app.listen(port, () => {
     console.log(`API Server running at http://localhost:${port}`);
 });
+
+export default app;
