@@ -4,6 +4,7 @@ import { productApi, ordersApi, dashboardApi, ProductFilters, Product } from '@/
 // Query Keys - centralized for cache invalidation
 export const queryKeys = {
     products: (filters: ProductFilters) => ['products', filters] as const,
+    product: (id: string) => ['product', id] as const,
     maxPrice: ['maxPrice'] as const,
     orders: ['orders'] as const,
     dashboardStats: ['dashboardStats'] as const,
@@ -21,6 +22,18 @@ export function useProducts(filters: ProductFilters) {
         queryFn: () => productApi.getProducts(filters),
         staleTime: 5 * 60 * 1000, // 5 minutes
         gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes (formerly cacheTime)
+    });
+}
+
+/**
+ * Hook to fetch single product details
+ */
+export function useProduct(id: string) {
+    return useQuery({
+        queryKey: queryKeys.product(id),
+        queryFn: () => productApi.getProductById(id),
+        enabled: !!id, // Only fetch if id is provided
+        staleTime: 5 * 60 * 1000,
     });
 }
 
