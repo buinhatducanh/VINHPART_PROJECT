@@ -201,6 +201,62 @@ app.get('/api/products/max-price', async (req, res) => {
     }
 });
 
+// GET single product by ID
+app.get('/api/products/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `
+            SELECT p.*, c.name as category_name, c.slug as category_slug
+            FROM products p
+            LEFT JOIN categories c ON p."categoryId" = c.id
+            WHERE p.id = $1 AND p."isActive" = true
+        `;
+        const { rows } = await pool.query(query, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        const p = rows[0];
+
+        // Stock status calculation
+        let status = 'out_of_stock';
+        if (p.stock > 10) status = 'in_stock';
+        else if (p.stock > 0) status = 'low_stock';
+
+        // Price calculation
+        const actualPrice = p.salePrice ? Number(p.salePrice) : Number(p.price);
+        const originalPrice = Number(p.price);
+        const discountPercent = p.salePrice ? Math.round(((originalPrice - Number(p.salePrice)) / originalPrice) * 100) : 0;
+
+        const product = {
+            product_id: p.id,
+            product_name: p.name,
+            category: p.category_slug || 'parts',
+            sub_category: p.category_name || 'General',
+            vehicle_type: 'Motorbike', // Default for now
+            compatible_brand: p.brand || 'Honda',
+            compatible_model: 'Universal',
+            engine_capacity: 'Universal',
+            price: actualPrice,
+            original_price: originalPrice,
+            discount_percentage: discountPercent,
+            stock: p.stock,
+            stock_status: status,
+            description: p.description || '',
+            product_image: p.images && p.images.length > 0 ? p.images[0] : '',
+            images: p.images || [], // Return all images
+            tags: [],
+            sku: p.sku
+        };
+
+        res.json(product);
+    } catch (error) {
+        console.error('Error fetching product:', error);
+        res.status(500).json({ error: 'Failed to fetch product' });
+    }
+});
+
 app.get('/api/products', async (req, res) => {
     try {
         // DEBUG LOGGING
