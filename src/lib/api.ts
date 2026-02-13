@@ -67,6 +67,17 @@ export const productApi = {
         return data.maxPrice || 5000000;
     },
 
+    // Get single product by ID
+    getProductById: async (id: string): Promise<Product> => {
+        const response = await fetch(`${API_BASE_URL}/products/${id}`);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch product');
+        }
+
+        return response.json();
+    },
+
     // Create product
     createProduct: async (product: Partial<Product>): Promise<Product> => {
         const response = await fetch(`${API_BASE_URL}/products`, {

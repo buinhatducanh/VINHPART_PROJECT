@@ -14,6 +14,8 @@ export interface Product {
   stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
   description: string;
   product_image: string;
+  images?: string[]; // ✅ FIX: Support multiple images
+  sku?: string;      // ✅ FIX: Support SKU
   tags: string[];
 }
 
