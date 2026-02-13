@@ -15,6 +15,7 @@ interface ProductListingProps {
   onBuyNow: (product: Product) => void;
   searchQuery?: string;
   onSearchQueryChange?: (query: string) => void;
+  onProductClick?: (productId: string) => void;
 }
 
 export function ProductListing({
@@ -23,7 +24,8 @@ export function ProductListing({
   onAddToCart,
   onBuyNow,
   searchQuery = '',
-  onSearchQueryChange
+  onSearchQueryChange,
+  onProductClick
 }: ProductListingProps) {
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000]);
@@ -361,6 +363,7 @@ export function ProductListing({
                         product={product}
                         onAddToCart={onAddToCart}
                         onBuyNow={onBuyNow}
+                        onProductClick={onProductClick}
                       />
                     </motion.div>
                   ))}

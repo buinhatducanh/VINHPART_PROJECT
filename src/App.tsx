@@ -13,6 +13,7 @@ import { AddToCartToast } from '@/features/cart/components/AddToCartToast';
 import { Toaster } from '@/shared/components/ui/sonner';
 import { toast } from 'sonner';
 import { Product, CartItem, User } from '@/shared/types';
+import { ProductDetailPage } from '@/features/product/pages/ProductDetailPage';
 
 // Create QueryClient with default options
 const queryClient = new QueryClient({
@@ -27,7 +28,8 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'products' | 'cart' | 'checkout' | 'admin' | 'blog-list' | 'blog-detail'>('landing');
+  const [currentPage, setCurrentPage] = useState<'landing' | 'products' | 'cart' | 'checkout' | 'admin' | 'blog-list' | 'blog-detail' | 'product-detail'>('landing');
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [currentBlogPostId, setCurrentBlogPostId] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -101,17 +103,17 @@ export default function App() {
     }
   };
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: Product, quantity: number = 1) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.product.product_id === product.product_id);
       if (existing) {
         return prev.map(item =>
           item.product.product_id === product.product_id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product, quantity }];
     });
 
     // Show toast notification
@@ -152,6 +154,12 @@ export default function App() {
     setCurrentPage('blog-list');
   };
 
+  const handleProductClick = (productId: string) => {
+    setSelectedProductId(productId);
+    setCurrentPage('product-detail');
+    window.scrollTo(0, 0);
+  };
+
   const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -188,6 +196,7 @@ export default function App() {
             onAdminClick={handleAdminClick}
             onBlogPostClick={handleBlogPostClick}
             onViewAllPosts={handleViewAllPosts}
+            onProductClick={handleProductClick}
           />
         )}
 
@@ -199,6 +208,17 @@ export default function App() {
             onBuyNow={handleBuyNow}
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
+            onProductClick={handleProductClick}
+          />
+        )}
+
+        {currentPage === 'product-detail' && selectedProductId && (
+          <ProductDetailPage
+            productId={selectedProductId}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            onBack={() => setCurrentPage('products')}
+            onProductClick={handleProductClick}
           />
         )}
 

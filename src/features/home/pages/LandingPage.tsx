@@ -20,6 +20,7 @@ interface LandingPageProps {
   onAdminClick?: () => void;
   onBlogPostClick?: (postId: string) => void;
   onViewAllPosts?: () => void;
+  onProductClick?: (productId: string) => void;
 }
 
 export function LandingPage({
@@ -30,6 +31,7 @@ export function LandingPage({
   onAdminClick,
   onBlogPostClick,
   onViewAllPosts,
+  onProductClick,
 }: LandingPageProps) {
   // State for data from API
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -101,6 +103,7 @@ export function LandingPage({
         onAddToCart={onAddToCart}
         onBuyNow={onBuyNow}
         isLoading={loading}
+        onProductClick={onProductClick}
       />
       <LatestPostsSection
         posts={latestPosts}

@@ -7,34 +7,12 @@ interface ProductCardProps {
   product: Product;
   onAddToCart: (product: Product) => void;
   onBuyNow: (product: Product) => void;
+  onProductClick?: (productId: string) => void;
 }
 
-// ✅ Helper to optimize Cloudinary image URLs
-// ✅ Helper to optimize Cloudinary image URLs or handle local paths
-const formatImageUrl = (url: string | undefined, width = 400) => {
-  if (!url) return '/placeholder-product.svg';
+import { formatImageUrl } from '@/lib/utils';
 
-  // Cloudinary
-  if (url.includes('cloudinary.com')) {
-    return url.replace('/upload/', `/upload/q_auto,f_auto,w_${width},c_scale/`);
-  }
-
-  // External URL
-  if (url.startsWith('http')) {
-    return url;
-  }
-
-  // Local URL (starts with / or just filename)
-  const baseUrl = 'http://localhost:3001';
-  if (url.startsWith('/')) {
-    return `${baseUrl}${url}`;
-  }
-
-  // Just filename, assume in uploads
-  return `${baseUrl}/uploads/${url}`;
-};
-
-export function ProductCard({ product, onAddToCart, onBuyNow }: ProductCardProps) {
+export function ProductCard({ product, onAddToCart, onBuyNow, onProductClick }: ProductCardProps) {
   const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
 
   const formatPrice = (price: number) => {
@@ -44,10 +22,20 @@ export function ProductCard({ product, onAddToCart, onBuyNow }: ProductCardProps
     }).format(price);
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent navigation if clicking buttons
+    if ((e.target as HTMLElement).closest('button')) return;
+
+    if (onProductClick) {
+      onProductClick(product.product_id);
+    }
+  };
+
   return (
     <motion.div
       whileHover={{ y: -8 }}
-      className="bg-gradient-to-b from-gray-900 to-gray-900/50 border border-gray-800 rounded-xl overflow-hidden group hover:border-red-600/50 hover:shadow-2xl hover:shadow-red-600/20 transition-all relative"
+      onClick={handleCardClick}
+      className={`bg-gradient-to-b from-gray-900 to-gray-900/50 border border-gray-800 rounded-xl overflow-hidden group hover:border-red-600/50 hover:shadow-2xl hover:shadow-red-600/20 transition-all relative ${onProductClick ? 'cursor-pointer' : ''}`}
     >
       {/* Glow effect on hover */}
       <div className="absolute inset-0 bg-gradient-to-b from-red-600/0 via-red-600/5 to-red-600/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
