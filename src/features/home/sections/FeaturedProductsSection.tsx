@@ -16,10 +16,11 @@ interface FeaturedProductsSectionProps {
     products: Product[];
     onAddToCart: (product: Product) => void;
     onBuyNow: (product: Product) => void;
-    isLoading?: boolean;
+    isLoading: boolean;
+    onProductClick?: (productId: string) => void;
 }
 
-export function FeaturedProductsSection({ products, onAddToCart, onBuyNow, isLoading }: FeaturedProductsSectionProps) {
+export function FeaturedProductsSection({ products, onAddToCart, onBuyNow, isLoading, onProductClick }: FeaturedProductsSectionProps) {
     // Generate dummy items for skeleton loading
     const skeletonItems = Array(4).fill(0);
 
@@ -70,6 +71,7 @@ export function FeaturedProductsSection({ products, onAddToCart, onBuyNow, isLoa
                                                 product={product}
                                                 onAddToCart={onAddToCart}
                                                 onBuyNow={onBuyNow}
+                                                onProductClick={onProductClick}
                                             />
                                         </div>
                                     </CarouselItem>
