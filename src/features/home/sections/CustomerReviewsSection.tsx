@@ -32,7 +32,7 @@ export function CustomerReviewsSection({ reviews }: CustomerReviewsSectionProps)
                     <p className="text-gray-400">Trải nghiệm thực tế từ người dùng</p>
                 </motion.div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-visible pb-4 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {reviews.map((review, index) => (
                         <motion.div
                             key={review.id}
@@ -40,7 +40,7 @@ export function CustomerReviewsSection({ reviews }: CustomerReviewsSectionProps)
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1 }}
-                            className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-red-600/50 transition-all"
+                            className="min-w-[85vw] md:min-w-0 snap-center bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-red-600/50 transition-all shrink-0"
                         >
                             {/* Review Title */}
                             <h4 className="text-white font-bold text-lg mb-2">{review.title}</h4>
