@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Product, Review } from '@/shared/types';
+import { Product, Review, User } from '@/shared/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { ProductSpecifications } from '../molecules/ProductSpecifications';
-import { Star, Send, CheckCircle, User, ThumbsUp, MessageSquare, ShieldCheck } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { Star, Send, CheckCircle, User as UserIcon, ThumbsUp, MessageSquare, ShieldCheck } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion'; // Changed from 'motion/react' to 'framer-motion' for AnimatePresence
 
 interface ProductDescriptionSectionProps {
     product: Product;
+    user?: User | null;
 }
 
-export function ProductDescriptionSection({ product }: ProductDescriptionSectionProps) {
+export function ProductDescriptionSection({ product, user }: ProductDescriptionSectionProps) {
     // ==================== REVIEW STATE ====================
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loadingReviews, setLoadingReviews] = useState(false);
@@ -18,8 +19,6 @@ export function ProductDescriptionSection({ product }: ProductDescriptionSection
     // Form state
     const [formRating, setFormRating] = useState(0);
     const [formHoverRating, setFormHoverRating] = useState(0);
-    const [formName, setFormName] = useState('');
-    const [formEmail, setFormEmail] = useState('');
     const [formTitle, setFormTitle] = useState('');
     const [formContent, setFormContent] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -64,38 +63,47 @@ export function ProductDescriptionSection({ product }: ProductDescriptionSection
     // Submit review
     const handleSubmitReview = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (formRating === 0) {
-            setSubmitError('Vui lòng chọn số sao đánh giá');
-            return;
-        }
-        if (!formName.trim() || !formContent.trim()) {
-            setSubmitError('Vui lòng điền đầy đủ tên và nội dung đánh giá');
+        if (!product) return;
+
+        if (!user) {
+            setSubmitError('Vui lòng đăng nhập để gửi đánh giá.');
             return;
         }
 
+        if (formRating === 0) {
+            setSubmitError('Vui lòng chọn số sao đánh giá.');
+            return;
+        }
+
+        setSubmitting(true);
+        setSubmitError('');
+
         try {
-            setSubmitting(true);
-            setSubmitError('');
             const res = await fetch('http://localhost:3001/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     product_id: product.product_id,
-                    customer_name: formName,
-                    customer_email: formEmail,
+                    customer_name: user.name,
+                    customer_email: user.email,
                     rating: formRating,
                     title: formTitle,
                     content: formContent,
+                    images: [] // TODO: Add image upload feature later
                 })
             });
 
             if (res.ok) {
                 setSubmitSuccess(true);
+                // Reset form
                 setFormRating(0);
-                setFormName('');
-                setFormEmail('');
+                setFormHoverRating(0);
                 setFormTitle('');
                 setFormContent('');
+                
+                // Fetch reviews again to potentially show the new one (if auto-approved, or just to refresh state)
+                fetchReviews();
+                
                 setTimeout(() => setSubmitSuccess(false), 5000);
             } else {
                 setSubmitError('Không thể gửi đánh giá. Vui lòng thử lại.');
@@ -319,6 +327,25 @@ export function ProductDescriptionSection({ product }: ProductDescriptionSection
                                         <h4 className="text-lg font-bold text-white mb-2">Cảm ơn bạn đã đánh giá!</h4>
                                         <p className="text-gray-400 text-sm">Đánh giá của bạn đang chờ được duyệt và sẽ sớm được hiển thị.</p>
                                     </motion.div>
+                                ) : !user ? (
+                                    <motion.div
+                                        key="login-prompt"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="bg-gray-800/20 border border-gray-700/50 rounded-xl p-8 text-center"
+                                    >
+                                        <UserIcon className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                                        <h4 className="text-lg font-medium text-white mb-2">Đăng nhập để đánh giá</h4>
+                                        <p className="text-gray-400 text-sm mb-6">
+                                            Chỉ những khách hàng đã đăng nhập mới có thể để lại đánh giá cho sản phẩm này.
+                                        </p>
+                                        {/* Since AuthModal is in Header, we just tell them to use the header button, or we can just show a visual cue. */}
+                                        <div className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-800 text-gray-300 rounded-lg cursor-not-allowed">
+                                            <ShieldCheck className="w-4 h-4" />
+                                            Yêu cầu xác thực tài khoản
+                                        </div>
+                                    </motion.div>
                                 ) : (
                                     <motion.form
                                         key="form"
@@ -359,20 +386,18 @@ export function ProductDescriptionSection({ product }: ProductDescriptionSection
                                             </div>
                                         </div>
 
-                                        {/* Name & Email row */}
+                                        {/* Name & Email row - Readonly from user state */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                    <User className="w-4 h-4 inline mr-1" />
-                                                    Họ tên <span className="text-red-400">*</span>
+                                                    <UserIcon className="w-4 h-4 inline mr-1" />
+                                                    Họ tên
                                                 </label>
                                                 <input
                                                     type="text"
-                                                    value={formName}
-                                                    onChange={(e) => setFormName(e.target.value)}
-                                                    placeholder="Nhập tên của bạn"
-                                                    className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all"
-                                                    required
+                                                    value={user?.name || ''}
+                                                    readOnly
+                                                    className="w-full px-4 py-3 bg-gray-800/30 border border-gray-700/50 rounded-xl text-gray-400 cursor-not-allowed focus:outline-none transition-all"
                                                 />
                                             </div>
                                             <div>
@@ -381,10 +406,9 @@ export function ProductDescriptionSection({ product }: ProductDescriptionSection
                                                 </label>
                                                 <input
                                                     type="email"
-                                                    value={formEmail}
-                                                    onChange={(e) => setFormEmail(e.target.value)}
-                                                    placeholder="email@example.com"
-                                                    className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all"
+                                                    value={user?.email || ''}
+                                                    readOnly
+                                                    className="w-full px-4 py-3 bg-gray-800/30 border border-gray-700/50 rounded-xl text-gray-400 cursor-not-allowed focus:outline-none transition-all"
                                                 />
                                             </div>
                                         </div>
