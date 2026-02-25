@@ -56,10 +56,10 @@ export function HeroSection({ onShopNow, onViewCatalog }: HeroSectionProps) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                 >
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-gray-200 to-red-600 bg-clip-text text-transparent">
+                    <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-white via-gray-200 to-red-600 bg-clip-text text-transparent px-2">
                         Nâng Cấp Hiệu Suất Xe
                     </h1>
-                    <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8 text-red-600">
+                    <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-6 md:mb-8 text-red-600 px-2">
                         Phụ Tùng Chính Hãng
                     </h2>
                     <p className="text-lg md:text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
@@ -71,7 +71,7 @@ export function HeroSection({ onShopNow, onViewCatalog }: HeroSectionProps) {
                             onClick={onShopNow}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg shadow-red-600/50 hover:shadow-red-600/80 transition-all"
+                            className="w-full sm:w-auto px-8 py-3 md:py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg shadow-red-600/50 hover:shadow-red-600/80 transition-all"
                         >
                             Mua ngay
                         </motion.button>
@@ -79,7 +79,7 @@ export function HeroSection({ onShopNow, onViewCatalog }: HeroSectionProps) {
                             onClick={onViewCatalog}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-8 py-4 bg-transparent border-2 border-white hover:bg-white hover:text-black text-white font-bold rounded-lg transition-all"
+                            className="w-full sm:w-auto px-8 py-3 md:py-4 bg-transparent border-2 border-white hover:bg-white hover:text-black text-white font-bold rounded-lg transition-all"
                         >
                             Xem danh mục
                         </motion.button>

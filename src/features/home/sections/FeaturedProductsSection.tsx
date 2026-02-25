@@ -46,7 +46,7 @@ export function FeaturedProductsSection({ products, onAddToCart, onBuyNow, isLoa
                                 skeletonItems.map((_, index) => (
                                     <CarouselItem
                                         key={`skeleton-${index}`}
-                                        className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4"
+                                        className="pl-4 basis-[85%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
                                     >
                                         <div className="h-full">
                                             <ProductCardSkeleton />
@@ -58,8 +58,8 @@ export function FeaturedProductsSection({ products, onAddToCart, onBuyNow, isLoa
                                     <CarouselItem
                                         key={product.product_id}
                                         className="
-                                            pl-2 md:pl-4 
-                                            md:basis-1/2 lg:basis-1/4
+                                            pl-4 
+                                            basis-[85%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4
                                             transition-transform
                                             duration-250
                                             ease-out
