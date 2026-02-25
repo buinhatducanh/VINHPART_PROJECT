@@ -2,6 +2,10 @@
 @import './tailwind.css';
 @import './theme.css';
 
+html, body {
+  overflow-x: hidden;
+}
+
 /* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
