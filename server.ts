@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { v2 as cloudinary } from 'cloudinary';
+
 
 dotenv.config();
 
@@ -199,8 +201,69 @@ app.get('/api/products/max-price', async (req, res) => {
     }
 });
 
+// GET single product by ID
+app.get('/api/products/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = `
+            SELECT p.*, c.name as category_name, c.slug as category_slug
+            FROM products p
+            LEFT JOIN categories c ON p."categoryId" = c.id
+            WHERE p.id = $1 AND p."isActive" = true
+        `;
+        const { rows } = await pool.query(query, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        const p = rows[0];
+
+        // Stock status calculation
+        let status = 'out_of_stock';
+        if (p.stock > 10) status = 'in_stock';
+        else if (p.stock > 0) status = 'low_stock';
+
+        // Price calculation
+        const actualPrice = p.salePrice ? Number(p.salePrice) : Number(p.price);
+        const originalPrice = Number(p.price);
+        const discountPercent = p.salePrice ? Math.round(((originalPrice - Number(p.salePrice)) / originalPrice) * 100) : 0;
+
+        const product = {
+            product_id: p.id,
+            product_name: p.name,
+            category: p.category_slug || 'parts',
+            sub_category: p.category_name || 'General',
+            vehicle_type: 'Motorbike', // Default for now
+            compatible_brand: p.brand || 'Honda',
+            compatible_model: 'Universal',
+            engine_capacity: 'Universal',
+            price: actualPrice,
+            original_price: originalPrice,
+            discount_percentage: discountPercent,
+            stock: p.stock,
+            stock_status: status,
+            description: p.description || '',
+            product_image: p.images && p.images.length > 0 ? p.images[0] : '',
+            images: p.images || [], // Return all images
+            tags: [],
+            sku: p.sku
+        };
+
+        res.json(product);
+    } catch (error) {
+        console.error('Error fetching product:', error);
+        res.status(500).json({ error: 'Failed to fetch product' });
+    }
+});
+
 app.get('/api/products', async (req, res) => {
     try {
+        // DEBUG LOGGING
+        const dbUrl = process.env.DATABASE_URL || 'undefined';
+        const maskedUrl = dbUrl.replace(/:[^:@]*@/, ':****@');
+        console.log(`[DEBUG] /api/products hit. DB URL: ${maskedUrl}`);
+
         const {
             page = 1,
             limit = 12,
@@ -287,7 +350,14 @@ app.get('/api/products', async (req, res) => {
 
         params.push(Number(limit), offset);
 
+
         const { rows: products } = await pool.query(dataQuery, params);
+
+        console.log(`[DEBUG] Fetched ${products.length} products`);
+        if (products.length > 0) {
+            console.log(`[DEBUG] First product image: ${JSON.stringify(products[0].images)}`);
+        }
+
 
         const mappedProducts = products.map(p => {
             // Calculate status
@@ -1081,8 +1151,33 @@ app.delete('/api/posts/:id', async (req, res) => {
 });
 
 
+// ============================================
+// UPLOAD API (Cloudinary Signature)
+// ============================================
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+app.get('/api/upload/signature', (req, res) => {
+    try {
+        const params = req.query;
+        const signature = cloudinary.utils.api_sign_request(
+            params as Record<string, any>,
+            process.env.CLOUDINARY_API_SECRET!
+        );
+        res.json({ signature });
+    } catch (error) {
+        console.error('Error generating signature:', error);
+        res.status(500).json({ error: 'Failed to generate signature' });
+    }
+});
+
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
+
     app.use(express.static(path.join(__dirname, 'dist')));
 
     // Handle React routing, return all requests to React app
