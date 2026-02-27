@@ -6,7 +6,7 @@ import { ManageProductsPage } from '../components/ManageProductsPage';
 import { ManagePostsPage } from '../components/ManagePostsPage';
 import { SettingsPage } from '../components/SettingsPage';
 import { ManageSEOPage } from '../components/ManageSEOPage';
-import { ManageCategoriesPage } from '../components/ManageCategoriesPage';
+import { CategoryPage as ManageCategoriesPage } from '../components/category';
 import { ManageReviewsPage } from '../components/ManageReviewsPage';
 import { DashboardHome } from '../components/DashboardHome';
 import { LogoutModal } from '../components/LogoutModal';
