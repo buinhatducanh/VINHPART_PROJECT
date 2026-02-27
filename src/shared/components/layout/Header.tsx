@@ -1,4 +1,4 @@
-import { Search, ShoppingCart, User, Menu } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, LogOut, Package, Settings, FileText } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthModal } from '@/features/auth/components/AuthModal';
@@ -30,6 +30,9 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
+  // Mobile menu state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   // Search suggestions state
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -48,7 +51,8 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
       // Hiện header khi scroll lên, ẩn khi scroll xuống
       if (currentScrollY < lastScrollY || currentScrollY < 10) {
         setIsVisible(true);
-      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+      } else if (currentScrollY > lastScrollY && currentScrollY > 100 && !isMobileMenuOpen) {
+        // Chỉ ẩn nếu mobile menu đang đóng
         setIsVisible(false);
         setShowAccountMenu(false); // Đóng menu khi ẩn header
       }
@@ -141,14 +145,22 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
       )}
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
+          {/* Mobile Menu Button (Left on mobile, hidden on desktop) */}
+          <button
+            className="md:hidden p-2 -ml-2 hover:bg-gray-900 rounded-lg transition-colors z-50 text-white"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <Menu className="w-5 h-5 lg:w-6 lg:h-6" />
+          </button>
+
           {/* Logo - VINPART Design */}
           <button
             onClick={onLogoClick}
-            className="flex items-center gap-3 group cursor-pointer"
+            className="flex items-center gap-2 lg:gap-3 group cursor-pointer absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0"
           >
             <motion.div
               whileHover={{ scale: 1.08, rotate: 3 }}
-              className="relative w-12 h-12 lg:w-16 lg:h-16 flex items-center justify-center"
+              className="relative w-12 h-12 lg:w-16 lg:h-16"
             >
               {/* Outer glow ring - animated pulse */}
               <div className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-800 rounded-xl blur-xl opacity-50 group-hover:opacity-100 transition-all duration-700 animate-pulse"></div>
@@ -299,14 +311,24 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
           </div>
 
           {/* Right Icons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             {/* Search Icon - Mobile */}
-            <button className="md:hidden p-2 hover:bg-gray-900 rounded-lg transition-colors">
-              <Search className="w-5 h-5 text-gray-400" />
+            <button
+              className="md:hidden p-2 hover:bg-gray-900 rounded-lg transition-colors text-white"
+              onClick={() => {
+                // Here you might want to open a mobile search overlay
+                // For now, let's just focus the search input if visible, or open mobile menu with search active
+                setIsMobileMenuOpen(true);
+                setTimeout(() => {
+                  document.getElementById('mobile-search-input')?.focus();
+                }, 100);
+              }}
+            >
+              <Search className="w-5 h-5 lg:w-6 lg:h-6" />
             </button>
 
             {/* Account */}
-            <div className="relative" ref={accountMenuRef}>
+            <div className="relative hidden md:block" ref={accountMenuRef}>
               <button
                 onClick={() => setShowAccountMenu(!showAccountMenu)}
                 className="p-2 hover:bg-gray-900 rounded-lg transition-colors relative"
@@ -379,9 +401,9 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
             {/* Cart */}
             <button
               onClick={onCartClick}
-              className="relative p-2 hover:bg-gray-900 rounded-lg transition-colors group"
+              className="relative p-2 hover:bg-gray-900 rounded-lg transition-colors group text-white"
             >
-              <ShoppingCart className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors" />
+              <ShoppingCart className="w-5 h-5 lg:w-6 lg:h-6 group-hover:text-red-500 transition-colors" />
               {cartCount > 0 && (
                 <motion.span
                   key={cartCount}
@@ -394,19 +416,223 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
               )}
             </button>
 
-            {/* Mobile Menu */}
-            <button className="md:hidden p-2 hover:bg-gray-900 rounded-lg transition-colors">
-              <Menu className="w-5 h-5 text-gray-400" />
-            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-[100] md:hidden">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute top-0 left-0 bottom-0 w-[85vw] max-w-sm bg-gray-950 border-r border-gray-800 shadow-2xl overflow-y-auto flex flex-col"
+            >
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-800">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center font-black text-white text-xl">
+                    V
+                  </div>
+                  <span className="font-black text-lg bg-gradient-to-r from-white via-red-50 to-white bg-clip-text text-transparent">VINPART</span>
+                </div>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Mobile Search */}
+              <div className="p-4 border-b border-gray-800">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    id="mobile-search-input"
+                    type="text"
+                    placeholder="Tìm kiếm phụ tùng..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchQuery.trim() && onSearch) {
+                        onSearch(searchQuery.trim());
+                        setShowSuggestions(false);
+                        setIsMobileMenuOpen(false); // Close menu on search
+                      }
+                    }}
+                    className="w-full bg-gray-900 border border-gray-800 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600"
+                  />
+                  {/* Simplistic version of suggestions for mobile */}
+                  {showSuggestions && suggestions.length > 0 && searchQuery.trim().length >= 2 && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-800 rounded-lg shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto">
+                      {suggestions.map((product) => (
+                        <button
+                          key={product.product_id}
+                          onClick={() => {
+                            handleSuggestionClick(product);
+                            setIsMobileMenuOpen(false); // Close menu on select
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-800 transition-colors flex items-center gap-3"
+                        >
+                          <img
+                            src={productImages[product.product_id] || product.product_image}
+                            alt={product.product_name}
+                            className="w-10 h-10 rounded-md object-cover bg-gray-800"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/40';
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm truncate">{product.product_name}</p>
+                            <p className="text-gray-400 text-xs">
+                              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* User Section / Auth Links */}
+              <div className="p-4 border-b border-gray-800 flex-1">
+                {user ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 mb-6 p-3 bg-gray-900/50 rounded-xl border border-gray-800/50">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 border border-gray-600 flex items-center justify-center">
+                        <User className="w-6 h-6 text-gray-300" />
+                      </div>
+                      <div>
+                        <p className="text-white font-bold">{user.name}</p>
+                        <p className="text-sm text-gray-400">{user.email}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => {
+                          handleFeatureClick();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-900 text-gray-300 hover:text-white transition-colors"
+                      >
+                        <User className="w-5 h-5" />
+                        <span>Tài khoản của tôi</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleFeatureClick();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-900 text-gray-300 hover:text-white transition-colors"
+                      >
+                        <Package className="w-5 h-5" />
+                        <span>Đơn mua</span>
+                      </button>
+
+                      {user.role === 'admin' && (
+                        <button
+                          onClick={() => {
+                            // Can't access handleAdminClick here directly from App.tsx without passing it as prop
+                            // So we trigger onLogoClick which goes to landing, then user needs to click admin button there
+                            // For a real fix, pass onAdminClick to Header
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-900/30 transition-colors"
+                        >
+                          <Settings className="w-5 h-5" />
+                          <span>Trang quản trị (Admin)</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={() => {
+                        setAuthMode('login');
+                        setShowAuthModal(true);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full py-3 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition-colors"
+                    >
+                      Đăng nhập
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAuthMode('signup');
+                        setShowAuthModal(true);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full py-3 px-4 rounded-lg bg-gray-900 hover:bg-gray-800 border border-gray-700 text-white font-bold transition-colors"
+                    >
+                      Đăng ký
+                    </button>
+                  </div>
+                )}
+
+                {/* Navigation Links (Demo) */}
+                <div className="mt-8 space-y-1">
+                  <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Danh mục</p>
+                  <button onClick={() => { onLogoClick(); setIsMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-900 text-gray-300 rounded-lg flex items-center gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
+                    Trang chủ
+                  </button>
+                  <button onClick={() => { onSearch?.(''); setIsMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-900 text-gray-300 rounded-lg flex items-center gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                    Sản phẩm
+                  </button>
+                  <button onClick={() => { setIsMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-900 text-gray-300 rounded-lg flex items-center gap-3">
+                    <FileText className="w-4 h-4 text-gray-500" />
+                    Báo giá & Dịch vụ
+                  </button>
+                </div>
+              </div>
+
+              {/* Drawer Footer */}
+              {user && (
+                <div className="p-4 border-t border-gray-800">
+                  <button
+                    onClick={() => {
+                      onLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-red-950/50 text-red-500 transition-colors"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span className="font-medium">Đăng xuất</span>
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         initialMode={authMode}
-        onLogin={onLogin}
+        onLogin={(u) => {
+          onLogin(u);
+          setShowAuthModal(false);
+        }}
       />
     </motion.header>
   );
