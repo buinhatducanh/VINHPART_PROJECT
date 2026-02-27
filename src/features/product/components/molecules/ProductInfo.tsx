@@ -2,7 +2,7 @@ import { Product } from '@/shared/types';
 import { ProductBadge } from '../atoms/ProductBadge';
 import { PriceDisplay } from '../atoms/PriceDisplay';
 import { ProductTag } from '../atoms/ProductTag';
-import { Tag, Truck, ShieldCheck, Box } from 'lucide-react';
+import { Tag, Truck, ShieldCheck, Box, Star } from 'lucide-react';
 
 interface ProductInfoProps {
     product: Product;
@@ -17,7 +17,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     {product.stock_status === 'in_stock' && <ProductBadge variant="in_stock" />}
                     {product.stock_status === 'low_stock' && <ProductBadge variant="low_stock" />}
                     {product.stock_status === 'out_of_stock' && <ProductBadge variant="out_of_stock" />}
-                    {product.discount_percentage && product.discount_percentage > 0 && (
+                    {Number(product.discount_percentage) > 0 && (
                         <ProductBadge variant="discount" value={product.discount_percentage} />
                     )}
                     <ProductBadge variant="vehicle" value={product.vehicle_type} />
@@ -27,6 +27,29 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     {product.product_name}
                 </h1>
 
+
+                {/*evaluate*/}
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-red-500">
+                        {[...Array(5)].map((_, index) => (
+                            <Star
+                                key={index}
+                                className={`w-4 h-4 ${index < 5 ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                                    }`}
+                            />
+                        ))}
+                    </div>
+
+                    <span className="text-sm text-gray-300 font-medium">
+                        4.8
+                    </span>
+
+                    <span className="text-sm text-gray-500">
+                        (124 đánh giá)
+                    </span>
+                </div>
+
+                {/*masp*/}
                 {product.sku && (
                     <p className="text-sm text-gray-500 font-mono">SKU: {product.sku}</p>
                 )}
@@ -41,6 +64,12 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     size="xl"
                 />
             </div>
+            {/* Product short description */}
+            <p className="text-sm text-gray-400 leading-relaxed">
+                Phù hợp với hầu hết các dòng xe sport và naked. Thiết kế khí động học
+                KOSO Arrow với nhôm CNC cao cấp và kính chống chói xanh giúp quan sát
+                tốt trong mọi điều kiện ánh sáng.
+            </p>
 
             {/* Info Tags Grid */}
             <div className="grid grid-cols-2 gap-3">

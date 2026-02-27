@@ -1,15 +1,17 @@
 import { motion } from 'motion/react';
 import { Settings, ArrowLeft, Bell, Lock, Palette, Globe, Mail, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSettings } from '@/shared/hooks/useSettings';
 
 interface SettingsPageProps {
   onBack: () => void;
 }
 
 export function SettingsPage({ onBack }: SettingsPageProps) {
+  const { siteName: persistedSiteName, setSiteName: savePersistedSiteName } = useSettings();
   const [settings, setSettings] = useState({
-    siteName: 'VINPART',
+    siteName: persistedSiteName,
     email: 'admin@vinpart.vn',
     enableNotifications: true,
     emailOnNewOrder: true,
@@ -19,6 +21,11 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
     language: 'vi',
     theme: 'dark',
   });
+
+  // Keep local state in sync if persistedSiteName changes elsewhere
+  useEffect(() => {
+    setSettings(prev => ({ ...prev, siteName: persistedSiteName }));
+  }, [persistedSiteName]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -32,6 +39,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
   const handleSave = () => {
     console.log('Lưu cài đặt:', settings);
+    savePersistedSiteName(settings.siteName);
     toast.success('Cài đặt đã được lưu thành công!');
   };
 
@@ -81,7 +89,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
               <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl flex items-center justify-center">
                 <Settings className="w-6 h-6 text-white" />
               </div>
-              <div>
+              <div className="text-left">
                 <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-orange-600 bg-clip-text">
                   CÀI ĐẶT HỆ THỐNG
                 </h1>

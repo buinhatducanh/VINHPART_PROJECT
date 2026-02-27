@@ -219,6 +219,7 @@ export default function App() {
             onBuyNow={handleBuyNow}
             onBack={() => setCurrentPage('products')}
             onProductClick={handleProductClick}
+            user={user}
           />
         )}
 

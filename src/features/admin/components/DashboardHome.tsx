@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { LogOut, Home, Settings, Package, TrendingUp } from 'lucide-react';
 import { AdminPage, DashboardStats } from '../types';
 import { getStatsConfig, QUICK_ACTIONS_CONFIG } from '../constants';
+import { useSettings } from '@/shared/hooks/useSettings';
 
 interface DashboardHomeProps {
     stats: DashboardStats;
@@ -11,6 +12,7 @@ interface DashboardHomeProps {
 }
 
 export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome }: DashboardHomeProps) {
+    const { siteName } = useSettings();
     const statsConfig = getStatsConfig(stats);
 
     return (
@@ -57,7 +59,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                                 <div className="absolute inset-0.5 bg-black rounded-xl"></div>
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="text-3xl font-black text-transparent bg-gradient-to-br from-red-500 via-red-600 to-red-800 bg-clip-text">
-                                        V
+                                        {siteName.charAt(0).toUpperCase()}
                                     </div>
                                 </div>
                                 {/* Corner accents */}
@@ -69,9 +71,9 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                                 <div className="absolute inset-0 bg-red-600/20 rounded-xl blur-xl"></div>
                             </motion.div>
 
-                            <div>
+                            <div className="text-left">
                                 <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-red-600 bg-clip-text">
-                                    VINPART ADMIN
+                                    {siteName.toUpperCase()}
                                 </h1>
                                 <p className="text-sm text-gray-500">Quản lý cửa hàng</p>
                             </div>
@@ -80,7 +82,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                         {/* User Info & Actions */}
                         <div className="flex items-center gap-4">
                             <div className="hidden md:block text-right">
-                                <p className="text-sm font-semibold text-white">admin@vinpart.vn</p>
+                                <p className="text-sm font-semibold text-white">{siteName.toLowerCase()}@vinhpart.vn</p>
                                 <p className="text-xs text-gray-500">Quản trị viên</p>
                             </div>
 
@@ -110,7 +112,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                     <h2 className="text-3xl font-bold text-white mb-2">
                         Chào mừng trở lại! 👋
                     </h2>
-                    <p className="text-gray-400">Đây là tng quan về cửa hàng VINPART của bạn.</p>
+                    <p className="text-gray-400">Đây là tổng quan về cửa hàng {siteName.toUpperCase()} của bạn.</p>
                 </motion.div>
 
                 {/* Stats Grid */}

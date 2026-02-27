@@ -6,6 +6,7 @@ import { AuthModal } from '@/features/auth/components/AuthModal';
 import { User as UserType, Product } from '@/shared/types';
 import { productApi } from '@/lib/api';
 import { productImages } from '@/shared/data/productImages';
+import { useSettings } from '@/shared/hooks/useSettings';
 
 interface HeaderProps {
   cartCount: number;
@@ -18,6 +19,7 @@ interface HeaderProps {
 }
 
 export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onLogout, onSearch }: HeaderProps) {
+  const { siteName } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
@@ -158,7 +160,7 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
           >
             <motion.div
               whileHover={{ scale: 1.08, rotate: 3 }}
-              className="relative w-10 h-10 lg:w-16 lg:h-16"
+              className="relative w-12 h-12 lg:w-16 lg:h-16"
             >
               {/* Outer glow ring - animated pulse */}
               <div className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-800 rounded-xl blur-xl opacity-50 group-hover:opacity-100 transition-all duration-700 animate-pulse"></div>
@@ -169,22 +171,26 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
               {/* Main logo container - premium design */}
               <div className="relative w-full h-full bg-gradient-to-br from-red-600 via-red-700 to-red-900 rounded-xl flex items-center justify-center shadow-2xl shadow-red-600/70 group-hover:shadow-red-500/90 transition-all border-[3px] border-red-500/50 group-hover:border-red-400/70 overflow-hidden">
                 {/* Animated background grid pattern */}
-                <div className="absolute inset-0 opacity-20">
+                <div className="absolute inset-0 opacity-20 pointer-events-none">
                   <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:10px_10px]"></div>
                 </div>
 
                 {/* Top shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-transparent rounded-xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-transparent rounded-xl pointer-events-none"></div>
 
-                {/* The "V" Letter - 3D Style */}
-                <div className="relative z-10">
-                  <div className="relative">
+                {/* The Logo Character - 3D Style */}
+                <div className="relative z-10 flex items-center justify-center">
+                  <div className="relative flex items-center justify-center">
                     {/* Shadow layer */}
-                    <span className="absolute top-1 left-0.5 text-4xl lg:text-5xl font-black text-black/60 tracking-tighter blur-[1px]">V</span>
-                    {/* Main V with gradient */}
-                    <span className="relative text-4xl lg:text-5xl font-black bg-gradient-to-b from-white via-red-50 to-red-100 bg-clip-text text-transparent drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] tracking-tighter">V</span>
+                    <span className="absolute translate-y-[2px] translate-x-[1px] text-4xl lg:text-5xl font-black text-black/60 blur-[1px]">
+                      {siteName.charAt(0).toUpperCase()}
+                    </span>
+                    {/* Main character with gradient */}
+                    <span className="relative text-4xl lg:text-5xl font-black bg-gradient-to-b from-white via-red-50 to-red-100 bg-clip-text text-transparent drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">
+                      {siteName.charAt(0).toUpperCase()}
+                    </span>
                     {/* Top highlight */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/3 bg-white/40 blur-md rounded-full"></div>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/3 bg-white/40 blur-md rounded-full pointer-events-none"></div>
                   </div>
 
                   {/* Accent dot indicator */}
@@ -205,19 +211,19 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
               <div className="absolute inset-0 rounded-xl border-2 border-red-400/30 group-hover:border-red-300/50 transition-all"></div>
             </motion.div>
 
-            <div className="hidden md:block">
+            <div className="hidden md:block text-left">
               <motion.div
                 className="text-base lg:text-xl font-black tracking-wide relative"
                 whileHover={{ x: 2 }}
               >
                 <span className="relative inline-block bg-gradient-to-r from-white via-red-50 to-white bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(220,38,38,0.5)]">
-                  VINPART
+                  {siteName.toUpperCase()}
                   {/* Underline accent */}
                   <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-60"></div>
                 </span>
               </motion.div>
               <div className="text-xs text-gray-400 tracking-[0.2em] font-bold mt-0.5">
-                AUTO EXCELLENCE
+                Quản lý cửa hàng
               </div>
             </div>
           </button>
