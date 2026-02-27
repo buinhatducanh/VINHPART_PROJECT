@@ -60,7 +60,36 @@ export function ProductActions({ product, onAddToCart, onBuyNow }: ProductAction
                     Mua ngay
                 </motion.button>
             </div>
+            {/* Extra product benefits */}
+            <div className="mt-4 p-4 rounded-xl bg-red-950/40 border border-red-900/40 space-y-3">
 
+                <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 flex items-center justify-center text-red-500">
+                        ✓
+                    </div>
+                    <p className="text-sm text-gray-300">
+                        Miễn phí vận chuyển cho đơn hàng trên 2.000.000 VND
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 flex items-center justify-center text-red-500">
+                        ✓
+                    </div>
+                    <p className="text-sm text-gray-300">
+                        Bộ ốc gắn đa năng đi kèm (8mm/10mm)
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 flex items-center justify-center text-red-500">
+                        ✓
+                    </div>
+                    <p className="text-sm text-gray-300">
+                        Điều chỉnh xoay 360 độ linh hoạt
+                    </p>
+                </div>
+            </div>
             {isOutOfStock && (
                 <p className="text-center text-sm text-red-500 font-medium">
                     Sản phẩm hiện đang tạm hết hàng
