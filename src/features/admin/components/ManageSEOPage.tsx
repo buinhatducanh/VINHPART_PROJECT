@@ -1,86 +1,119 @@
 import { motion } from 'motion/react';
-import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Eye, Calendar } from 'lucide-react';
-import { useState } from 'react';
+import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Eye, Calendar, Save, X, Upload } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import { SEOPost } from '@/shared/types';
+import { postsApi } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface ManageSEOPageProps {
   onBack: () => void;
 }
 
-// Mock data
-const mockSEOPosts: SEOPost[] = [
-  {
-    id: 'post-1',
-    title: 'Top 10 phụ tùng xe máy bán chạy nhất 2025',
-    slug: 'top-10-phu-tung-xe-may-ban-chay-nhat-2025',
-    content: 'Nội dung chi tiết về các phụ tùng xe máy...',
-    excerpt: 'Khám phá 10 phụ tùng xe máy được yêu thích nhất trong năm 2025',
-    featured_image: 'https://images.unsplash.com/photo-1558980664-769d59546b3d?w=800',
-    meta_title: 'Top 10 phụ tùng xe máy bán chạy | VINPART',
-    meta_description: 'Danh sách 10 phụ tùng xe máy chất lượng cao được ưa chuộng nhất',
-    meta_keywords: ['phụ tùng xe máy', 'phụ kiện xe máy', 'mua phụ tùng'],
-    status: 'published',
-    author: 'Admin VINPART',
-    published_at: '2025-01-15T10:00:00Z',
-    created_at: '2025-01-10T08:00:00Z',
-    updated_at: '2025-01-15T10:00:00Z',
-    view_count: 1234
-  },
-  {
-    id: 'post-2',
-    title: 'Hướng dẫn chọn mua đèn LED cho ô tô',
-    slug: 'huong-dan-chon-mua-den-led-cho-o-to',
-    content: 'Hướng dẫn chi tiết về cách chọn đèn LED phù hợp...',
-    excerpt: 'Những điều cần biết khi chọn mua đèn LED cho xe ô tô',
-    featured_image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800',
-    meta_title: 'Hướng dẫn chọn đèn LED ô tô | VINPART',
-    meta_description: 'Tất cả thông tin về đèn LED ô tô và cách chọn lựa phù hợp',
-    meta_keywords: ['đèn led ô tô', 'phụ tùng ô tô', 'đèn xe hơi'],
-    status: 'published',
-    author: 'Admin VINPART',
-    published_at: '2025-01-20T14:30:00Z',
-    created_at: '2025-01-18T09:00:00Z',
-    updated_at: '2025-01-20T14:30:00Z',
-    view_count: 856
-  },
-  {
-    id: 'post-3',
-    title: 'Bảo dưỡng phanh xe máy định kỳ',
-    slug: 'bao-duong-phanh-xe-may-dinh-ky',
-    content: 'Cách bảo dưỡng hệ thống phanh xe máy...',
-    excerpt: 'Hướng dẫn bảo dưỡng phanh xe máy đúng cách',
-    meta_title: 'Bảo dưỡng phanh xe máy | VINPART',
-    meta_description: 'Kinh nghiệm bảo dưỡng phanh xe máy an toàn và hiệu quả',
-    meta_keywords: ['phanh xe máy', 'bảo dưỡng xe máy', 'sửa chữa xe'],
-    status: 'draft',
-    author: 'Admin VINPART',
-    created_at: '2025-02-01T11:00:00Z',
-    updated_at: '2025-02-03T15:00:00Z',
-    view_count: 0
-  },
-];
-
 export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
-  const [posts, setPosts] = useState<SEOPost[]>(mockSEOPosts);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'PUBLISHED' | 'DRAFT'>('all');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
-  const [_editingPost, setEditingPost] = useState<SEOPost | null>(null);
-  const [_showAddModal, setShowAddModal] = useState(false);
+  const [editingPost, setEditingPost] = useState<SEOPost | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || post.status === filterStatus;
-    return matchesSearch && matchesStatus;
+  // Cloudinary Widget Refs
+  const widgetRef = useRef<any>(null);
+  const editingPostRef = useRef<SEOPost | null>(null);
+  const imageFieldToUpdateRef = useRef<'featuredImage' | 'ogImage' | 'featured_image' | null>(null);
+
+  useEffect(() => {
+    editingPostRef.current = editingPost;
+  }, [editingPost]);
+
+  // Fetch Posts
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['posts', filterStatus],
+    queryFn: () => postsApi.getPosts(filterStatus === 'all' ? undefined : filterStatus),
   });
 
-  const handleDelete = (id: string) => {
-    setPosts(posts.filter(post => post.id !== id));
-    setShowDeleteConfirm(null);
+  // Create Post Mutation
+  const createMutation = useMutation({
+    mutationFn: postsApi.createPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      toast.success('Đã tạo bài viết mới thành công');
+      setIsAddModalOpen(false);
+      setEditingPost(null);
+    },
+    onError: (error: Error) => {
+      toast.error('Lỗi khi tạo bài viết: ' + error.message);
+    }
+  });
+
+  // Update Post Mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, post }: { id: string, post: Partial<SEOPost> }) => postsApi.updatePost(id, post),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      toast.success('Đã cập nhật bài viết thành công');
+      setEditingPost(null);
+    },
+    onError: (error: Error) => {
+      toast.error('Lỗi khi cập nhật bài viết: ' + error.message);
+    }
+  });
+
+  // Delete Post Mutation
+  const deleteMutation = useMutation({
+    mutationFn: postsApi.deletePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      toast.success('Đã xóa bài viết thành công');
+      setShowDeleteConfirm(null);
+    },
+    onError: (error: Error) => {
+      toast.error('Lỗi khi xóa bài viết: ' + error.message);
+    }
+  });
+
+  // Initialize Cloudinary widget for editing
+  useEffect(() => {
+    if ((window as any).cloudinary) {
+      widgetRef.current = (window as any).cloudinary.createUploadWidget(
+        {
+          cloudName: (import.meta as any).env.VITE_CLOUDINARY_CLOUD_NAME || 'dmz66rbbk',
+          uploadPreset: 'vinhpart_products_preset',
+          sources: ['local', 'url'],
+          multiple: false,
+          folder: 'vinhpart_seo',
+          resourceType: 'image',
+          clientAllowedFormats: ['png', 'jpg', 'jpeg', 'webp'],
+        },
+        (error: any, result: any) => {
+          if (!error && result && result.event === "success") {
+            const url = result.info.secure_url;
+            const current = editingPostRef.current;
+            const field = imageFieldToUpdateRef.current || 'featuredImage';
+            
+            if (current) {
+              setEditingPost({ ...current, [field]: url });
+              toast.success(`Đã cập nhật ${field === 'featuredImage' ? 'ảnh chính' : 'ảnh chia sẻ social'}`);
+            }
+          }
+        }
+      );
+    }
+  }, []);
+
+  const openWidget = (field: 'featuredImage' | 'ogImage') => {
+    imageFieldToUpdateRef.current = field;
+    widgetRef.current?.open();
   };
 
+  const filteredPosts = posts.filter(post =>
+    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (post.excerpt && post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'Vừa xong';
     return new Date(dateString).toLocaleDateString('vi-VN', {
       year: 'numeric',
       month: 'long',
@@ -88,19 +121,22 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles = {
-      published: 'bg-green-500/10 text-green-400 border-green-500/50',
-      draft: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/50',
-      archived: 'bg-gray-500/10 text-gray-400 border-gray-500/50',
-    };
-    const labels = {
-      published: 'Đã xuất bản',
-      draft: 'Nháp',
-      archived: 'Lưu trữ',
-    };
-    return { style: styles[status as keyof typeof styles], label: labels[status as keyof typeof labels] };
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .trim()
+      .normalize('NFD') // chuẩn hóa unicode để tách dấu
+      .replace(/[\u0300-\u036f]/g, '') // xóa dấu
+      .replace(/[đĐ]/g, 'd')
+      .replace(/[^a-z0-9\s-]/g, '') // xóa ký tự đặc biệt
+      .replace(/[\s-]+/g, '-') // thay khoảng trắng/nhiều gạch bằng 1 gạch
+      .replace(/^-+|-+$/g, '') // xóa gạch ở đầu/cuối
+      + '-' + Math.random().toString(36).substring(2, 6); // Add small random suffix to avoid duplicates
   };
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-black flex items-center justify-center text-white">Đang tải bài viết...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black pb-20">
@@ -109,7 +145,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
         {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-red-600/30 rounded-full"
+            className="absolute w-1 h-1 bg-purple-600/30 rounded-full"
             initial={{
               x: Math.random() * window.innerWidth,
               y: Math.random() * window.innerHeight,
@@ -140,9 +176,9 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
                 onClick={onBack}
                 whileHover={{ scale: 1.05, x: -5 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-3 bg-gray-900 border border-gray-700 rounded-lg hover:border-red-600/50 transition-all group"
+                className="p-3 bg-gray-900 border border-gray-700 rounded-lg hover:border-purple-600/50 transition-all group"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors" />
+                <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
               </motion.button>
 
               <div className="flex items-center gap-3">
@@ -158,9 +194,21 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
               </div>
             </div>
 
-            {/* Add Post Button */}
             <motion.button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => {
+                setEditingPost({
+                  id: '',
+                  title: '',
+                  slug: '',
+                  content: '',
+                  excerpt: '',
+                  status: 'DRAFT',
+                  viewCount: 0,
+                  createdAt: '',
+                  updatedAt: ''
+                });
+                setIsAddModalOpen(true);
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg shadow-purple-600/25 flex items-center gap-2"
@@ -176,12 +224,11 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-4 mb-6"
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-4 mb-6"
         >
           <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
@@ -193,180 +240,317 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
               />
             </div>
 
-            {/* Status Filter */}
             <div className="flex gap-2">
-              {(['all', 'published', 'draft', 'archived'] as const).map((status) => (
-                <motion.button
+              {(['all', 'PUBLISHED', 'DRAFT'] as const).map((status) => (
+                <button
                   key={status}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={() => setFilterStatus(status)}
-                  className={`px-4 py-3 rounded-lg font-semibold text-sm transition-all ${filterStatus === status
-                    ? 'bg-purple-600 text-white'
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${filterStatus === status
+                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
                     : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'
                     }`}
                 >
-                  {status === 'all' ? 'Tất cả' :
-                    status === 'published' ? 'Đã xuất bản' :
-                      status === 'draft' ? 'Nháp' : 'Lưu trữ'}
-                </motion.button>
+                  {status === 'all' ? 'Tất cả' : status === 'PUBLISHED' ? 'Đã xuất bản' : 'Bản nháp'}
+                </button>
               ))}
             </div>
           </div>
         </motion.div>
 
-        {/* Posts Grid */}
+        {/* List */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredPosts.map((post, index) => {
-            const badge = getStatusBadge(post.status);
-            return (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="group relative bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl overflow-hidden hover:border-purple-600/50 transition-all"
-              >
-                {/* Featured Image */}
-                {post.featured_image && (
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={post.featured_image}
-                      alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
-
-                    {/* Status Badge */}
-                    <div className="absolute top-4 right-4">
-                      <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${badge.style}`}>
-                        {badge.label}
-                      </span>
-                    </div>
-                  </div>
+          {filteredPosts.map((post, index) => (
+            <motion.div
+              key={post.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="group relative bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl overflow-hidden hover:border-purple-600/50 transition-all"
+            >
+              <div className="relative h-48 overflow-hidden bg-gray-800 flex items-center justify-center">
+                {post.featuredImage ? (
+                  <img
+                    src={post.featuredImage}
+                    alt={post.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                ) : (
+                  <FileText className="w-12 h-12 text-gray-600 opacity-20" />
                 )}
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+                
+                <div className="absolute top-4 right-4">
+                  <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${
+                    post.status === 'PUBLISHED' 
+                      ? 'bg-green-500/10 text-green-400 border-green-500/50' 
+                      : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/50'
+                  }`}>
+                    {post.status === 'PUBLISHED' ? 'Đã xuất bản' : 'Bản nháp'}
+                  </span>
+                </div>
+              </div>
 
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-purple-400 transition-colors">
-                    {post.title}
-                  </h3>
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                    {post.excerpt}
-                  </p>
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-purple-400 transition-colors">
+                  {post.title}
+                </h3>
+                <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                  {post.excerpt}
+                </p>
 
-                  {/* Meta Info */}
-                  <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>{formatDate(post.created_at)}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      <span>{post.view_count} lượt xem</span>
-                    </div>
+                <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatDate(post.createdAt)}</span>
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 pt-4 border-t border-gray-800">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setEditingPost(post)}
-                      className="flex-1 px-4 py-2 bg-purple-600/10 border border-purple-600/50 text-purple-400 rounded-lg hover:bg-purple-600/20 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Edit className="w-4 h-4" />
-                      Sửa
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowDeleteConfirm(post.id)}
-                      className="flex-1 px-4 py-2 bg-red-600/10 border border-red-600/50 text-red-400 rounded-lg hover:bg-red-600/20 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Xóa
-                    </motion.button>
+                  <div className="flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    <span>{post.viewCount} lượt xem</span>
                   </div>
                 </div>
-              </motion.div>
-            );
-          })}
+
+                <div className="flex items-center gap-2 pt-4 border-t border-gray-800">
+                  <button
+                    onClick={() => {
+                        setEditingPost(post);
+                        setIsAddModalOpen(false);
+                    }}
+                    className="flex-1 px-4 py-2 bg-purple-600/10 border border-purple-600/50 text-purple-400 rounded-lg hover:bg-purple-600/20 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Sửa
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(post.id)}
+                    className="flex-1 px-4 py-2 bg-red-600/10 border border-red-600/50 text-red-400 rounded-lg hover:bg-red-600/20 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Xóa
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
 
-        {/* Empty State */}
         {filteredPosts.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-12 text-center"
-          >
-            <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Không tìm thấy bài viết</h3>
-            <p className="text-gray-500 mb-4">Không có bài viết nào phù hợp với bộ lọc của bạn.</p>
-            <motion.button
-              onClick={() => {
-                setSearchQuery('');
-                setFilterStatus('all');
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-all"
-            >
-              Xóa bộ lọc
-            </motion.button>
-          </motion.div>
+          <div className="text-center py-20 bg-gray-900/50 border border-gray-800 rounded-xl">
+             <FileText className="w-16 h-16 text-gray-700 mx-auto mb-4 opacity-50" />
+             <h3 className="text-xl font-bold text-gray-500">Không tìm thấy bài viết nào</h3>
+          </div>
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setShowDeleteConfirm(null)}
-        >
+      {/* Add/Edit Modal */}
+      {editingPost && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
           <motion.div
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-md w-full"
+            className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-4xl p-8 relative my-auto shadow-2xl"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 to-transparent rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent rounded-2xl pointer-events-none"></div>
 
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8 text-white" />
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-black text-white">
+                {isAddModalOpen ? 'THÊM BÀI VIẾT MỚI' : 'CHỈNH SỬA BÀI VIẾT'}
+              </h2>
+              <button onClick={() => { setEditingPost(null); setIsAddModalOpen(false); }} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+                <X className="w-6 h-6 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Image Col */}
+              <div className="lg:col-span-4 space-y-4">
+                <div className="aspect-video lg:aspect-square bg-gray-800 rounded-xl border-2 border-dashed border-gray-700 flex items-center justify-center overflow-hidden relative group">
+                  {editingPost.featuredImage ? (
+                    <img src={editingPost.featuredImage} className="w-full h-full object-cover" alt="Preview" />
+                  ) : (
+                    <div className="text-center text-gray-500">
+                      <Upload className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                      <p className="text-xs uppercase font-bold tracking-tighter">Click để tải ảnh</p>
+                    </div>
+                  )}
+                  <button 
+                    onClick={() => openWidget('featuredImage')}
+                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold"
+                  >
+                    THAY ĐỔI ẢNH CHÍNH
+                  </button>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-500 uppercase">Featured Image URL</label>
+                  <input
+                    type="text"
+                    value={editingPost.featuredImage || ''}
+                    onChange={(e) => setEditingPost({ ...editingPost, featuredImage: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-300 focus:border-purple-600 outline-none transition-all"
+                  />
+                </div>
+
+                {/* Social Image */}
+                <div className="space-y-2 pt-4 border-t border-gray-800">
+                  <label className="text-xs font-black text-gray-500 uppercase">Ảnh chia sẻ Social (OG Image)</label>
+                  <div className="aspect-video bg-gray-800 rounded-lg border border-gray-700 flex items-center justify-center overflow-hidden relative group">
+                    {editingPost.ogImage ? (
+                      <img src={editingPost.ogImage} className="w-full h-full object-cover" alt="OG Preview" />
+                    ) : (
+                      <div className="text-center text-gray-500">
+                        <Upload className="w-6 h-6 mx-auto mb-1 opacity-20" />
+                        <p className="text-[10px] uppercase font-bold tracking-tighter">Click để tải ảnh social</p>
+                      </div>
+                    )}
+                    <button 
+                      onClick={() => openWidget('ogImage')}
+                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold"
+                    >
+                      THAY ĐỔI ẢNH SOCIAL
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={editingPost.ogImage || ''}
+                    onChange={(e) => setEditingPost({ ...editingPost, ogImage: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-300 focus:border-purple-600 outline-none transition-all"
+                    placeholder="OG Image URL..."
+                  />
+                </div>
               </div>
 
-              <h3 className="text-2xl font-bold text-white text-center mb-2">Xóa bài viết</h3>
-              <p className="text-gray-400 text-center mb-6">
-                Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.
-              </p>
+              {/* Form Col */}
+              <div className="lg:col-span-8 space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-500 uppercase">Tiêu đề bài viết</label>
+                    <input
+                      type="text"
+                      value={editingPost.title}
+                      onChange={(e) => {
+                        const title = e.target.value;
+                        setEditingPost({ ...editingPost, title, slug: isAddModalOpen ? generateSlug(title) : editingPost.slug });
+                      }}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all"
+                      placeholder="Nhập tiêu đề..."
+                    />
+                  </div>
 
-              <div className="flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowDeleteConfirm(null)}
-                  className="flex-1 px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Hủy
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleDelete(showDeleteConfirm)}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-600/25"
-                >
-                  Xóa
-                </motion.button>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-500 uppercase">Slug (URL)</label>
+                    <input
+                      type="text"
+                      value={editingPost.slug}
+                      onChange={(e) => setEditingPost({ ...editingPost, slug: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all font-mono text-sm"
+                      placeholder="tieu-de-bai-viet"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-500 uppercase">Trạng thái</label>
+                      <select
+                        value={editingPost.status}
+                        onChange={(e) => setEditingPost({ ...editingPost, status: e.target.value as any })}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all"
+                      >
+                        <option value="DRAFT">Bản nháp</option>
+                        <option value="PUBLISHED">Công khai</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-xs font-black text-gray-500 uppercase">Tiêu đề Meta (SEO Title)</label>
+                       <input
+                        type="text"
+                        value={editingPost.metaTitle || ''}
+                        onChange={(e) => setEditingPost({ ...editingPost, metaTitle: e.target.value })}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all"
+                        placeholder="Thẻ Title SEO..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-500 uppercase">Mô tả Meta (Meta Description)</label>
+                    <textarea
+                      value={editingPost.metaDescription || ''}
+                      onChange={(e) => setEditingPost({ ...editingPost, metaDescription: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all h-20 resize-none text-sm"
+                      placeholder="Thẻ Meta Description SEO..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-500 uppercase">Mô tả ngắn (Excerpt)</label>
+                    <textarea
+                      value={editingPost.excerpt || ''}
+                      onChange={(e) => setEditingPost({ ...editingPost, excerpt: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all h-20 resize-none"
+                      placeholder="Bài viết này nói về..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-500 uppercase">Nội dung bài viết (Markdown/HTML)</label>
+                    <textarea
+                      value={editingPost.content}
+                      onChange={(e) => setEditingPost({ ...editingPost, content: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all h-40 font-mono text-sm"
+                      placeholder="Nội dung chi tiết..."
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                   <button 
+                    onClick={() => { setEditingPost(null); setIsAddModalOpen(false); }}
+                    className="flex-1 py-4 bg-gray-800 text-gray-400 font-bold rounded-xl hover:bg-gray-700 transition-all border border-gray-700"
+                   >
+                     HỦY BỔ
+                   </button>
+                   <button 
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                    onClick={() => {
+                      if (isAddModalOpen) {
+                        createMutation.mutate(editingPost);
+                      } else {
+                        updateMutation.mutate({ id: editingPost.id, post: editingPost });
+                      }
+                    }}
+                    className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-purple-800 text-white font-black rounded-xl hover:from-purple-500 hover:to-purple-700 transition-all shadow-xl shadow-purple-900/40 flex items-center justify-center gap-2"
+                   >
+                     <Save className="w-5 h-5" />
+                     {isAddModalOpen ? 'TẠO BÀI VIẾT' : 'CẬP NHẬT'}
+                   </button>
+                </div>
               </div>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gray-900 border border-red-900/50 rounded-2xl p-8 max-w-md w-full shadow-2xl"
+          >
+            <div className="w-16 h-16 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Trash2 className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-bold text-white text-center mb-2">Xác nhận xóa?</h3>
+            <p className="text-gray-400 text-center mb-8">
+              Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.
+            </p>
+            <div className="flex gap-4">
+               <button onClick={() => setShowDeleteConfirm(null)} className="flex-1 py-3 bg-gray-800 text-gray-300 font-bold rounded-xl border border-gray-700 transition-colors">QUAY LẠI</button>
+               <button onClick={() => deleteMutation.mutate(showDeleteConfirm)} className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all">XÓA NGAY</button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );

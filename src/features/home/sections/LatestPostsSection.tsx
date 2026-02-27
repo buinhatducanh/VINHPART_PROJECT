@@ -7,9 +7,9 @@ interface BlogPost {
     slug: string;
     title: string;
     excerpt: string;
-    featured_image?: string;
-    published_at?: string;
-    view_count: number;
+    featuredImage?: string;
+    publishedAt?: string;
+    viewCount: number;
 }
 
 import { BlogPostSkeleton } from '@/shared/components/skeletons/BlogPostSkeleton';
@@ -74,7 +74,7 @@ export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts, isL
                                 {/* Featured Image */}
                                 <div className="relative h-48 overflow-hidden">
                                     <img
-                                        src={post.featured_image || '/placeholder-image.jpg'}
+                                        src={post.featuredImage || '/placeholder-image.jpg'}
                                         alt={post.title}
                                         className="
                     w-full h-full object-cover
@@ -100,11 +100,11 @@ export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts, isL
                                     <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                                         <div className="flex items-center gap-1">
                                             <Calendar className="w-3 h-3" />
-                                            <span>{formatDate(post.published_at || new Date().toISOString())}</span>
+                                            <span>{formatDate(post.publishedAt || new Date().toISOString())}</span>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <Eye className="w-3 h-3" />
-                                            <span>{post.view_count} lượt xem</span>
+                                            <span>{post.viewCount} lượt xem</span>
                                         </div>
                                     </div>
 
