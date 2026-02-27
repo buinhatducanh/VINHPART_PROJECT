@@ -44,17 +44,18 @@ export interface SEOPost {
   title: string;
   slug: string; // URL-friendly version của title
   content: string;
-  excerpt: string; // Mô tả ngắn
-  featured_image?: string;
-  meta_title: string;
-  meta_description: string;
-  meta_keywords: string[];
-  status: 'draft' | 'published' | 'archived';
-  author: string;
-  published_at?: string;
-  created_at: string;
-  updated_at: string;
-  view_count: number;
+  excerpt?: string; // Mô tả ngắn
+  featuredImage?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  ogImage?: string;
+  status: 'DRAFT' | 'PUBLISHED';
+  authorId?: string;
+  author?: User;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  viewCount: number;
 }
 
 // Review interface

@@ -67,9 +67,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
 
   if (currentPage === 'manageCategories') {
     return <ManageCategoriesPage onBack={() => setCurrentPage('dashboard')} />;
-  }
-
-  if (currentPage === 'manageReviews') {
+  }  if (currentPage === 'manageReviews') {
     return <ManageReviewsPage onBack={() => setCurrentPage('dashboard')} />;
   }
 
