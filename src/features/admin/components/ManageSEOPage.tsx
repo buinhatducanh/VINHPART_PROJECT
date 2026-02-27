@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 interface ManageSEOPageProps {
   onBack: () => void;
 }
-
+//FIXED
 export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
