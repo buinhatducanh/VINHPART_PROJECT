@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Product } from '@/shared/types';
+import { Product, User } from '@/shared/types';
 import { useProduct } from '@/hooks/useQueries';
 import { ProductDetailSection } from '../components/organisms/ProductDetailSection';
 import { ProductDescriptionSection } from '../components/organisms/ProductDescriptionSection';
@@ -10,10 +10,11 @@ import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
 
 interface ProductDetailPageProps {
     productId: string;
-    onAddToCart: (product: Product, quantity?: number) => void; // Main app uses simplified version, but we adapted actions
+    onAddToCart: (product: Product, quantity?: number) => void;
     onBuyNow: (product: Product) => void;
     onBack: () => void;
     onProductClick: (id: string) => void;
+    user?: User | null;
 }
 
 export function ProductDetailPage({
@@ -21,7 +22,8 @@ export function ProductDetailPage({
     onAddToCart,
     onBuyNow,
     onBack,
-    onProductClick
+    onProductClick,
+    user
 }: ProductDetailPageProps) {
 
     const { data: product, isLoading, error } = useProduct(productId);
@@ -51,17 +53,15 @@ export function ProductDetailPage({
 
     if (error || !product) {
         return (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center pt-24 text-center px-4">
-                <h2 className="text-2xl font-bold text-white mb-4">Không tìm thấy sản phẩm</h2>
-                <p className="text-gray-400 mb-8 max-w-md">
-                    Sản phẩm bạn đang tìm kiếm có thể đã bị xóa hoặc đường dẫn không hợp lệ.
-                </p>
+            <div className="min-h-screen pt-24 pb-20 px-4 flex flex-col items-center justify-center text-center">
+                <h2 className="text-2xl font-bold text-white mb-4">Sản phẩm không tồn tại</h2>
+                <p className="text-gray-400 mb-8">Rất tiếc, sản phẩm bạn đang tìm kiếm không còn hoặc đã bị xóa.</p>
                 <button
                     onClick={onBack}
-                    className="flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors font-medium"
+                    className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
                 >
                     <ArrowLeft className="w-5 h-5" />
-                    Quay lại cửa hàng
+                    Quay lại danh sách
                 </button>
             </div>
         );
@@ -74,9 +74,9 @@ export function ProductDetailPage({
     };
 
     return (
-        <div className="bg-black/95 min-h-screen pb-20">
+        <div className="bg-black text-white min-h-screen pb-20">
             <SEO
-                title={`${product.product_name} | VINHPART`}
+                title={`${product.product_name} - VINPART`}
                 description={product.description?.slice(0, 160)}
                 image={product.product_image}
             />
@@ -104,7 +104,7 @@ export function ProductDetailPage({
                     onBuyNow={(p) => onBuyNow(p)} // Buy now usually goes to checkout with 1 item or specific items.
                 />
 
-                <ProductDescriptionSection product={product} />
+                <ProductDescriptionSection product={product} user={user} />
 
                 <RelatedProductsSection
                     currentProduct={product}

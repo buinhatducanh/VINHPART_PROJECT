@@ -1,0 +1,20 @@
+﻿src/shared/data/modalContent.tsx(99,125): error TS17008: JSX element 'span' has no corresponding closing tag.
+src/shared/data/modalContent.tsx(99,186): error TS1003: Identifier expected.
+src/shared/data/modalContent.tsx(99,187): error TS1005: '>' expected.
+src/shared/data/modalContent.tsx(99,191): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/shared/data/modalContent.tsx(100,124): error TS17008: JSX element 'span' has no corresponding closing tag.
+src/shared/data/modalContent.tsx(100,185): error TS1003: Identifier expected.
+src/shared/data/modalContent.tsx(100,186): error TS1005: '>' expected.
+src/shared/data/modalContent.tsx(100,190): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/shared/data/modalContent.tsx(252,183): error TS17008: JSX element 'span' has no corresponding closing tag.
+src/shared/data/modalContent.tsx(252,237): error TS1003: Identifier expected.
+src/shared/data/modalContent.tsx(252,238): error TS1005: '>' expected.
+src/shared/data/modalContent.tsx(252,242): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/shared/data/modalContent.tsx(646,14): error TS17008: JSX element 'span' has no corresponding closing tag.
+src/shared/data/modalContent.tsx(646,88): error TS1003: Identifier expected.
+src/shared/data/modalContent.tsx(646,89): error TS1005: '>' expected.
+src/shared/data/modalContent.tsx(646,93): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/shared/data/modalContent.tsx(696,158): error TS17008: JSX element 'span' has no corresponding closing tag.
+src/shared/data/modalContent.tsx(696,235): error TS1003: Identifier expected.
+src/shared/data/modalContent.tsx(696,236): error TS1005: '>' expected.
+src/shared/data/modalContent.tsx(696,240): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?

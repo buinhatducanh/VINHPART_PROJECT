@@ -2,6 +2,8 @@ import { motion } from 'motion/react';
 import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Eye, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { SEOPost } from '@/shared/types';
+import { useSettings } from '@/shared/hooks/useSettings';
+import { useMemo } from 'react';
 
 interface ManageSEOPageProps {
   onBack: () => void;
@@ -61,9 +63,25 @@ const mockSEOPosts: SEOPost[] = [
 ];
 
 export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
+  const { siteName } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
-  const [posts, setPosts] = useState<SEOPost[]>(mockSEOPosts);
+
+  // Use useMemo to generate posts with dynamic siteName if we want them and can afford it.
+  // For now, let's just make the mock data more flexible in the rendering or here.
+  const postsWithDynamicAuthor = useMemo(() => {
+    return mockSEOPosts.map(post => ({
+      ...post,
+      author: siteName // Or just a generic 'User' or something, but following user's 'remove admin'
+    }));
+  }, [siteName]);
+
+  const [posts, setPosts] = useState<SEOPost[]>(postsWithDynamicAuthor);
+
+  // Update posts if siteName changes
+  useMemo(() => {
+     setPosts(prev => prev.map(p => ({...p, author: siteName})));
+  }, [siteName]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [_editingPost, setEditingPost] = useState<SEOPost | null>(null);
   const [_showAddModal, setShowAddModal] = useState(false);
@@ -149,7 +167,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
-                <div>
+                <div className="text-left">
                   <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-purple-600 bg-clip-text">
                     QUẢN LÝ BÀI VIẾT SEO
                   </h1>
