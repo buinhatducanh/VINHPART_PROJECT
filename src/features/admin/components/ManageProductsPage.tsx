@@ -234,7 +234,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center">
                   <Package className="w-6 h-6 text-white" />
                 </div>
-                <div>
+                <div className="text-left">
                   <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-blue-600 bg-clip-text">
                     QUẢN LÝ SẢN PHẨM
                   </h1>
