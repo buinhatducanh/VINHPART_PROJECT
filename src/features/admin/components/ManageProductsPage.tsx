@@ -373,7 +373,6 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                         )}
                       </div>
                     </td>
-
                     {/* Stock */}
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">

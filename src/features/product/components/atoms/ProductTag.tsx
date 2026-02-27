@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-
 interface ProductTagProps {
     icon?: ReactNode;
     label: string;
