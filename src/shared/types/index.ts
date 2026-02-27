@@ -27,8 +27,10 @@ export interface CartItem {
 export interface Category {
   id: string;
   name: string;
+  slug?: string; // URL-friendly version của name
   parent_id?: string | null; // ID của danh mục cha, null nếu là danh mục gốc
   description?: string;
+  image?: string; // Hình ảnh hiển thị
   icon?: string;
   order: number; // Thứ tự hiển thị
   created_at: string;

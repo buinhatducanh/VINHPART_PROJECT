@@ -55,6 +55,7 @@ model Product {
   updatedAt   DateTime    @updatedAt
   orderItems  OrderItem[]
   category    Category?   @relation(fields: [categoryId], references: [id])
+  reviews     reviews[]
 
   @@index([categoryId])
   @@index([slug])
@@ -128,6 +129,29 @@ model Post {
   @@index([slug], map: "idx_posts_slug")
   @@index([status], map: "idx_posts_status")
   @@map("posts")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reviews {
+  id                 String    @id
+  productId          String
+  customerName       String
+  customerEmail      String
+  rating             Int
+  title              String?
+  content            String?
+  images             String[]
+  status             String?   @default("pending")
+  isVerifiedPurchase Boolean?  @default(false)
+  priority           Int?      @default(0)
+  helpfulCount       Int?      @default(0)
+  createdAt          DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime? @default(now()) @db.Timestamptz(6)
+  products           Product   @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([productId], map: "idx_reviews_product_id")
+  @@index([rating], map: "idx_reviews_rating")
+  @@index([status], map: "idx_reviews_status")
 }
 
 enum PostStatus {
