@@ -2,33 +2,18 @@ import { motion } from 'motion/react';
 import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Eye, Calendar, Save, X, Upload } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { SEOPost } from '@/shared/types';
-import { useSettings } from '@/shared/hooks/useSettings';
-import { useMemo } from 'react';
+import { postsApi } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface ManageSEOPageProps {
   onBack: () => void;
 }
 //FIXED
 export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
-  const { siteName } = useSettings();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
-
-  // Use useMemo to generate posts with dynamic siteName if we want them and can afford it.
-  // For now, let's just make the mock data more flexible in the rendering or here.
-  const postsWithDynamicAuthor = useMemo(() => {
-    return mockSEOPosts.map(post => ({
-      ...post,
-      author: siteName // Or just a generic 'User' or something, but following user's 'remove admin'
-    }));
-  }, [siteName]);
-
-  const [posts, setPosts] = useState<SEOPost[]>(postsWithDynamicAuthor);
-
-  // Update posts if siteName changes
-  useMemo(() => {
-     setPosts(prev => prev.map(p => ({...p, author: siteName})));
-  }, [siteName]);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'PUBLISHED' | 'DRAFT'>('all');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editingPost, setEditingPost] = useState<SEOPost | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -200,7 +185,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-left">
+                <div>
                   <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-purple-600 bg-clip-text">
                     QUẢN LÝ BÀI VIẾT SEO
                   </h1>
