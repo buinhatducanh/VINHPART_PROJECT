@@ -11,7 +11,7 @@
         ]
     },
     "include": [
-        "vite.config.ts",
-        "prisma.config.ts"
+        "frontend/vite.config.ts",
+        "backend/prisma.config.ts"
     ]
 }
