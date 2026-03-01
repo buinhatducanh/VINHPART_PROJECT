@@ -51,6 +51,7 @@ async function migrate() {
     try {
         await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "googleId" TEXT UNIQUE`);
         await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT`);
+        await client.query(`ALTER TABLE users ALTER COLUMN password DROP NOT NULL`);
     } catch (e) {
         console.error('Startup migration error:', e);
     } finally {
