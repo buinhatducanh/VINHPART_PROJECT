@@ -333,7 +333,16 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                 onClick={() => setShowAccountMenu(!showAccountMenu)}
                 className="p-2 hover:bg-gray-900 rounded-lg transition-colors relative"
               >
-                <User className="w-5 h-5 text-gray-400" />
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-7 h-7 rounded-full object-cover border-2 border-gray-700 hover:border-red-600 transition-colors"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <User className="w-5 h-5 text-gray-400" />
+                )}
               </button>
 
               <AnimatePresence>
@@ -347,9 +356,23 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                     {user ? (
                       // Logged In Menu
                       <>
-                        <div className="px-4 py-3 border-b border-gray-800">
-                          <p className="text-white font-bold">{user.name}</p>
-                          <p className="text-xs text-gray-500">{user.email}</p>
+                        <div className="px-4 py-3 border-b border-gray-800 flex items-center gap-3">
+                          {user.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt={user.name}
+                              className="w-9 h-9 rounded-full object-cover border-2 border-gray-700 flex-shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 border border-gray-600 flex items-center justify-center flex-shrink-0">
+                              <User className="w-5 h-5 text-gray-300" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-white font-bold truncate">{user.name}</p>
+                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                          </div>
                         </div>
                         <button className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white" onClick={handleFeatureClick}>
                           Tài khoản của tôi
