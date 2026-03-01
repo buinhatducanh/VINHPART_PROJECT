@@ -164,8 +164,9 @@ router.post('/google', async (req, res) => {
         });
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('Google auth error:', error);
-        res.status(500).json({ error: 'Google authentication failed' });
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error('Google auth error:', msg);
+        res.status(500).json({ error: `Google authentication failed: ${msg}` });
     } finally {
         client.release();
     }
