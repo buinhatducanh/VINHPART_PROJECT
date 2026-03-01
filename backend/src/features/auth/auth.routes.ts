@@ -2,8 +2,10 @@ import { Router } from 'express';
 import { pool } from '../../shared/database';
 import { hashPassword, verifyPassword } from '../../shared/auth-helpers';
 import { v4 as uuidv4 } from 'uuid';
+import { OAuth2Client } from 'google-auth-library';
 
 const router = Router();
+const googleClient = new OAuth2Client();
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -79,11 +81,93 @@ router.post('/login', async (req, res) => {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role.toLowerCase()
+            role: user.role.toLowerCase(),
+            avatar: user.avatar || null
         });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+// POST /api/auth/google
+router.post('/google', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { credential, clientId } = req.body;
+
+        if (!credential) {
+            res.status(400).json({ error: 'Google credential is required' });
+            return;
+        }
+
+        // Verify the Google ID token
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: clientId,
+        });
+
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+            res.status(400).json({ error: 'Invalid Google token' });
+            return;
+        }
+
+        const { sub: googleId, email, name, picture } = payload;
+
+        await client.query('BEGIN');
+
+        // Check if user exists by googleId or email
+        const existingUser = await client.query(
+            'SELECT * FROM users WHERE "googleId" = $1 OR email = $2',
+            [googleId, email]
+        );
+
+        let user;
+
+        if (existingUser.rows.length > 0) {
+            // User exists - update googleId and avatar if needed
+            user = existingUser.rows[0];
+            const now = new Date();
+            await client.query(
+                `UPDATE users SET "googleId" = $1, avatar = $2, "updatedAt" = $3, name = COALESCE(name, $4) WHERE id = $5`,
+                [googleId, picture || user.avatar, now, name, user.id]
+            );
+            user.avatar = picture || user.avatar;
+            user.name = user.name || name;
+        } else {
+            // Create new user with Google info (no password needed)
+            const id = uuidv4();
+            const now = new Date();
+            const role = email === 'admin@vinpart.vn' ? 'ADMIN' : 'USER';
+
+            const insertQuery = `
+                INSERT INTO users (id, email, name, "googleId", avatar, role, "createdAt", "updatedAt")
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                RETURNING id, email, name, role, avatar
+            `;
+
+            const { rows } = await client.query(insertQuery, [
+                id, email, name, googleId, picture, role, now, now
+            ]);
+            user = rows[0];
+        }
+
+        await client.query('COMMIT');
+
+        res.json({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role.toLowerCase(),
+            avatar: user.avatar || null
+        });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Google auth error:', error);
+        res.status(500).json({ error: 'Google authentication failed' });
+    } finally {
+        client.release();
     }
 });
 
