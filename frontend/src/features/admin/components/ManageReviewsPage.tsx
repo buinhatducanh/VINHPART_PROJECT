@@ -1,15 +1,17 @@
+import { memo, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { MessageSquare, ArrowLeft, Search, Edit, Trash2, Star, Check, X, ArrowUp, ArrowDown, User, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Review } from '@/shared/types';
+import { API_BASE_URL } from '@/lib/api';
 
 interface ManageReviewsPageProps {
   onBack: () => void;
 }
 
+const MAX_ANIMATED_ROWS = 15;
 
-
-export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
+export const ManageReviewsPage = memo(function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [filterRating, setFilterRating] = useState<number | 'all'>('all');
@@ -18,7 +20,6 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [_editingReview, setEditingReview] = useState<Review | null>(null);
 
-  // Fetch reviews
   const fetchReviews = async () => {
     try {
       setLoading(true);
@@ -26,7 +27,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
       if (filterStatus !== 'all') params.append('status', filterStatus);
       if (filterRating !== 'all') params.append('rating', filterRating.toString());
 
-      const res = await fetch(`http://localhost:3001/api/reviews?${params.toString()}`);
+      const res = await fetch(`${API_BASE_URL}/reviews?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setReviews(data);
@@ -42,17 +43,21 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
     fetchReviews();
   }, [filterStatus, filterRating]);
 
-  // Filter only by search query on client side since backend handles status/rating
-  const filteredReviews = reviews.filter(review =>
-    review.product_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    review.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    review.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    review.title?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Memoized filtered reviews
+  const filteredReviews = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    if (!query) return reviews;
+    return reviews.filter(review =>
+      review.product_name?.toLowerCase().includes(query) ||
+      review.customer_name?.toLowerCase().includes(query) ||
+      review.content?.toLowerCase().includes(query) ||
+      review.title?.toLowerCase().includes(query)
+    );
+  }, [reviews, searchQuery]);
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/reviews/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/reviews/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setReviews(reviews.filter(review => review.id !== id));
         setShowDeleteConfirm(null);
@@ -64,7 +69,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
 
   const updateReviewStatus = async (id: string, status: 'approved' | 'rejected') => {
     try {
-      const res = await fetch(`http://localhost:3001/api/reviews/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/reviews/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -89,7 +94,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
     const newPriority = Math.max(0, review.priority + delta);
 
     try {
-      const res = await fetch(`http://localhost:3001/api/reviews/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/reviews/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priority: newPriority })
@@ -142,38 +147,15 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
     );
   };
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: reviews.length,
     pending: reviews.filter(r => r.status === 'pending').length,
     approved: reviews.filter(r => r.status === 'approved').length,
     rejected: reviews.filter(r => r.status === 'rejected').length,
-  };
+  }), [reviews]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black pb-20">
-      {/* Animated background particles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-red-600/30 rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-            }}
-            animate={{
-              y: [null, Math.random() * window.innerHeight],
-              opacity: [0.3, 0.8, 0.3]
-            }}
-            transition={{
-              duration: Math.random() * 5 + 3,
-              repeat: Infinity,
-              delay: Math.random() * 2
-            }}
-          />
-        ))}
-      </div>
-
       {/* Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -212,52 +194,31 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-4"
-          >
+          <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-4">
             <p className="text-gray-400 text-sm mb-1">Tổng số</p>
             <p className="text-3xl font-bold text-white">{stats.total}</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-gray-900/50 backdrop-blur-xl border border-yellow-600/30 rounded-xl p-4"
-          >
+          </div>
+          <div className="bg-gray-900/50 backdrop-blur-xl border border-yellow-600/30 rounded-xl p-4">
             <p className="text-gray-400 text-sm mb-1">Chờ duyệt</p>
             <p className="text-3xl font-bold text-yellow-400">{stats.pending}</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-gray-900/50 backdrop-blur-xl border border-green-600/30 rounded-xl p-4"
-          >
+          </div>
+          <div className="bg-gray-900/50 backdrop-blur-xl border border-green-600/30 rounded-xl p-4">
             <p className="text-gray-400 text-sm mb-1">Đã duyệt</p>
             <p className="text-3xl font-bold text-green-400">{stats.approved}</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-gray-900/50 backdrop-blur-xl border border-red-600/30 rounded-xl p-4"
-          >
+          </div>
+          <div className="bg-gray-900/50 backdrop-blur-xl border border-red-600/30 rounded-xl p-4">
             <p className="text-gray-400 text-sm mb-1">Từ chối</p>
             <p className="text-3xl font-bold text-red-400">{stats.rejected}</p>
-          </motion.div>
+          </div>
         </div>
 
         {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
           className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-4 mb-6"
         >
           <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
@@ -269,7 +230,6 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
               />
             </div>
 
-            {/* Status Filter */}
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as any)}
@@ -281,7 +241,6 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
               <option value="rejected">Từ chối</option>
             </select>
 
-            {/* Rating Filter */}
             <select
               value={filterRating}
               onChange={(e) => setFilterRating(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
@@ -306,9 +265,9 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
             return (
               <motion.div
                 key={review.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={index < MAX_ANIMATED_ROWS ? { opacity: 0, y: 20 } : false}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={index < MAX_ANIMATED_ROWS ? { delay: index * 0.03 } : undefined}
                 className="group relative bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-6 hover:border-cyan-600/50 transition-all"
               >
                 {/* Header */}
@@ -342,95 +301,79 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
                   </div>
                 </div>
 
-                {/* Product */}
                 <div className="mb-3">
                   <p className="text-sm text-gray-500">Sản phẩm: <span className="text-cyan-400">{review.product_name}</span></p>
                 </div>
 
-                {/* Content */}
                 <p className="text-gray-300 mb-4">{review.content}</p>
 
-                {/* Images */}
                 {review.images && review.images.length > 0 && (
                   <div className="flex gap-2 mb-4">
                     {review.images.map((img, idx) => (
                       <div key={idx} className="w-20 h-20 rounded-lg overflow-hidden border border-gray-700">
-                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* Stats */}
                 <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
-                  <span>👍 {review.helpful_count} người thấy hữu ích</span>
-                  <span>🏆 Độ ưu tiên: {review.priority}</span>
+                  <span>{review.helpful_count} người thấy hữu ích</span>
+                  <span>Độ ưu tiên: {review.priority}</span>
                 </div>
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2">
                   {review.status === 'pending' && (
                     <>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                      <button
                         onClick={() => handleApprove(review.id)}
                         className="px-4 py-2 bg-green-600/10 border border-green-600/50 text-green-400 rounded-lg hover:bg-green-600/20 transition-all flex items-center gap-2"
                       >
                         <Check className="w-4 h-4" />
                         Duyệt
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                      </button>
+                      <button
                         onClick={() => handleReject(review.id)}
                         className="px-4 py-2 bg-red-600/10 border border-red-600/50 text-red-400 rounded-lg hover:bg-red-600/20 transition-all flex items-center gap-2"
                       >
                         <X className="w-4 h-4" />
                         Từ chối
-                      </motion.button>
+                      </button>
                     </>
                   )}
 
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button
                     onClick={() => handleChangePriority(review.id, 1)}
                     className="px-4 py-2 bg-blue-600/10 border border-blue-600/50 text-blue-400 rounded-lg hover:bg-blue-600/20 transition-all flex items-center gap-2"
                   >
                     <ArrowUp className="w-4 h-4" />
                     Tăng ưu tiên
-                  </motion.button>
+                  </button>
 
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button
                     onClick={() => handleChangePriority(review.id, -1)}
                     className="px-4 py-2 bg-orange-600/10 border border-orange-600/50 text-orange-400 rounded-lg hover:bg-orange-600/20 transition-all flex items-center gap-2"
                   >
                     <ArrowDown className="w-4 h-4" />
                     Giảm ưu tiên
-                  </motion.button>
+                  </button>
 
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button
                     onClick={() => setEditingReview(review)}
                     className="px-4 py-2 bg-purple-600/10 border border-purple-600/50 text-purple-400 rounded-lg hover:bg-purple-600/20 transition-all flex items-center gap-2"
                   >
                     <Edit className="w-4 h-4" />
                     Sửa
-                  </motion.button>
+                  </button>
 
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button
                     onClick={() => setShowDeleteConfirm(review.id)}
                     className="px-4 py-2 bg-red-600/10 border border-red-600/50 text-red-400 rounded-lg hover:bg-red-600/20 transition-all flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
                     Xóa
-                  </motion.button>
+                  </button>
                 </div>
               </motion.div>
             );
@@ -438,7 +381,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
         </div>
 
         {/* Empty State */}
-        {filteredReviews.length === 0 && (
+        {!loading && filteredReviews.length === 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -447,18 +390,16 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
             <MessageSquare className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">Không tìm thấy đánh giá</h3>
             <p className="text-gray-500 mb-4">Không có đánh giá nào phù hợp với bộ lọc của bạn.</p>
-            <motion.button
+            <button
               onClick={() => {
                 setSearchQuery('');
                 setFilterStatus('all');
                 setFilterRating('all');
               }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
               className="px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-all"
             >
               Xóa bộ lọc
-            </motion.button>
+            </button>
           </motion.div>
         )}
       </div>
@@ -490,22 +431,18 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
               </p>
 
               <div className="flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={() => setShowDeleteConfirm(null)}
                   className="flex-1 px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   Hủy
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                </button>
+                <button
                   onClick={() => handleDelete(showDeleteConfirm)}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-600/25"
                 >
                   Xóa
-                </motion.button>
+                </button>
               </div>
             </div>
           </motion.div>
@@ -513,4 +450,4 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
       )}
     </div>
   );
-}
+});
