@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AddProductPage } from '../components/AddProductPage';
 import { StatisticsPage } from '../components/StatisticsPage';
 import { ManageOrdersPage } from '../components/ManageOrdersPage';
@@ -10,7 +10,8 @@ import { CategoryPage as ManageCategoriesPage } from '../components/category';
 import { ManageReviewsPage } from '../components/ManageReviewsPage';
 import { DashboardHome } from '../components/DashboardHome';
 import { LogoutModal } from '../components/LogoutModal';
-import { AdminPage, DashboardStats } from '../types';
+import { AdminPage } from '../types';
+import { useDashboardStats } from '@/hooks/useQueries';
 
 interface AdminDashboardProps {
   onBackToHome: () => void;
@@ -19,21 +20,9 @@ interface AdminDashboardProps {
 export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState<AdminPage>('dashboard');
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
-    products: 0,
-    orders: 0,
-    categories: 0,
-    banners: 0
-  });
 
-  useEffect(() => {
-    fetch('http://localhost:3001/api/dashboard/stats')
-      .then(res => res.json())
-      .then(data => {
-        setDashboardStats(data);
-      })
-      .catch(err => console.error('Error fetching stats:', err));
-  }, []);
+  const { data: dashboardStats } = useDashboardStats();
+  const stats = dashboardStats ?? { products: 0, orders: 0, categories: 0, banners: 0 };
 
   const handleLogout = () => {
     setShowLogoutConfirm(false);
@@ -67,7 +56,9 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
 
   if (currentPage === 'manageCategories') {
     return <ManageCategoriesPage onBack={() => setCurrentPage('dashboard')} />;
-  }  if (currentPage === 'manageReviews') {
+  }
+
+  if (currentPage === 'manageReviews') {
     return <ManageReviewsPage onBack={() => setCurrentPage('dashboard')} />;
   }
 
@@ -78,7 +69,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
   return (
     <>
       <DashboardHome
-        stats={dashboardStats}
+        stats={stats}
         onNavigate={setCurrentPage}
         onLogoutRequest={() => setShowLogoutConfirm(true)}
         onBackToHome={onBackToHome}
