@@ -203,7 +203,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
                         {googleLoading && (
                           <div className="mt-3 text-center text-gray-400 text-sm">
                             <div className="animate-spin w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full mx-auto mb-1"></div>
-                            Đang xác thực với Google...
+                            {mode === 'login' ? 'Đang đăng nhập với Google...' : 'Đang đăng ký với Google...'}
                           </div>
                         )}
                       </div>
@@ -214,7 +214,9 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
                           <div className="w-full border-t border-gray-800"></div>
                         </div>
                         <div className="relative flex justify-center text-xs">
-                          <span className="px-2 bg-gray-900 text-gray-500">HOẶC ĐĂNG NHẬP VỚI EMAIL</span>
+                          <span className="px-2 bg-gray-900 text-gray-500">
+                            {mode === 'login' ? 'HOẶC ĐĂNG NHẬP VỚI EMAIL' : 'HOẶC ĐĂNG KÝ VỚI EMAIL'}
+                          </span>
                         </div>
                       </div>
                     </>
