@@ -17,13 +17,20 @@ export interface StatItem {
     gradient: string;
     border: string;
     shadow: string;
+    targetPage?: AdminPage;
 }
 
-export interface QuickActionConfig {
+export interface NavMenuItem {
     label: string;
+    description: string;
     icon: LucideIcon;
     color: string;
-    hoverColor: string;
-    targetPage?: AdminPage;
-    isHome?: boolean;
+    bgColor: string;
+    borderColor: string;
+    targetPage: AdminPage;
+}
+
+export interface NavMenuGroup {
+    title: string;
+    items: NavMenuItem[];
 }
