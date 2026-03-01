@@ -6,10 +6,22 @@ import "./styles/index.css";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
-createRoot(document.getElementById("root")!).render(
-  <HelmetProvider>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+const AppWithProviders = () => {
+  const app = (
+    <HelmetProvider>
       <App />
-    </GoogleOAuthProvider>
-  </HelmetProvider>
-);
+    </HelmetProvider>
+  );
+
+  if (GOOGLE_CLIENT_ID) {
+    return (
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        {app}
+      </GoogleOAuthProvider>
+    );
+  }
+
+  return app;
+};
+
+createRoot(document.getElementById("root")!).render(<AppWithProviders />);

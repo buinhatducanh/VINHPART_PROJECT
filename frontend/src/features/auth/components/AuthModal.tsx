@@ -6,6 +6,8 @@ import { GoogleLogin } from '@react-oauth/google';
 
 import { User } from '@/shared/types';
 
+const GOOGLE_ENABLED = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -183,36 +185,42 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
                   </div>
 
                   {/* Google Login Button */}
-                  <div className="mb-6">
-                    <div className="flex justify-center [&_iframe]:!rounded-lg">
-                      <GoogleLogin
-                        onSuccess={handleGoogleSuccess}
-                        onError={handleGoogleError}
-                        theme="filled_black"
-                        shape="rectangular"
-                        size="large"
-                        width="360"
-                        text={mode === 'login' ? 'signin_with' : 'signup_with'}
-                        locale="vi"
-                      />
-                    </div>
-                    {googleLoading && (
-                      <div className="mt-3 text-center text-gray-400 text-sm">
-                        <div className="animate-spin w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full mx-auto mb-1"></div>
-                        Đang xác thực với Google...
+                  {GOOGLE_ENABLED && (
+                    <>
+                      <div className="mb-6">
+                        <div className="flex justify-center [&_iframe]:!rounded-lg">
+                          <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={handleGoogleError}
+                            theme="filled_black"
+                            shape="rectangular"
+                            size="large"
+                            width="360"
+                            text={mode === 'login' ? 'signin_with' : 'signup_with'}
+                            locale="vi"
+                          />
+                        </div>
+                        {googleLoading && (
+                          <div className="mt-3 text-center text-gray-400 text-sm">
+                            <div className="animate-spin w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full mx-auto mb-1"></div>
+                            {mode === 'login' ? 'Đang đăng nhập với Google...' : 'Đang đăng ký với Google...'}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Divider */}
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-800"></div>
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="px-2 bg-gray-900 text-gray-500">HOẶC ĐĂNG NHẬP VỚI EMAIL</span>
-                    </div>
-                  </div>
+                      {/* Divider */}
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-gray-800"></div>
+                        </div>
+                        <div className="relative flex justify-center text-xs">
+                          <span className="px-2 bg-gray-900 text-gray-500">
+                            {mode === 'login' ? 'HOẶC ĐĂNG NHẬP VỚI EMAIL' : 'HOẶC ĐĂNG KÝ VỚI EMAIL'}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   {/* Form */}
                   <form onSubmit={handleSubmit} className="space-y-4">
