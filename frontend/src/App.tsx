@@ -260,7 +260,7 @@ export default function App() {
             onPostClick={handleBlogPostClick}
           />
         )}
-        <Toaster position="top-right" richColors />
+        <Toaster position="bottom-left" richColors />
       </div>
     </QueryClientProvider>
   );
