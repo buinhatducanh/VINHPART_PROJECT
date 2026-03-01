@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { pool } from './shared/database';
 
 // Feature routes
 import authRoutes from './features/auth/auth.routes';
@@ -45,8 +46,22 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 
-app.listen(port, () => {
-    console.log(`API Server running at http://localhost:${port}`);
+async function migrate() {
+    const client = await pool.connect();
+    try {
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "googleId" TEXT UNIQUE`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT`);
+    } catch (e) {
+        console.error('Startup migration error:', e);
+    } finally {
+        client.release();
+    }
+}
+
+migrate().then(() => {
+    app.listen(port, () => {
+        console.log(`API Server running at http://localhost:${port}`);
+    });
 });
 
 export default app;
