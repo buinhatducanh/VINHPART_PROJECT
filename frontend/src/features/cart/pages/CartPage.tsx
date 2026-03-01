@@ -81,7 +81,7 @@ export function CartPage({ cartItems, onUpdateQuantity, onBackToShopping, onChec
                   {/* Product Image */}
                   <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
                     <img
-                      src={productImages[item.product.product_id] || `https://source.unsplash.com/400x400/?${item.product.product_image}`}
+                      src={productImages[item.product.product_id] || item.product.product_image}
                       alt={item.product.product_name}
                       className="w-full h-full object-cover"
                     />
