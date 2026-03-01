@@ -1,34 +1,34 @@
 
 import { motion } from 'motion/react';
-import { Package, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X } from 'lucide-react';
+import { Package, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Product } from '@/shared/types';
+import { API_BASE_URL } from '@/lib/api';
 
 interface ManageProductsPageProps {
   onBack: () => void;
   onAddProduct: () => void;
 }
 
+const ITEMS_PER_PAGE = 20;
+const MAX_ANIMATED_ROWS = 20;
+
 export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [products, setProducts] = useState<Product[]>([]); // Start empty
+  const [products, setProducts] = useState<Product[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // ✅ Cloudinary Widget Ref for image upload
   const widgetRef = useRef<any>(null);
-
-  // ✅ Ref to track latest editingProduct (fix closure stale issue)
   const editingProductRef = useRef<Product | null>(null);
 
-  // Sync ref with state
   useEffect(() => {
     editingProductRef.current = editingProduct;
   }, [editingProduct]);
 
-  // ✅ Initialize Cloudinary widget
   useEffect(() => {
     if ((window as any).cloudinary) {
       widgetRef.current = (window as any).cloudinary.createUploadWidget(
@@ -65,42 +65,28 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
           }
         },
         (error: any, result: any) => {
-          // Debug: Log tất cả events
-          console.log('Cloudinary event (Edit):', result?.event, result);
-
           if (!error && result && result.event === "success") {
             const url = result.info.secure_url;
-            console.log('✅ Upload success (Edit):', url);
-
-            // ✅ FIX: Use ref to avoid stale closure
             const current = editingProductRef.current;
-            console.log('Current editing product ID:', current?.product_id);
-
             if (current) {
               setEditingProduct({ ...current, product_image: url });
-              console.log('📸 Updated editingProduct with new image:', url);
               toast.success('Ảnh đã được tải lên thành công!');
-            } else {
-              console.warn('⚠️ No product being edited');
             }
           } else if (error) {
-            console.error('❌ Upload error (Edit):', error);
             toast.error('Lỗi khi tải ảnh lên: ' + error.message);
           }
         }
       );
     }
-  }, []); // ✅ FIX: Only initialize once on mount, not on every edit
+  }, []);
 
-  // Fetch products on mount
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const fetchProducts = () => {
     setLoading(true);
-    // Request a high limit to get all products for client-side management for now
-    fetch('http://localhost:3001/api/products?limit=1000')
+    fetch(`${API_BASE_URL}/products?limit=1000`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -118,22 +104,39 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
       });
   };
 
-  const filteredProducts = products.filter(product =>
-    product.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.compatible_brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Memoized filtered products
+  const filteredProducts = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    if (!query) return products;
+    return products.filter(product =>
+      product.product_name.toLowerCase().includes(query) ||
+      product.compatible_brand.toLowerCase().includes(query) ||
+      product.category.toLowerCase().includes(query)
+    );
+  }, [products, searchQuery]);
 
-  const formatCurrency = (value: number) => {
+  // Pagination
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const formatCurrency = useCallback((value: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
     }).format(value);
-  };
+  }, []);
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/products/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -152,8 +155,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   const handleSaveEdit = async () => {
     if (editingProduct) {
       try {
-        // ✅ FIX: Send proper data structure matching API expectations
-        const res = await fetch(`http://localhost:3001/api/products/${editingProduct.product_id}`, {
+        const res = await fetch(`${API_BASE_URL}/products/${editingProduct.product_id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -169,7 +171,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
         });
 
         if (res.ok) {
-          await res.json(); // Consume body
+          await res.json();
           fetchProducts();
           setEditingProduct(null);
           toast.success("Cập nhật thành công");
@@ -189,29 +191,6 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black pb-20">
-      {/* Animated background particles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-red-600/30 rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-            }}
-            animate={{
-              y: [null, Math.random() * window.innerHeight],
-              opacity: [0.3, 0.8, 0.3]
-            }}
-            transition={{
-              duration: Math.random() * 5 + 3,
-              repeat: Infinity,
-              delay: Math.random() * 2
-            }}
-          />
-        ))}
-      </div>
-
       {/* Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -238,12 +217,11 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                   <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-blue-600 bg-clip-text">
                     QUẢN LÝ SẢN PHẨM
                   </h1>
-                  <p className="text-sm text-gray-500">{products.length} sản phẩm</p>
+                  <p className="text-sm text-gray-500">{filteredProducts.length} sản phẩm</p>
                 </div>
               </div>
             </div>
 
-            {/* Add Product Button */}
             <motion.button
               onClick={onAddProduct}
               whileHover={{ scale: 1.05 }}
@@ -309,12 +287,12 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {filteredProducts.map((product, index) => (
+                {paginatedProducts.map((product, index) => (
                   <motion.tr
                     key={product.product_id}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={index < MAX_ANIMATED_ROWS ? { opacity: 0, x: -20 } : false}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={index < MAX_ANIMATED_ROWS ? { delay: index * 0.03 } : undefined}
                     className="hover:bg-gray-800/30 transition-colors group"
                   >
                     {/* Product Info */}
@@ -326,6 +304,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                               src={product.product_image}
                               alt={product.product_name}
                               className="w-full h-full object-cover"
+                              loading="lazy"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64?text=No+Image';
                               }}
@@ -340,24 +319,20 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                           <p className="text-white font-semibold line-clamp-1">
                             {product.product_name}
                           </p>
-
                         </div>
                       </div>
                     </td>
 
-                    {/* Brand */}
                     <td className="px-6 py-4">
                       <span className="text-white">{product.compatible_brand}</span>
                     </td>
 
-                    {/* Category */}
                     <td className="px-6 py-4">
                       <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/50 rounded-lg text-blue-400 text-sm">
                         {product.sub_category || product.category}
                       </span>
                     </td>
 
-                    {/* Price */}
                     <td className="px-6 py-4">
                       <div className="whitespace-nowrap">
                         <p className="text-white font-bold">
@@ -373,7 +348,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                         )}
                       </div>
                     </td>
-                    {/* Stock */}
+
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
                         <span className="text-white font-medium">{product.stock} sản phẩm</span>
@@ -389,26 +364,21 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                       </div>
                     </td>
 
-                    {/* Actions */}
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
+                        <button
                           onClick={() => setEditingProduct(product)}
                           className="p-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-blue-600/50 transition-all group/edit"
                         >
                           <Edit className="w-4 h-4 text-gray-400 group-hover/edit:text-blue-600 transition-colors" />
-                        </motion.button>
+                        </button>
 
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
+                        <button
                           onClick={() => setShowDeleteConfirm(product.product_id)}
                           className="p-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-red-600/50 transition-all group/delete"
                         >
                           <Trash2 className="w-4 h-4 text-gray-400 group-hover/delete:text-red-600 transition-colors" />
-                        </motion.button>
+                        </button>
                       </div>
                     </td>
                   </motion.tr>
@@ -416,6 +386,58 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="border-t border-gray-800 px-6 py-4 flex items-center justify-between">
+              <p className="text-sm text-gray-400">
+                Hiển thị {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)} / {filteredProducts.length} sản phẩm
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-blue-600/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4 text-gray-400" />
+                </button>
+
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let page: number;
+                  if (totalPages <= 5) {
+                    page = i + 1;
+                  } else if (currentPage <= 3) {
+                    page = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    page = totalPages - 4 + i;
+                  } else {
+                    page = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
+                        currentPage === page
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/25'
+                          : 'bg-gray-800 border border-gray-700 text-gray-400 hover:border-blue-600/50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-blue-600/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </button>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* Empty State */}
@@ -428,14 +450,12 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
             <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">Không tìm thấy sản phẩm</h3>
             <p className="text-gray-500 mb-4">Không có sản phẩm nào phù hợp với tìm kiếm của bạn.</p>
-            <motion.button
+            <button
               onClick={() => setSearchQuery('')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
               className="px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-all"
             >
               Xóa bộ lọc
-            </motion.button>
+            </button>
           </motion.div>
         )}
       </div>
@@ -475,7 +495,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                   <div className="aspect-square bg-gray-800/50 rounded-xl overflow-hidden border-2 border-dashed border-gray-700 flex items-center justify-center relative group">
                     {editingProduct.product_image ? (
                       <img
-                        key={editingProduct.product_image} // ✅ Force re-render when URL changes
+                        key={editingProduct.product_image}
                         src={editingProduct.product_image}
                         alt="Preview"
                         className="w-full h-full object-cover"
@@ -502,7 +522,6 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                     />
                   </div>
 
-                  {/* Upload Button */}
                   <button
                     type="button"
                     onClick={() => {
@@ -627,23 +646,19 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
               </div>
 
               <div className="flex gap-3 mt-8 pt-6 border-t border-gray-800">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <button
                   onClick={() => setEditingProduct(null)}
                   className="flex-1 px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
                 >
                   Hủy bỏ
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                </button>
+                <button
                   onClick={handleSaveEdit}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/25 font-bold flex items-center justify-center gap-2"
                 >
                   <Save className="w-5 h-5" />
                   Lưu thay đổi
-                </motion.button>
+                </button>
               </div>
             </div>
           </motion.div>
@@ -677,22 +692,18 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
               </p>
 
               <div className="flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={() => setShowDeleteConfirm(null)}
                   className="flex-1 px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   Hủy
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                </button>
+                <button
                   onClick={() => handleDelete(showDeleteConfirm)}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-600/25"
                 >
                   Xóa
-                </motion.button>
+                </button>
               </div>
             </div>
           </motion.div>

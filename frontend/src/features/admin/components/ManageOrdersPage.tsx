@@ -1,6 +1,8 @@
+import { memo, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { ClipboardList, ArrowLeft, Eye, Truck, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useOrders } from '@/hooks/useQueries';
 
 interface ManageOrdersPageProps {
   onBack: () => void;
@@ -16,60 +18,62 @@ interface Order {
   items: number;
 }
 
-export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
+const MAX_ANIMATED_ROWS = 15;
+
+const statusConfig = {
+  pending: {
+    label: 'Chờ xử lý',
+    color: 'text-yellow-400',
+    bg: 'bg-yellow-500/10',
+    border: 'border-yellow-500/50',
+    icon: Clock
+  },
+  processing: {
+    label: 'Đang xử lý',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
+    border: 'border-blue-500/50',
+    icon: Truck
+  },
+  shipped: {
+    label: 'Đang giao',
+    color: 'text-purple-400',
+    bg: 'bg-purple-500/10',
+    border: 'border-purple-500/50',
+    icon: Truck
+  },
+  delivered: {
+    label: 'Đã giao',
+    color: 'text-green-400',
+    bg: 'bg-green-500/10',
+    border: 'border-green-500/50',
+    icon: CheckCircle
+  },
+  cancelled: {
+    label: 'Đã hủy',
+    color: 'text-red-400',
+    bg: 'bg-red-500/10',
+    border: 'border-red-500/50',
+    icon: XCircle
+  }
+};
+
+export const ManageOrdersPage = memo(function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [orders, setOrders] = useState<Order[]>([]);
+  const { data: orders = [] } = useOrders();
 
-  useEffect(() => {
-    fetch('http://localhost:3001/api/orders')
-      .then(res => res.json())
-      .then(data => {
-        setOrders(data);
-      })
-      .catch(err => console.error('Error fetching orders:', err));
-  }, []);
+  const filteredOrders = useMemo(() => {
+    if (selectedStatus === 'all') return orders as Order[];
+    return (orders as Order[]).filter(order => order.status === selectedStatus);
+  }, [orders, selectedStatus]);
 
-  const statusConfig = {
-    pending: {
-      label: 'Chờ xử lý',
-      color: 'text-yellow-400',
-      bg: 'bg-yellow-500/10',
-      border: 'border-yellow-500/50',
-      icon: Clock
-    },
-    processing: {
-      label: 'Đang xử lý',
-      color: 'text-blue-400',
-      bg: 'bg-blue-500/10',
-      border: 'border-blue-500/50',
-      icon: Truck
-    },
-    shipped: {
-      label: 'Đang giao',
-      color: 'text-purple-400',
-      bg: 'bg-purple-500/10',
-      border: 'border-purple-500/50',
-      icon: Truck
-    },
-    delivered: {
-      label: 'Đã giao',
-      color: 'text-green-400',
-      bg: 'bg-green-500/10',
-      border: 'border-green-500/50',
-      icon: CheckCircle
-    },
-    cancelled: {
-      label: 'Đã hủy',
-      color: 'text-red-400',
-      bg: 'bg-red-500/10',
-      border: 'border-red-500/50',
-      icon: XCircle
-    }
-  };
-
-  const filteredOrders = selectedStatus === 'all'
-    ? orders
-    : orders.filter(order => order.status === selectedStatus);
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    (orders as Order[]).forEach(o => {
+      counts[o.status] = (counts[o.status] || 0) + 1;
+    });
+    return counts;
+  }, [orders]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -80,29 +84,6 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black pb-20">
-      {/* Animated background particles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-red-600/30 rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-            }}
-            animate={{
-              y: [null, Math.random() * window.innerHeight],
-              opacity: [0.3, 0.8, 0.3]
-            }}
-            transition={{
-              duration: Math.random() * 5 + 3,
-              repeat: Infinity,
-              delay: Math.random() * 2
-            }}
-          />
-        ))}
-      </div>
-
       {/* Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -152,10 +133,10 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
                 : 'text-gray-400 hover:text-white hover:bg-gray-800'
               }`}
           >
-            Tất cả ({orders.length})
+            Tất cả ({(orders as Order[]).length})
           </button>
           {Object.entries(statusConfig).map(([key, config]) => {
-            const count = orders.filter(o => o.status === key).length;
+            const count = statusCounts[key] || 0;
             return (
               <button
                 key={key}
@@ -181,14 +162,12 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
             return (
               <motion.div
                 key={order.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={index < MAX_ANIMATED_ROWS ? { opacity: 0, y: 20 } : false}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -2 }}
+                transition={index < MAX_ANIMATED_ROWS ? { delay: index * 0.05 } : undefined}
                 className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-6 hover:border-purple-600/30 transition-all group"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  {/* Order Info */}
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Mã đơn hàng</p>
@@ -211,7 +190,6 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
                     </div>
                   </div>
 
-                  {/* Status & Actions */}
                   <div className="flex items-center gap-3">
                     <div className={`px-4 py-2 rounded-lg ${statusInfo.bg} border ${statusInfo.border} flex items-center gap-2`}>
                       <StatusIcon className={`w-4 h-4 ${statusInfo.color}`} />
@@ -220,17 +198,14 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
                       </span>
                     </div>
 
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <button
                       className="p-3 bg-gray-800 border border-gray-700 rounded-lg hover:border-purple-600/50 transition-all group/btn"
                     >
                       <Eye className="w-5 h-5 text-gray-400 group-hover/btn:text-purple-600 transition-colors" />
-                    </motion.button>
+                    </button>
                   </div>
                 </div>
 
-                {/* Additional Info */}
                 <div className="mt-4 pt-4 border-t border-gray-800 flex items-center gap-2 text-sm text-gray-500">
                   <span>{order.items} sản phẩm</span>
                   <span>•</span>
@@ -256,4 +231,4 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
       </div>
     </div>
   );
-}
+});
