@@ -24,8 +24,40 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
   const shipping = subtotal >= 500000 ? 0 : 50000;
   const total = subtotal + shipping;
 
-  const handlePlaceOrder = () => {
-    setOrderComplete(true);
+  const handlePlaceOrder = async () => {
+    try {
+      // Mock order data from form (in a real app, this would come from state)
+      const orderData = {
+        customerName: 'Nguyễn Văn A',
+        customerEmail: 'example@email.com',
+        customerPhone: '0901234567',
+        address: 'Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố',
+        city: 'Hồ Chí Minh',
+        notes: 'Yêu cầu đặc biệt về đơn hàng...',
+        totalAmount: total,
+        items: cartItems.map(item => ({
+          productId: item.product.product_id,
+          name: item.product.product_name,
+          price: item.product.price,
+          quantity: item.quantity
+        }))
+      };
+
+      const response = await fetch('http://localhost:3001/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (response.ok) {
+        setOrderComplete(true);
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      alert('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!');
+    }
   };
 
   if (orderComplete) {

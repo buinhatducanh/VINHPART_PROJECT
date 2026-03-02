@@ -4,7 +4,7 @@ import { pool } from '../../shared/database';
 const router = Router();
 
 // GET /api/orders
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
     try {
         const query = `
             SELECT o.id, o."orderNumber", o."customerName", o."createdAt", o."totalAmount", o.status,
@@ -27,6 +27,104 @@ router.get('/', async (req, res) => {
         res.json(mappedOrders);
     } catch (error) {
         console.error('Error fetching orders:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// POST /api/orders
+router.post('/', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const {
+            customerName,
+            customerEmail,
+            customerPhone,
+            address,
+            city,
+            notes,
+            totalAmount,
+            items
+        } = req.body;
+
+        await client.query('BEGIN');
+
+        // Generate a simple order number
+        const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+        const orderQuery = `
+            INSERT INTO orders (id, "orderNumber", "customerName", "customerEmail", "customerPhone", address, city, notes, "totalAmount", status, "createdAt", "updatedAt")
+            VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, 'PENDING', NOW(), NOW())
+            RETURNING id
+        `;
+
+        const orderResult = await client.query(orderQuery, [
+            orderNumber,
+            customerName,
+            customerEmail,
+            customerPhone,
+            address,
+            city,
+            notes,
+            totalAmount
+        ]);
+
+        const orderId = orderResult.rows[0].id;
+
+        for (const item of items) {
+            const itemQuery = `
+                INSERT INTO order_items (id, "orderId", "productId", name, price, quantity)
+                VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5)
+            `;
+            await client.query(itemQuery, [
+                orderId,
+                item.productId,
+                item.name,
+                item.price,
+                item.quantity
+            ]);
+        }
+
+        await client.query('COMMIT');
+
+        res.status(201).json({
+            id: orderId,
+            orderNumber,
+            message: 'Order placed successfully'
+        });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error placing order:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    } finally {
+        client.release();
+    }
+});
+
+// GET /api/orders/:id
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const orderQuery = `
+            SELECT * FROM orders WHERE id = $1
+        `;
+        const itemsQuery = `
+            SELECT * FROM order_items WHERE "orderId" = $1
+        `;
+
+        const orderResult = await pool.query(orderQuery, [id]);
+        if (orderResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        const itemsResult = await pool.query(itemsQuery, [id]);
+
+        const order = orderResult.rows[0];
+        res.json({
+            ...order,
+            items: itemsResult.rows
+        });
+    } catch (error) {
+        console.error('Error fetching order details:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });

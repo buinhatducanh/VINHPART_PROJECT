@@ -3,6 +3,7 @@ import { LogOut, Home, Settings, Package, TrendingUp } from 'lucide-react';
 import { AdminPage, DashboardStats } from '../types';
 import { getStatsConfig, QUICK_ACTIONS_CONFIG } from '../constants';
 import { useSettings } from '@/shared/hooks/useSettings';
+import { NotificationBell } from '@/features/notification/components/NotificationBell';
 
 interface DashboardHomeProps {
     stats: DashboardStats;
@@ -44,7 +45,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
             <motion.header
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="relative border-b border-gray-800 bg-black/40 backdrop-blur-xl"
+                className="relative z-50 border-b border-gray-800 bg-black/40 backdrop-blur-xl"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-between">
@@ -85,6 +86,8 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                                 <p className="text-sm font-semibold text-white">{siteName.toLowerCase()}@vinhpart.vn</p>
                                 <p className="text-xs text-gray-500">Quản trị viên</p>
                             </div>
+
+                            <NotificationBell />
 
                             <motion.button
                                 onClick={onLogoutRequest}

@@ -14,6 +14,7 @@ import postRoutes from './features/post/post.routes';
 import reviewRoutes from './features/review/review.routes';
 import dashboardRoutes from './features/dashboard/dashboard.routes';
 import uploadRoutes from './features/upload/upload.routes';
+import notificationRoutes from './features/notification/notification.routes';
 
 dotenv.config();
 
@@ -36,12 +37,13 @@ app.use('/api/posts', postRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../../dist')));
 
-    app.get(/.*/, (req, res) => {
+    app.get(/.*/, (_req, res) => {
         res.sendFile(path.join(__dirname, '../../dist', 'index.html'));
     });
 }
