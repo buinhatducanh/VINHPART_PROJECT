@@ -1,27 +1,13 @@
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
-import { GoogleOAuthProvider } from "@react-oauth/google";
+import { I18nProvider } from '@/shared/lib/i18n';
 import App from "./App.tsx";
 import "./styles/index.css";
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
-
-const AppWithProviders = () => {
-  const app = (
-    <HelmetProvider>
+createRoot(document.getElementById("root")!).render(
+  <HelmetProvider>
+    <I18nProvider>
       <App />
-    </HelmetProvider>
-  );
-
-  if (GOOGLE_CLIENT_ID) {
-    return (
-      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-        {app}
-      </GoogleOAuthProvider>
-    );
-  }
-
-  return app;
-};
-
-createRoot(document.getElementById("root")!).render(<AppWithProviders />);
+    </I18nProvider>
+  </HelmetProvider>
+);

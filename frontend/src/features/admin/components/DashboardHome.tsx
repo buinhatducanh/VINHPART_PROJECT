@@ -1,11 +1,9 @@
-import { memo, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { LogOut, Home, DollarSign, ShoppingCart, Users, ArrowUpRight, ChevronRight } from 'lucide-react';
+import { LogOut, Home, Settings, Package, TrendingUp } from 'lucide-react';
 import { AdminPage, DashboardStats } from '../types';
-import { getStatsConfig, NAV_MENU_CONFIG } from '../constants';
+import { getStatsConfig, QUICK_ACTIONS_CONFIG } from '../constants';
 import { useSettings } from '@/shared/hooks/useSettings';
-import { NotificationBell } from '@/features/notification/components/NotificationBell';
-import { useOrders } from '@/hooks/useQueries';
+import { useI18n } from '@/shared/lib/i18n';
 
 interface DashboardHomeProps {
     stats: DashboardStats;
@@ -14,247 +12,201 @@ interface DashboardHomeProps {
     onBackToHome: () => void;
 }
 
-export const DashboardHome = memo(function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome }: DashboardHomeProps) {
+export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome }: DashboardHomeProps) {
     const { siteName } = useSettings();
-    const statsConfig = useMemo(() => getStatsConfig(stats), [stats]);
-    const { data: orders } = useOrders();
-
-    const analyticsPreview = useMemo(() => {
-        if (!orders || !Array.isArray(orders)) {
-            return { totalRevenue: 0, totalOrders: 0, pendingOrders: 0, deliveredOrders: 0 };
-        }
-        const totalRevenue = orders.reduce((sum: number, o: any) => sum + (o.total || 0), 0);
-        const totalOrders = orders.length;
-        const pendingOrders = orders.filter((o: any) => o.status === 'pending').length;
-        const deliveredOrders = orders.filter((o: any) => o.status === 'delivered').length;
-        return { totalRevenue, totalOrders, pendingOrders, deliveredOrders };
-    }, [orders]);
-
-    const formatCurrency = (value: number) => {
-        if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-        if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
-        return value.toString();
-    };
+    const statsConfig = getStatsConfig(stats);
+    const { t } = useI18n();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
-            {/* Header */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                {[...Array(30)].map((_, i) => (
+                    <motion.div
+                        key={i}
+                        className="absolute w-1 h-1 bg-red-600/30 rounded-full"
+                        initial={{ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight }}
+                        animate={{ y: [null, Math.random() * window.innerHeight], opacity: [0.3, 0.8, 0.3] }}
+                        transition={{ duration: Math.random() * 5 + 3, repeat: Infinity, delay: Math.random() * 2 }}
+                    />
+                ))}
+            </div>
+
             <motion.header
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="relative z-50 border-b border-gray-800 bg-black/40 backdrop-blur-xl"
+                className="relative border-b border-border bg-background/40 backdrop-blur-xl"
             >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="relative w-12 h-12">
+                            <motion.div whileHover={{ scale: 1.05, rotate: 5 }} className="relative w-14 h-14">
                                 <div className="absolute inset-0 bg-gradient-to-br from-red-600 to-red-800 rounded-xl transform rotate-3"></div>
-                                <div className="absolute inset-0.5 bg-black rounded-xl"></div>
+                                <div className="absolute inset-0.5 bg-background rounded-xl"></div>
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="text-2xl font-black text-transparent bg-gradient-to-br from-red-500 via-red-600 to-red-800 bg-clip-text">
+                                    <div className="text-3xl font-black text-transparent bg-gradient-to-br from-red-500 via-red-600 to-red-800 bg-clip-text">
                                         {siteName.charAt(0).toUpperCase()}
                                     </div>
                                 </div>
-                            </div>
+                                <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-red-600"></div>
+                                <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-red-600"></div>
+                                <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-red-600"></div>
+                                <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-red-600"></div>
+                                <div className="absolute inset-0 bg-red-600/20 rounded-xl blur-xl"></div>
+                            </motion.div>
+
                             <div className="text-left">
-                                <h1 className="text-xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-red-600 bg-clip-text">
+                                <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-red-600 bg-clip-text">
                                     {siteName.toUpperCase()}
                                 </h1>
-                                <p className="text-xs text-gray-500">Bảng điều khiển quản trị</p>
+                                <p className="text-sm text-muted-foreground">{t('common.storeManagement')}</p>
                             </div>
                         </div>
 
-                        {/* User Info & Actions */}
                         <div className="flex items-center gap-4">
                             <div className="hidden md:block text-right">
-                                <p className="text-sm font-semibold text-white">{siteName.toLowerCase()}@vinhpart.vn</p>
-                                <p className="text-xs text-gray-500">Quản trị viên</p>
+                                <p className="text-sm font-semibold text-foreground">{siteName.toLowerCase()}@vinhpart.vn</p>
+                                <p className="text-xs text-muted-foreground">{t('common.admin')}</p>
                             </div>
-
-                            <NotificationBell />
-
-                            <button
-                                onClick={onBackToHome}
-                                className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white hover:border-gray-600 transition-all"
-                            >
-                                <Home className="w-4 h-4" />
-                                Trang chủ
-                            </button>
 
                             <motion.button
                                 onClick={onLogoutRequest}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="group relative p-2.5 bg-gray-900 border border-gray-700 rounded-lg hover:border-red-600/50 transition-all"
+                                className="group relative p-3 bg-card border border-border rounded-lg hover:border-red-600/50 transition-all"
                             >
-                                <LogOut className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" />
+                                <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-red-600 transition-colors" />
+                                <div className="absolute inset-0 bg-red-600/0 group-hover:bg-red-600/10 rounded-lg transition-colors"></div>
                             </motion.button>
                         </div>
                     </div>
                 </div>
             </motion.header>
 
-            {/* Main Content */}
             <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Section 1: Clickable Stats Cards */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="mb-8"
-                >
-                    <h2 className="text-lg font-semibold text-gray-400 mb-4">Tổng quan</h2>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {statsConfig.map((stat, index) => (
-                            <motion.button
-                                key={stat.label}
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.15 + index * 0.05 }}
-                                whileHover={{ y: -4, scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => stat.targetPage && onNavigate(stat.targetPage)}
-                                className="group relative text-left"
-                            >
-                                <div className={`relative bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl p-5 overflow-hidden transition-all duration-300 ${stat.targetPage ? 'cursor-pointer hover:border-red-500/40' : 'cursor-default'}`}>
-                                    <div className={`absolute inset-0 ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-                                    <div className="relative flex items-center gap-4">
-                                        <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                                            <stat.icon className="w-6 h-6 text-white" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-3xl font-black text-white">{stat.value}</p>
-                                            <p className="text-sm text-gray-400 truncate">{stat.label}</p>
-                                        </div>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
+                    <h2 className="text-3xl font-bold text-foreground mb-2">{t('admin.dashboard.welcome')} 👋</h2>
+                    <p className="text-muted-foreground">{t('admin.dashboard.overview', { name: siteName.toUpperCase() })}</p>
+                </motion.div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {statsConfig.map((stat, index) => (
+                        <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + index * 0.1 }} whileHover={{ y: -5, scale: 1.02 }} className="group relative">
+                            <div className={`relative bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6 overflow-hidden hover:border-${stat.border} transition-all duration-300`}>
+                                <div className={`absolute inset-0 ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                                <div className="relative mb-4">
+                                    <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center group-hover:shadow-lg ${stat.shadow} transition-all duration-300`}>
+                                        <stat.icon className="w-7 h-7 text-foreground" />
                                     </div>
-                                    {stat.targetPage && (
-                                        <ChevronRight className="absolute top-1/2 right-4 -translate-y-1/2 w-4 h-4 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    )}
+                                    <div className={`absolute inset-0 w-14 h-14 bg-gradient-to-br ${stat.color} rounded-xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300`}></div>
                                 </div>
-                            </motion.button>
-                        ))}
-                    </div>
-                </motion.div>
-
-                {/* Section 2: Analytics Preview (real data) */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="mb-8"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-gray-400">Phân tích doanh thu</h2>
-                        <button
-                            onClick={() => onNavigate('statistics')}
-                            className="flex items-center gap-1.5 text-sm text-green-400 hover:text-green-300 transition-colors"
-                        >
-                            Xem chi tiết
-                            <ArrowUpRight className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="bg-gray-900/50 backdrop-blur-xl border border-green-600/20 rounded-xl p-4">
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                                    <DollarSign className="w-4 h-4 text-white" />
+                                <div className="relative">
+                                    <p className="text-4xl font-black text-foreground mb-1">{stat.value}</p>
+                                    <p className="text-muted-foreground group-hover:text-muted-foreground transition-colors">{t(`admin.stats.${stat.key}`)}</p>
                                 </div>
-                                <p className="text-xs text-gray-500">Doanh thu</p>
+                                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-red-600/0 group-hover:border-red-600/30 transition-all duration-300 rounded-tr-2xl"></div>
+                                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-red-600/0 group-hover:border-red-600/30 transition-all duration-300 rounded-bl-2xl"></div>
                             </div>
-                            <p className="text-xl font-bold text-white">{formatCurrency(analyticsPreview.totalRevenue)} <span className="text-xs text-gray-500">VNĐ</span></p>
+                        </motion.div>
+                    ))}
+                </div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="relative bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-600/5 to-transparent"></div>
+                    <div className="relative">
+                        <div className="flex items-center gap-3 mb-6">
+                            <Settings className="w-6 h-6 text-red-600" />
+                            <h3 className="text-xl font-bold text-foreground">{t('admin.dashboard.quickActions')}</h3>
                         </div>
-
-                        <div className="bg-gray-900/50 backdrop-blur-xl border border-blue-600/20 rounded-xl p-4">
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
-                                    <ShoppingCart className="w-4 h-4 text-white" />
-                                </div>
-                                <p className="text-xs text-gray-500">Tổng đơn</p>
-                            </div>
-                            <p className="text-xl font-bold text-white">{analyticsPreview.totalOrders}</p>
-                        </div>
-
-                        <div className="bg-gray-900/50 backdrop-blur-xl border border-yellow-600/20 rounded-xl p-4">
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
-                                    <ShoppingCart className="w-4 h-4 text-white" />
-                                </div>
-                                <p className="text-xs text-gray-500">Chờ xử lý</p>
-                            </div>
-                            <p className="text-xl font-bold text-yellow-400">{analyticsPreview.pendingOrders}</p>
-                        </div>
-
-                        <div className="bg-gray-900/50 backdrop-blur-xl border border-purple-600/20 rounded-xl p-4">
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-                                    <Users className="w-4 h-4 text-white" />
-                                </div>
-                                <p className="text-xs text-gray-500">Đã giao</p>
-                            </div>
-                            <p className="text-xl font-bold text-green-400">{analyticsPreview.deliveredOrders}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {QUICK_ACTIONS_CONFIG.map((action, index) => (
+                                <motion.button
+                                    key={action.label}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.7 + index * 0.1 }}
+                                    whileHover={{ scale: 1.05, x: 5 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => action.targetPage ? onNavigate(action.targetPage) : onBackToHome()}
+                                    className={`group relative flex items-center gap-3 p-4 bg-muted backdrop-blur border border-border rounded-xl ${action.hoverColor} transition-all duration-300 hover:border-gray-600`}
+                                >
+                                    <div className={`${action.color} group-hover:scale-110 transition-transform`}>
+                                        <action.icon className="w-6 h-6" />
+                                    </div>
+                                    <span className="text-foreground font-medium text-sm">{t(`admin.dashboard.actions.${action.key}`)}</span>
+                                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </div>
+                                </motion.button>
+                            ))}
                         </div>
                     </div>
                 </motion.div>
 
-                {/* Section 3: Unified Navigation Menu (grouped) */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.45 }}
-                >
-                    <h2 className="text-lg font-semibold text-gray-400 mb-4">Quản lý</h2>
-
-                    <div className="space-y-6">
-                        {NAV_MENU_CONFIG.map((group) => (
-                            <div key={group.title}>
-                                <p className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-3">{group.title}</p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {group.items.map((item) => (
-                                        <button
-                                            key={item.label}
-                                            onClick={() => onNavigate(item.targetPage)}
-                                            className={`group relative flex items-center gap-4 p-4 bg-gray-900/40 backdrop-blur border ${item.borderColor} rounded-xl hover:bg-gray-800/50 transition-all duration-200 text-left`}
-                                        >
-                                            <div className={`w-10 h-10 bg-gradient-to-br ${item.bgColor} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:shadow-lg transition-shadow`}>
-                                                <item.icon className="w-5 h-5 text-white" />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-white font-semibold text-sm">{item.label}</p>
-                                                <p className="text-xs text-gray-500">{item.description}</p>
-                                            </div>
-                                            <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-gray-400 transition-colors flex-shrink-0" />
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1 }} className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-card/30 border border-border rounded-xl p-4 backdrop-blur">
+                        <p className="text-xs text-muted-foreground mb-1">{t('admin.dashboard.sysVersion')}</p>
+                        <p className="text-foreground font-semibold">{siteName.toUpperCase()} v2.0.0</p>
+                    </div>
+                    <div className="bg-card/30 border border-border rounded-xl p-4 backdrop-blur">
+                        <p className="text-xs text-muted-foreground mb-1">{t('admin.dashboard.lastLogin')}</p>
+                        <p className="text-foreground font-semibold">{t('common.today')}, 10:30 AM</p>
+                    </div>
+                    <div className="bg-card/30 border border-border rounded-xl p-4 backdrop-blur">
+                        <p className="text-xs text-muted-foreground mb-1">{t('admin.dashboard.sysStatus')}</p>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <p className="text-foreground font-semibold">{t('admin.dashboard.statusNormal')}</p>
+                        </div>
                     </div>
                 </motion.div>
 
-                {/* Footer: System Info */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="mt-10 pt-6 border-t border-gray-800/50 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-600"
-                >
-                    <div className="flex items-center gap-4">
-                        <span>VINHPART v2.0.0</span>
-                        <span className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                            Hệ thống hoạt động
-                        </span>
-                    </div>
-                    <button
-                        onClick={onBackToHome}
-                        className="sm:hidden flex items-center gap-1.5 text-gray-500 hover:text-white transition-colors"
-                    >
-                        <Home className="w-3.5 h-3.5" />
-                        Về trang chủ
-                    </button>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 }} className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <motion.button onClick={() => onNavigate('statistics')} whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="bg-gradient-to-br from-green-600/20 to-green-800/20 border border-green-600/30 rounded-xl p-6 text-left hover:border-green-600/50 transition-all group">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-800 rounded-xl flex items-center justify-center group-hover:shadow-lg shadow-green-600/25 transition-all">
+                                <TrendingUp className="w-6 h-6 text-foreground" />
+                            </div>
+                            <div>
+                                <h4 className="text-foreground font-bold mb-1">{t('admin.dashboard.stats')}</h4>
+                                <p className="text-sm text-muted-foreground">{t('admin.dashboard.statsDesc')}</p>
+                            </div>
+                        </div>
+                    </motion.button>
+
+                    <motion.button onClick={() => onNavigate('manageProducts')} whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 border border-blue-600/30 rounded-xl p-6 text-left hover:border-blue-600/50 transition-all group">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center group-hover:shadow-lg shadow-blue-600/25 transition-all">
+                                <Package className="w-6 h-6 text-foreground" />
+                            </div>
+                            <div>
+                                <h4 className="text-foreground font-bold mb-1">{t('admin.dashboard.products')}</h4>
+                                <p className="text-sm text-muted-foreground">{t('admin.dashboard.productsDesc')}</p>
+                            </div>
+                        </div>
+                    </motion.button>
+
+                    <motion.button onClick={() => onNavigate('settings')} whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="bg-gradient-to-br from-orange-600/20 to-orange-800/20 border border-orange-600/30 rounded-xl p-6 text-left hover:border-orange-600/50 transition-all group">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl flex items-center justify-center group-hover:shadow-lg shadow-orange-600/25 transition-all">
+                                <Settings className="w-6 h-6 text-foreground" />
+                            </div>
+                            <div>
+                                <h4 className="text-foreground font-bold mb-1">{t('admin.dashboard.settings')}</h4>
+                                <p className="text-sm text-muted-foreground">{t('admin.dashboard.settingsDesc')}</p>
+                            </div>
+                        </div>
+                    </motion.button>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.3 }} className="mt-8 flex justify-center">
+                    <motion.button onClick={onBackToHome} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 bg-card/50 border border-border text-foreground rounded-lg hover:border-gray-600 transition-all flex items-center gap-2 group">
+                        <Home className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <span>{t('admin.dashboard.backToHome')}</span>
+                    </motion.button>
                 </motion.div>
             </main>
         </div>
     );
-});
+}

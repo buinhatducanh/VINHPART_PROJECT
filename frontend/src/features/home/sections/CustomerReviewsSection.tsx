@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { Star } from 'lucide-react';
 import { FADE_IN_VARIANTS } from '../constants';
+import { useI18n } from '@/shared/lib/i18n';
 
 interface Review {
     id: string;
@@ -17,8 +18,10 @@ interface CustomerReviewsSectionProps {
 }
 
 export function CustomerReviewsSection({ reviews }: CustomerReviewsSectionProps) {
+    const { t } = useI18n();
+
     return (
-        <section className="py-20 bg-gray-900">
+        <section className="py-20 bg-card">
             <div className="container mx-auto px-4">
                 <motion.div
                     initial={FADE_IN_VARIANTS.initial}
@@ -26,10 +29,10 @@ export function CustomerReviewsSection({ reviews }: CustomerReviewsSectionProps)
                     viewport={{ once: true }}
                     className="text-center mb-12"
                 >
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                        Đánh giá từ khách hàng
+                    <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                        {t('home.reviewsTitle')}
                     </h2>
-                    <p className="text-gray-400">Trải nghiệm thực tế từ người dùng</p>
+                    <p className="text-muted-foreground">{t('home.reviewsSubtitle')}</p>
                 </motion.div>
 
                 <div className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-visible pb-4 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -40,10 +43,10 @@ export function CustomerReviewsSection({ reviews }: CustomerReviewsSectionProps)
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1 }}
-                            className="min-w-[85vw] md:min-w-0 snap-center bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-red-600/50 transition-all shrink-0"
+                            className="min-w-[85vw] md:min-w-0 snap-center bg-card border border-border rounded-lg p-6 hover:border-red-600/50 transition-all shrink-0"
                         >
                             {/* Review Title */}
-                            <h4 className="text-white font-bold text-lg mb-2">{review.title}</h4>
+                            <h4 className="text-foreground font-bold text-lg mb-2">{review.title}</h4>
 
                             {/* Rating Stars */}
                             <div className="flex gap-1 mb-4">
@@ -53,15 +56,15 @@ export function CustomerReviewsSection({ reviews }: CustomerReviewsSectionProps)
                             </div>
 
                             {/* Review Content */}
-                            <p className="text-gray-300 mb-4 italic line-clamp-3">"{review.content}"</p>
+                            <p className="text-muted-foreground mb-4 italic line-clamp-3">"{review.content}"</p>
 
                             {/* Customer Info */}
-                            <div className="border-t border-gray-800 pt-4">
-                                <p className="text-white font-bold">{review.customer_name}</p>
-                                <p className="text-gray-400 text-sm">{review.product_name}</p>
+                            <div className="border-t border-border pt-4">
+                                <p className="text-foreground font-bold">{review.customer_name}</p>
+                                <p className="text-muted-foreground text-sm">{review.product_name}</p>
                                 {review.is_verified_purchase && (
                                     <span className="inline-block mt-2 px-2 py-1 bg-green-900/30 text-green-400 text-xs rounded border border-green-800">
-                                        ✓ Đã mua hàng
+                                        {t('home.verifiedPurchase')}
                                     </span>
                                 )}
                             </div>

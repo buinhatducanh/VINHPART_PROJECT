@@ -135,7 +135,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen bg-black flex items-center justify-center text-white">Đang tải bài viết...</div>;
+    return <div className="min-h-screen bg-background flex items-center justify-center text-foreground">Đang tải bài viết...</div>;
   }
 
   return (
@@ -167,7 +167,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="relative border-b border-gray-800 bg-black/40 backdrop-blur-xl sticky top-0 z-10"
+        className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -176,20 +176,20 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
                 onClick={onBack}
                 whileHover={{ scale: 1.05, x: -5 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-3 bg-gray-900 border border-gray-700 rounded-lg hover:border-purple-600/50 transition-all group"
+                className="p-3 bg-card border border-border rounded-lg hover:border-purple-600/50 transition-all group"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
+                <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-purple-600 transition-colors" />
               </motion.button>
 
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-white" />
+                  <FileText className="w-6 h-6 text-foreground" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-purple-600 bg-clip-text">
                     QUẢN LÝ BÀI VIẾT SEO
                   </h1>
-                  <p className="text-sm text-gray-500">{posts.length} bài viết</p>
+                  <p className="text-sm text-muted-foreground">{posts.length} bài viết</p>
                 </div>
               </div>
             </div>
@@ -211,7 +211,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg shadow-purple-600/25 flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-foreground rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg shadow-purple-600/25 flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Thêm bài viết mới
@@ -226,17 +226,17 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
         <motion.div
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
-           className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-4 mb-6"
+           className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4 mb-6"
         >
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Tìm kiếm bài viết..."
-                className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-600/50 focus:ring-2 focus:ring-purple-600/20 transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-purple-600/50 focus:ring-2 focus:ring-purple-600/20 transition-all"
               />
             </div>
 
@@ -246,8 +246,8 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
                   key={status}
                   onClick={() => setFilterStatus(status)}
                   className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${filterStatus === status
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
-                    : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'
+                    ? 'bg-purple-600 text-foreground shadow-lg shadow-purple-600/25'
+                    : 'bg-muted text-muted-foreground hover:bg-muted'
                     }`}
                 >
                   {status === 'all' ? 'Tất cả' : status === 'PUBLISHED' ? 'Đã xuất bản' : 'Bản nháp'}
@@ -265,9 +265,9 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="group relative bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl overflow-hidden hover:border-purple-600/50 transition-all"
+              className="group relative bg-card/50 backdrop-blur-xl border border-border rounded-xl overflow-hidden hover:border-purple-600/50 transition-all"
             >
-              <div className="relative h-48 overflow-hidden bg-gray-800 flex items-center justify-center">
+              <div className="relative h-48 overflow-hidden bg-muted flex items-center justify-center">
                 {post.featuredImage ? (
                   <img
                     src={post.featuredImage}
@@ -291,14 +291,14 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
               </div>
 
               <div className="p-6">
-                <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-purple-400 transition-colors">
+                <h3 className="text-xl font-bold text-foreground mb-2 line-clamp-2 group-hover:text-purple-400 transition-colors">
                   {post.title}
                 </h3>
-                <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
                   {post.excerpt}
                 </p>
 
-                <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     <span>{formatDate(post.createdAt)}</span>
@@ -309,7 +309,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-4 border-t border-gray-800">
+                <div className="flex items-center gap-2 pt-4 border-t border-border">
                   <button
                     onClick={() => {
                         setEditingPost(post);
@@ -334,77 +334,77 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
         </div>
 
         {filteredPosts.length === 0 && (
-          <div className="text-center py-20 bg-gray-900/50 border border-gray-800 rounded-xl">
+          <div className="text-center py-20 bg-card/50 border border-border rounded-xl">
              <FileText className="w-16 h-16 text-gray-700 mx-auto mb-4 opacity-50" />
-             <h3 className="text-xl font-bold text-gray-500">Không tìm thấy bài viết nào</h3>
+             <h3 className="text-xl font-bold text-muted-foreground">Không tìm thấy bài viết nào</h3>
           </div>
         )}
       </div>
 
       {/* Add/Edit Modal */}
       {editingPost && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
           <motion.div
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
-            className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-4xl p-8 relative my-auto shadow-2xl"
+            className="bg-card border border-border rounded-2xl w-full max-w-4xl p-8 relative my-auto shadow-2xl"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent rounded-2xl pointer-events-none"></div>
 
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-black text-white">
+              <h2 className="text-2xl font-black text-foreground">
                 {isAddModalOpen ? 'THÊM BÀI VIẾT MỚI' : 'CHỈNH SỬA BÀI VIẾT'}
               </h2>
-              <button onClick={() => { setEditingPost(null); setIsAddModalOpen(false); }} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
-                <X className="w-6 h-6 text-gray-400" />
+              <button onClick={() => { setEditingPost(null); setIsAddModalOpen(false); }} className="p-2 hover:bg-muted rounded-lg transition-colors">
+                <X className="w-6 h-6 text-muted-foreground" />
               </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Image Col */}
               <div className="lg:col-span-4 space-y-4">
-                <div className="aspect-video lg:aspect-square bg-gray-800 rounded-xl border-2 border-dashed border-gray-700 flex items-center justify-center overflow-hidden relative group">
+                <div className="aspect-video lg:aspect-square bg-muted rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden relative group">
                   {editingPost.featuredImage ? (
                     <img src={editingPost.featuredImage} className="w-full h-full object-cover" alt="Preview" />
                   ) : (
-                    <div className="text-center text-gray-500">
+                    <div className="text-center text-muted-foreground">
                       <Upload className="w-10 h-10 mx-auto mb-2 opacity-20" />
                       <p className="text-xs uppercase font-bold tracking-tighter">Click để tải ảnh</p>
                     </div>
                   )}
                   <button 
                     onClick={() => openWidget('featuredImage')}
-                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold"
+                    className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-foreground text-xs font-bold"
                   >
                     THAY ĐỔI ẢNH CHÍNH
                   </button>
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-gray-500 uppercase">Featured Image URL</label>
+                  <label className="text-xs font-black text-muted-foreground uppercase">Featured Image URL</label>
                   <input
                     type="text"
                     value={editingPost.featuredImage || ''}
                     onChange={(e) => setEditingPost({ ...editingPost, featuredImage: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-300 focus:border-purple-600 outline-none transition-all"
+                    className="w-full bg-muted border border-border rounded-lg px-4 py-2 text-sm text-muted-foreground focus:border-purple-600 outline-none transition-all"
                   />
                 </div>
 
                 {/* Social Image */}
-                <div className="space-y-2 pt-4 border-t border-gray-800">
-                  <label className="text-xs font-black text-gray-500 uppercase">Ảnh chia sẻ Social (OG Image)</label>
-                  <div className="aspect-video bg-gray-800 rounded-lg border border-gray-700 flex items-center justify-center overflow-hidden relative group">
+                <div className="space-y-2 pt-4 border-t border-border">
+                  <label className="text-xs font-black text-muted-foreground uppercase">Ảnh chia sẻ Social (OG Image)</label>
+                  <div className="aspect-video bg-muted rounded-lg border border-border flex items-center justify-center overflow-hidden relative group">
                     {editingPost.ogImage ? (
                       <img src={editingPost.ogImage} className="w-full h-full object-cover" alt="OG Preview" />
                     ) : (
-                      <div className="text-center text-gray-500">
+                      <div className="text-center text-muted-foreground">
                         <Upload className="w-6 h-6 mx-auto mb-1 opacity-20" />
                         <p className="text-[10px] uppercase font-bold tracking-tighter">Click để tải ảnh social</p>
                       </div>
                     )}
                     <button 
                       onClick={() => openWidget('ogImage')}
-                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold"
+                      className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-foreground text-xs font-bold"
                     >
                       THAY ĐỔI ẢNH SOCIAL
                     </button>
@@ -413,7 +413,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
                     type="text"
                     value={editingPost.ogImage || ''}
                     onChange={(e) => setEditingPost({ ...editingPost, ogImage: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-300 focus:border-purple-600 outline-none transition-all"
+                    className="w-full bg-muted border border-border rounded-lg px-4 py-2 text-sm text-muted-foreground focus:border-purple-600 outline-none transition-all"
                     placeholder="OG Image URL..."
                   />
                 </div>
@@ -423,7 +423,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
               <div className="lg:col-span-8 space-y-6">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-500 uppercase">Tiêu đề bài viết</label>
+                    <label className="text-xs font-black text-muted-foreground uppercase">Tiêu đề bài viết</label>
                     <input
                       type="text"
                       value={editingPost.title}
@@ -431,72 +431,72 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
                         const title = e.target.value;
                         setEditingPost({ ...editingPost, title, slug: isAddModalOpen ? generateSlug(title) : editingPost.slug });
                       }}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground focus:border-purple-600 outline-none transition-all"
                       placeholder="Nhập tiêu đề..."
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-500 uppercase">Slug (URL)</label>
+                    <label className="text-xs font-black text-muted-foreground uppercase">Slug (URL)</label>
                     <input
                       type="text"
                       value={editingPost.slug}
                       onChange={(e) => setEditingPost({ ...editingPost, slug: e.target.value })}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all font-mono text-sm"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground focus:border-purple-600 outline-none transition-all font-mono text-sm"
                       placeholder="tieu-de-bai-viet"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-500 uppercase">Trạng thái</label>
+                      <label className="text-xs font-black text-muted-foreground uppercase">Trạng thái</label>
                       <select
                         value={editingPost.status}
                         onChange={(e) => setEditingPost({ ...editingPost, status: e.target.value as any })}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all"
+                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground focus:border-purple-600 outline-none transition-all"
                       >
                         <option value="DRAFT">Bản nháp</option>
                         <option value="PUBLISHED">Công khai</option>
                       </select>
                     </div>
                     <div className="space-y-2">
-                       <label className="text-xs font-black text-gray-500 uppercase">Tiêu đề Meta (SEO Title)</label>
+                       <label className="text-xs font-black text-muted-foreground uppercase">Tiêu đề Meta (SEO Title)</label>
                        <input
                         type="text"
                         value={editingPost.metaTitle || ''}
                         onChange={(e) => setEditingPost({ ...editingPost, metaTitle: e.target.value })}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all"
+                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground focus:border-purple-600 outline-none transition-all"
                         placeholder="Thẻ Title SEO..."
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-500 uppercase">Mô tả Meta (Meta Description)</label>
+                    <label className="text-xs font-black text-muted-foreground uppercase">Mô tả Meta (Meta Description)</label>
                     <textarea
                       value={editingPost.metaDescription || ''}
                       onChange={(e) => setEditingPost({ ...editingPost, metaDescription: e.target.value })}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all h-20 resize-none text-sm"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground focus:border-purple-600 outline-none transition-all h-20 resize-none text-sm"
                       placeholder="Thẻ Meta Description SEO..."
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-500 uppercase">Mô tả ngắn (Excerpt)</label>
+                    <label className="text-xs font-black text-muted-foreground uppercase">Mô tả ngắn (Excerpt)</label>
                     <textarea
                       value={editingPost.excerpt || ''}
                       onChange={(e) => setEditingPost({ ...editingPost, excerpt: e.target.value })}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all h-20 resize-none"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground focus:border-purple-600 outline-none transition-all h-20 resize-none"
                       placeholder="Bài viết này nói về..."
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-500 uppercase">Nội dung bài viết (Markdown/HTML)</label>
+                    <label className="text-xs font-black text-muted-foreground uppercase">Nội dung bài viết (Markdown/HTML)</label>
                     <textarea
                       value={editingPost.content}
                       onChange={(e) => setEditingPost({ ...editingPost, content: e.target.value })}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-600 outline-none transition-all h-40 font-mono text-sm"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground focus:border-purple-600 outline-none transition-all h-40 font-mono text-sm"
                       placeholder="Nội dung chi tiết..."
                     />
                   </div>
@@ -505,7 +505,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
                 <div className="flex gap-4 pt-4">
                    <button 
                     onClick={() => { setEditingPost(null); setIsAddModalOpen(false); }}
-                    className="flex-1 py-4 bg-gray-800 text-gray-400 font-bold rounded-xl hover:bg-gray-700 transition-all border border-gray-700"
+                    className="flex-1 py-4 bg-muted text-muted-foreground font-bold rounded-xl hover:bg-muted/80 transition-all border border-border"
                    >
                      HỦY BỔ
                    </button>
@@ -518,7 +518,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
                         updateMutation.mutate({ id: editingPost.id, post: editingPost });
                       }
                     }}
-                    className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-purple-800 text-white font-black rounded-xl hover:from-purple-500 hover:to-purple-700 transition-all shadow-xl shadow-purple-900/40 flex items-center justify-center gap-2"
+                    className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-purple-800 text-foreground font-black rounded-xl hover:from-purple-500 hover:to-purple-700 transition-all shadow-xl shadow-purple-900/40 flex items-center justify-center gap-2"
                    >
                      <Save className="w-5 h-5" />
                      {isAddModalOpen ? 'TẠO BÀI VIẾT' : 'CẬP NHẬT'}
@@ -532,22 +532,22 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
 
       {/* Delete Confirmation */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-gray-900 border border-red-900/50 rounded-2xl p-8 max-w-md w-full shadow-2xl"
+            className="bg-card border border-red-900/50 rounded-2xl p-8 max-w-md w-full shadow-2xl"
           >
             <div className="w-16 h-16 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <Trash2 className="w-8 h-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-bold text-white text-center mb-2">Xác nhận xóa?</h3>
-            <p className="text-gray-400 text-center mb-8">
+            <h3 className="text-xl font-bold text-foreground text-center mb-2">Xác nhận xóa?</h3>
+            <p className="text-muted-foreground text-center mb-8">
               Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.
             </p>
             <div className="flex gap-4">
-               <button onClick={() => setShowDeleteConfirm(null)} className="flex-1 py-3 bg-gray-800 text-gray-300 font-bold rounded-xl border border-gray-700 transition-colors">QUAY LẠI</button>
-               <button onClick={() => deleteMutation.mutate(showDeleteConfirm)} className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all">XÓA NGAY</button>
+               <button onClick={() => setShowDeleteConfirm(null)} className="flex-1 py-3 bg-muted text-muted-foreground font-bold rounded-xl border border-border transition-colors">QUAY LẠI</button>
+               <button onClick={() => deleteMutation.mutate(showDeleteConfirm)} className="flex-1 py-3 bg-red-600 text-foreground font-bold rounded-xl hover:bg-red-700 transition-all">XÓA NGAY</button>
             </div>
           </motion.div>
         </div>

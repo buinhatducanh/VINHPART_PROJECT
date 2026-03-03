@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { HERO_VIDEO_URL, PARTICLE_COUNT } from '../constants';
+import { useI18n } from '@/shared/lib/i18n';
 
 interface HeroSectionProps {
     onShopNow: () => void;
@@ -7,6 +8,8 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ onShopNow, onViewCatalog }: HeroSectionProps) {
+    const { t } = useI18n();
+
     return (
         <section className="relative h-screen flex items-center justify-center overflow-hidden">
             {/* Video Background */}
@@ -23,7 +26,7 @@ export function HeroSection({ onShopNow, onViewCatalog }: HeroSectionProps) {
             </div>
 
             {/* Dark Overlay */}
-            <div className="absolute inset-0 bg-black/70"></div>
+            <div className="absolute inset-0 bg-background/70"></div>
 
             {/* Animated particles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -57,13 +60,13 @@ export function HeroSection({ onShopNow, onViewCatalog }: HeroSectionProps) {
                     transition={{ duration: 0.8 }}
                 >
                     <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-white via-gray-200 to-red-600 bg-clip-text text-transparent px-2">
-                        Nâng Cấp Hiệu Suất Xe
+                        {t('hero.title')}
                     </h1>
                     <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-6 md:mb-8 text-red-600 px-2">
-                        Phụ Tùng Chính Hãng
+                        {t('hero.subtitle')}
                     </h2>
-                    <p className="text-lg md:text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-                        Chất lượng cao cấp, hiệu suất vượt trội, phù hợp mọi loại xe
+                    <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
+                        {t('hero.description')}
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -71,17 +74,17 @@ export function HeroSection({ onShopNow, onViewCatalog }: HeroSectionProps) {
                             onClick={onShopNow}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="w-full sm:w-auto px-8 py-3 md:py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg shadow-red-600/50 hover:shadow-red-600/80 transition-all"
+                            className="w-full sm:w-auto px-8 py-3 md:py-4 bg-red-600 hover:bg-red-700 text-foreground font-bold rounded-lg shadow-lg shadow-red-600/50 hover:shadow-red-600/80 transition-all"
                         >
-                            Mua ngay
+                            {t('hero.buyNow')}
                         </motion.button>
                         <motion.button
                             onClick={onViewCatalog}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="w-full sm:w-auto px-8 py-3 md:py-4 bg-transparent border-2 border-white hover:bg-white hover:text-black text-white font-bold rounded-lg transition-all"
+                            className="w-full sm:w-auto px-8 py-3 md:py-4 bg-transparent border-2 border-white hover:bg-white hover:text-black text-foreground font-bold rounded-lg transition-all"
                         >
-                            Xem danh mục
+                            {t('hero.viewCatalog')}
                         </motion.button>
                     </div>
                 </motion.div>

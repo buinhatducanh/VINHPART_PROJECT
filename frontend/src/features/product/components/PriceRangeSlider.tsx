@@ -77,17 +77,17 @@ export function PriceRangeSlider({ min, max, value, onChange, onApply }: PriceRa
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-xl p-5 shadow-2xl">
+    <div className="bg-gradient-to-br from-gray-900 to-black border border-border rounded-xl p-5 shadow-2xl">
       {/* Header */}
       <div className="text-center mb-5">
-        <h3 className="text-lg font-black text-white tracking-wide">KHOẢNG GIÁ</h3>
+        <h3 className="text-lg font-black text-foreground tracking-wide">KHOẢNG GIÁ</h3>
         <div className="h-0.5 w-16 bg-gradient-to-r from-red-600 to-red-400 mx-auto mt-2 rounded-full"></div>
       </div>
 
       {/* Price Inputs */}
       <div className="space-y-3 mb-5">
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
             <ArrowDown className="w-4 h-4" />
           </span>
           <input
@@ -96,14 +96,14 @@ export function PriceRangeSlider({ min, max, value, onChange, onApply }: PriceRa
             onChange={handleMinInputChange}
             onBlur={handleMinInputBlur}
             onKeyDown={(e) => e.key === 'Enter' && handleMinInputBlur()}
-            className="w-full pl-10 pr-10 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white font-semibold text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all"
+            className="w-full pl-10 pr-10 py-2.5 bg-muted border border-border rounded-lg text-foreground font-semibold text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all"
             placeholder="0"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-medium">đ</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-medium">đ</span>
         </div>
 
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
             <ArrowUp className="w-4 h-4" />
           </span>
           <input
@@ -112,10 +112,10 @@ export function PriceRangeSlider({ min, max, value, onChange, onApply }: PriceRa
             onChange={handleMaxInputChange}
             onBlur={handleMaxInputBlur}
             onKeyDown={(e) => e.key === 'Enter' && handleMaxInputBlur()}
-            className="w-full pl-10 pr-10 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white font-semibold text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all"
+            className="w-full pl-10 pr-10 py-2.5 bg-muted border border-border rounded-lg text-foreground font-semibold text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all"
             placeholder={formatNumber(max)}
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-medium">đ</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-medium">đ</span>
         </div>
       </div>
 
@@ -125,7 +125,7 @@ export function PriceRangeSlider({ min, max, value, onChange, onApply }: PriceRa
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleReset}
-          className="flex-1 py-2.5 bg-gray-800 border border-gray-700 text-gray-300 font-semibold rounded-lg hover:bg-gray-700 transition-all flex items-center justify-center gap-1.5"
+          className="flex-1 py-2.5 bg-muted border border-border text-muted-foreground font-semibold rounded-lg hover:bg-muted/80 transition-all flex items-center justify-center gap-1.5"
         >
           <RotateCcw className="w-3.5 h-3.5" />
         </motion.button>
@@ -134,7 +134,7 @@ export function PriceRangeSlider({ min, max, value, onChange, onApply }: PriceRa
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onApply}
-            className="flex-[2] py-2.5 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold rounded-lg hover:from-red-700 hover:to-red-600 transition-all shadow-lg shadow-red-600/30"
+            className="flex-[2] py-2.5 bg-gradient-to-r from-red-600 to-red-500 text-foreground font-bold rounded-lg hover:from-red-700 hover:to-red-600 transition-all shadow-lg shadow-red-600/30"
           >
             Áp dụng
           </motion.button>

@@ -60,27 +60,27 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
       <div className="min-h-screen pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
           {/* Back button skeleton */}
-          <Skeleton className="w-24 h-8 bg-gray-800 mb-6" />
+          <Skeleton className="w-24 h-8 bg-muted mb-6" />
 
           {/* Image skeleton */}
-          <Skeleton className="w-full h-[400px] bg-gray-800 rounded-lg mb-8" />
+          <Skeleton className="w-full h-[400px] bg-muted rounded-lg mb-8" />
 
           {/* Title skeleton */}
-          <Skeleton className="w-3/4 h-12 bg-gray-800 mb-4" />
+          <Skeleton className="w-3/4 h-12 bg-muted mb-4" />
 
           {/* Meta skeleton */}
           <div className="flex gap-4 mb-8">
-            <Skeleton className="w-20 h-4 bg-gray-800" />
-            <Skeleton className="w-32 h-4 bg-gray-800" />
-            <Skeleton className="w-24 h-4 bg-gray-800" />
+            <Skeleton className="w-20 h-4 bg-muted" />
+            <Skeleton className="w-32 h-4 bg-muted" />
+            <Skeleton className="w-24 h-4 bg-muted" />
           </div>
 
           {/* Content skeleton */}
           <div className="space-y-4">
-            <Skeleton className="w-full h-4 bg-gray-800" />
-            <Skeleton className="w-full h-4 bg-gray-800" />
-            <Skeleton className="w-5/6 h-4 bg-gray-800" />
-            <Skeleton className="w-full h-4 bg-gray-800" />
+            <Skeleton className="w-full h-4 bg-muted" />
+            <Skeleton className="w-full h-4 bg-muted" />
+            <Skeleton className="w-5/6 h-4 bg-muted" />
+            <Skeleton className="w-full h-4 bg-muted" />
           </div>
         </div>
       </div>
@@ -91,7 +91,7 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
     return (
       <div className="min-h-screen pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-gray-400">Không tìm thấy bài viết</p>
+          <p className="text-muted-foreground">Không tìm thấy bài viết</p>
           <Button onClick={onBack} className="mt-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Quay lại
@@ -117,7 +117,7 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={onBack}
-          className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition-colors mb-6 group"
+          className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors mb-6 group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           Quay lại
@@ -155,7 +155,7 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
           </h1>
 
           {/* Meta info */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4" />
               <span>Admin</span>
@@ -197,15 +197,15 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="border-t border-gray-800 pt-12"
+            className="border-t border-border pt-12"
           >
-            <h2 className="text-2xl font-bold text-white mb-6">Bài viết liên quan</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">Bài viết liên quan</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedPosts.map((relatedPost) => (
                 <div
                   key={relatedPost.id}
                   onClick={() => onPostClick(relatedPost.slug)}
-                  className="bg-gray-900/50 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-red-500/50 transition-all group"
+                  className="bg-card/50 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-red-500/50 transition-all group"
                 >
                   <div className="h-40 overflow-hidden">
                     <img
@@ -216,10 +216,10 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
                     />
                   </div>
                   <div className="p-4">
-                    <h3 className="text-white font-semibold mb-2 line-clamp-2 group-hover:text-red-400 transition-colors">
+                    <h3 className="text-foreground font-semibold mb-2 line-clamp-2 group-hover:text-red-400 transition-colors">
                       {relatedPost.title}
                     </h3>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="w-3 h-3" />
                       <span>{formatDate(relatedPost.publishedAt || '')}</span>
                     </div>

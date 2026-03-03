@@ -1,8 +1,7 @@
 import { motion } from 'motion/react';
-import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X, Eye, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X, Eye, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { API_BASE_URL } from '@/lib/api';
+import { useState, useEffect, useRef } from 'react';
 
 interface Post {
     id: string;
@@ -25,27 +24,27 @@ interface ManagePostsPageProps {
     onBack: () => void;
 }
 
-const ITEMS_PER_PAGE = 20;
-const MAX_ANIMATED_ROWS = 20;
-
 export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [posts, setPosts] = useState<Post[]>([]);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
     const [editingPost, setEditingPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1);
 
+    // Cloudinary Widget Refs
     const featuredImageWidgetRef = useRef<any>(null);
     const ogImageWidgetRef = useRef<any>(null);
     const editingPostRef = useRef<Post | null>(null);
 
+    // Sync ref with state
     useEffect(() => {
         editingPostRef.current = editingPost;
     }, [editingPost]);
 
+    // Initialize Cloudinary widgets
     useEffect(() => {
         if ((window as any).cloudinary) {
+            // Featured Image Widget
             featuredImageWidgetRef.current = (window as any).cloudinary.createUploadWidget(
                 {
                     cloudName: (import.meta as any).env.VITE_CLOUDINARY_CLOUD_NAME || 'dmz66rbbk',
@@ -76,6 +75,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                 }
             );
 
+            // OG Image Widget
             ogImageWidgetRef.current = (window as any).cloudinary.createUploadWidget(
                 {
                     cloudName: (import.meta as any).env.VITE_CLOUDINARY_CLOUD_NAME || 'dmz66rbbk',
@@ -108,13 +108,14 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
         }
     }, []);
 
+    // Fetch posts on mount
     useEffect(() => {
         fetchPosts();
     }, []);
 
     const fetchPosts = () => {
         setLoading(true);
-        fetch(`${API_BASE_URL}/posts?limit=1000`)
+        fetch('http://localhost:3001/api/posts?limit=1000')
             .then(res => res.json())
             .then(data => {
                 setPosts(Array.isArray(data) ? data : []);
@@ -126,28 +127,14 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
             });
     };
 
-    const filteredPosts = useMemo(() => {
-        const query = searchQuery.toLowerCase();
-        if (!query) return posts;
-        return posts.filter(post =>
-            post.title.toLowerCase().includes(query) ||
-            post.slug.toLowerCase().includes(query)
-        );
-    }, [posts, searchQuery]);
-
-    const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
-    const paginatedPosts = useMemo(() => {
-        const start = (currentPage - 1) * ITEMS_PER_PAGE;
-        return filteredPosts.slice(start, start + ITEMS_PER_PAGE);
-    }, [filteredPosts, currentPage]);
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery]);
+    const filteredPosts = posts.filter(post =>
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.slug.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const handleDelete = async (id: string) => {
         try {
-            const res = await fetch(`${API_BASE_URL}/posts/${id}`, {
+            const res = await fetch(`http://localhost:3001/api/posts/${id}`, {
                 method: 'DELETE'
             });
             if (res.ok) {
@@ -166,7 +153,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
     const handleSaveEdit = async () => {
         if (editingPost) {
             try {
-                const url = editingPost.id ? `${API_BASE_URL}/posts/${editingPost.id}` : `${API_BASE_URL}/posts`;
+                const url = editingPost.id ? `http://localhost:3001/api/posts/${editingPost.id}` : 'http://localhost:3001/api/posts';
                 const method = editingPost.id ? 'PUT' : 'POST';
 
                 const res = await fetch(url, {
@@ -219,7 +206,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading posts...</div>;
+        return <div className="min-h-screen bg-background flex items-center justify-center text-foreground">Loading posts...</div>;
     }
 
     return (
@@ -228,7 +215,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
             <motion.div
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="relative border-b border-gray-800 bg-black/40 backdrop-blur-xl sticky top-0 z-10"
+                className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -237,20 +224,20 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                 onClick={onBack}
                                 whileHover={{ scale: 1.05, x: -5 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="p-3 bg-gray-900 border border-gray-700 rounded-lg hover:border-red-600/50 transition-all group"
+                                className="p-3 bg-card border border-border rounded-lg hover:border-red-600/50 transition-all group"
                             >
-                                <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors" />
+                                <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-red-600 transition-colors" />
                             </motion.button>
 
                             <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-800 rounded-xl flex items-center justify-center">
-                                    <FileText className="w-6 h-6 text-white" />
+                                    <FileText className="w-6 h-6 text-foreground" />
                                 </div>
                                 <div>
                                     <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-green-600 bg-clip-text">
                                         QUẢN LÝ BÀI VIẾT
                                     </h1>
-                                    <p className="text-sm text-gray-500">{filteredPosts.length} bài viết</p>
+                                    <p className="text-sm text-muted-foreground">{posts.length} bài viết</p>
                                 </div>
                             </div>
                         </div>
@@ -259,7 +246,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             onClick={createNewPost}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-lg shadow-green-600/25 flex items-center gap-2"
+                            className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-foreground rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-lg shadow-green-600/25 flex items-center gap-2"
                         >
                             <Plus className="w-5 h-5" />
                             Thêm bài viết mới
@@ -274,16 +261,16 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-4 mb-6"
+                    className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4 mb-6"
                 >
                     <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Tìm kiếm bài viết theo tiêu đề, slug..."
-                            className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 transition-all"
+                            className="w-full pl-12 pr-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 transition-all"
                         />
                     </div>
                 </motion.div>
@@ -293,38 +280,54 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl overflow-hidden"
+                    className="bg-card/50 backdrop-blur-xl border border-border rounded-xl overflow-hidden"
                 >
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-gray-800">
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Bài viết</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Trạng thái</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Lượt xem</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Ngày xuất bản</th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Thao tác</th>
+                                <tr className="border-b border-border">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Bài viết
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Trạng thái
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Lượt xem
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Ngày xuất bản
+                                    </th>
+                                    <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Thao tác
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-800">
-                                {paginatedPosts.map((post, index) => (
+                                {filteredPosts.map((post, index) => (
                                     <motion.tr
                                         key={post.id}
-                                        initial={index < MAX_ANIMATED_ROWS ? { opacity: 0, x: -20 } : false}
+                                        initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
-                                        transition={index < MAX_ANIMATED_ROWS ? { delay: index * 0.03 } : undefined}
-                                        className="hover:bg-gray-800/30 transition-colors group"
+                                        transition={{ delay: index * 0.05 }}
+                                        className="hover:bg-muted/30 transition-colors group"
                                     >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 {post.featuredImage && (
-                                                    <div className="w-16 h-16 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
-                                                        <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover" loading="lazy" />
+                                                    <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                                                        <img
+                                                            src={post.featuredImage}
+                                                            alt={post.title}
+                                                            className="w-full h-full object-cover"
+                                                        />
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <p className="text-white font-semibold line-clamp-2">{post.title}</p>
-                                                    <p className="text-gray-500 text-sm">/{post.slug}</p>
+                                                    <p className="text-foreground font-semibold line-clamp-2">
+                                                        {post.title}
+                                                    </p>
+                                                    <p className="text-muted-foreground text-sm">/{post.slug}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -339,14 +342,14 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                         </td>
 
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-white">
-                                                <Eye className="w-4 h-4 text-gray-500" />
+                                            <div className="flex items-center gap-2 text-foreground">
+                                                <Eye className="w-4 h-4 text-muted-foreground" />
                                                 {post.viewCount}
                                             </div>
                                         </td>
 
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-gray-400 text-sm">
+                                            <div className="flex items-center gap-2 text-muted-foreground text-sm">
                                                 <Calendar className="w-4 h-4" />
                                                 {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('vi-VN') : '-'}
                                             </div>
@@ -354,19 +357,23 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
 
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button
+                                                <motion.button
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
                                                     onClick={() => setEditingPost(post)}
-                                                    className="p-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-green-600/50 transition-all group/edit"
+                                                    className="p-2 bg-muted border border-border rounded-lg hover:border-green-600/50 transition-all group/edit"
                                                 >
-                                                    <Edit className="w-4 h-4 text-gray-400 group-hover/edit:text-green-600 transition-colors" />
-                                                </button>
+                                                    <Edit className="w-4 h-4 text-muted-foreground group-hover/edit:text-green-600 transition-colors" />
+                                                </motion.button>
 
-                                                <button
+                                                <motion.button
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
                                                     onClick={() => setShowDeleteConfirm(post.id)}
-                                                    className="p-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-red-600/50 transition-all group/delete"
+                                                    className="p-2 bg-muted border border-border rounded-lg hover:border-red-600/50 transition-all group/delete"
                                                 >
-                                                    <Trash2 className="w-4 h-4 text-gray-400 group-hover/delete:text-red-600 transition-colors" />
-                                                </button>
+                                                    <Trash2 className="w-4 h-4 text-muted-foreground group-hover/delete:text-red-600 transition-colors" />
+                                                </motion.button>
                                             </div>
                                         </td>
                                     </motion.tr>
@@ -374,53 +381,6 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             </tbody>
                         </table>
                     </div>
-
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                        <div className="border-t border-gray-800 px-6 py-4 flex items-center justify-between">
-                            <p className="text-sm text-gray-400">
-                                Hiển thị {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredPosts.length)} / {filteredPosts.length} bài viết
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1}
-                                    className="p-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-green-600/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <ChevronLeft className="w-4 h-4 text-gray-400" />
-                                </button>
-
-                                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                                    let page: number;
-                                    if (totalPages <= 5) page = i + 1;
-                                    else if (currentPage <= 3) page = i + 1;
-                                    else if (currentPage >= totalPages - 2) page = totalPages - 4 + i;
-                                    else page = currentPage - 2 + i;
-                                    return (
-                                        <button
-                                            key={page}
-                                            onClick={() => setCurrentPage(page)}
-                                            className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
-                                                currentPage === page
-                                                    ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-600/25'
-                                                    : 'bg-gray-800 border border-gray-700 text-gray-400 hover:border-green-600/50'
-                                            }`}
-                                        >
-                                            {page}
-                                        </button>
-                                    );
-                                })}
-
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="p-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-green-600/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </motion.div>
 
                 {/* Empty State */}
@@ -428,14 +388,19 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-12 text-center mt-6"
+                        className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-12 text-center mt-6"
                     >
                         <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Không tìm thấy bài viết</h3>
-                        <p className="text-gray-500 mb-4">Không có bài viết nào phù hợp với tìm kiếm của bạn.</p>
-                        <button onClick={() => setSearchQuery('')} className="px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-all">
+                        <h3 className="text-xl font-bold text-foreground mb-2">Không tìm thấy bài viết</h3>
+                        <p className="text-muted-foreground mb-4">Không có bài viết nào phù hợp với tìm kiếm của bạn.</p>
+                        <motion.button
+                            onClick={() => setSearchQuery('')}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-6 py-3 bg-muted border border-border text-foreground rounded-lg hover:bg-muted/80 transition-all"
+                        >
                             Xóa bộ lọc
-                        </button>
+                        </motion.button>
                     </motion.div>
                 )}
             </div>
@@ -445,114 +410,185 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                    className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
                     onClick={() => setEditingPost(null)}
                 >
                     <motion.div
                         initial={{ scale: 0.9, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="relative bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-6xl w-full my-8 max-h-[90vh] overflow-y-auto"
+                        className="relative bg-card border border-border rounded-2xl p-8 max-w-6xl w-full my-8 max-h-[90vh] overflow-y-auto"
                     >
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-2xl font-bold text-transparent bg-gradient-to-r from-white to-green-500 bg-clip-text">
                                 {editingPost.id ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'}
                             </h3>
-                            <button onClick={() => setEditingPost(null)} className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors">
+                            <button
+                                onClick={() => setEditingPost(null)}
+                                className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                            >
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Left Col: Images */}
                             <div className="lg:col-span-1 space-y-4">
+                                {/* Featured Image */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Ảnh đại diện</label>
-                                    <div className="aspect-video bg-gray-800/50 rounded-xl overflow-hidden border-2 border-dashed border-gray-700 flex items-center justify-center">
+                                    <label className="block text-sm font-medium text-muted-foreground mb-2">Ảnh đại diện</label>
+                                    <div className="aspect-video bg-muted rounded-xl overflow-hidden border-2 border-dashed border-border flex items-center justify-center">
                                         {editingPost.featuredImage ? (
-                                            <img key={editingPost.featuredImage} src={editingPost.featuredImage} alt="Featured" className="w-full h-full object-cover" />
+                                            <img
+                                                key={editingPost.featuredImage}
+                                                src={editingPost.featuredImage}
+                                                alt="Featured"
+                                                className="w-full h-full object-cover"
+                                            />
                                         ) : (
-                                            <div className="text-center text-gray-500">
+                                            <div className="text-center text-muted-foreground">
                                                 <Upload className="w-8 h-8 mx-auto mb-2 opacity-50" />
                                                 <span className="text-sm">Chưa có ảnh</span>
                                             </div>
                                         )}
                                     </div>
-                                    <button type="button" onClick={() => featuredImageWidgetRef.current?.open()} className="w-full mt-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => featuredImageWidgetRef.current?.open()}
+                                        className="w-full mt-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-foreground font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                                    >
                                         <Upload className="w-4 h-4" />
                                         Tải ảnh đại diện
                                     </button>
                                 </div>
 
+                                {/* OG Image */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Ảnh OG (Social)</label>
-                                    <div className="aspect-[1.91/1] bg-gray-800/50 rounded-xl overflow-hidden border-2 border-dashed border-gray-700 flex items-center justify-center">
+                                    <label className="block text-sm font-medium text-muted-foreground mb-2">Ảnh OG (Social)</label>
+                                    <div className="aspect-[1.91/1] bg-muted rounded-xl overflow-hidden border-2 border-dashed border-border flex items-center justify-center">
                                         {editingPost.ogImage ? (
-                                            <img key={editingPost.ogImage} src={editingPost.ogImage} alt="OG" className="w-full h-full object-cover" />
+                                            <img
+                                                key={editingPost.ogImage}
+                                                src={editingPost.ogImage}
+                                                alt="OG"
+                                                className="w-full h-full object-cover"
+                                            />
                                         ) : (
-                                            <div className="text-center text-gray-500">
+                                            <div className="text-center text-muted-foreground">
                                                 <Upload className="w-6 h-6 mx-auto mb-1 opacity-50" />
                                                 <span className="text-xs">1200x630px</span>
                                             </div>
                                         )}
                                     </div>
-                                    <button type="button" onClick={() => ogImageWidgetRef.current?.open()} className="w-full mt-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => ogImageWidgetRef.current?.open()}
+                                        className="w-full mt-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-foreground font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                                    >
                                         <Upload className="w-4 h-4" />
                                         Tải ảnh OG
                                     </button>
                                 </div>
                             </div>
 
+                            {/* Right Col: Content */}
                             <div className="lg:col-span-2 space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-300 mb-2">Tiêu đề</label>
-                                        <input type="text" value={editingPost.title} onChange={(e) => setEditingPost({ ...editingPost, title: e.target.value })} className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 transition-all" />
+                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Tiêu đề</label>
+                                        <input
+                                            type="text"
+                                            value={editingPost.title}
+                                            onChange={(e) => setEditingPost({ ...editingPost, title: e.target.value })}
+                                            className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 transition-all"
+                                        />
                                     </div>
+
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-300 mb-2">Slug</label>
-                                        <input type="text" value={editingPost.slug} onChange={(e) => setEditingPost({ ...editingPost, slug: e.target.value })} className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 transition-all" />
+                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Slug</label>
+                                        <input
+                                            type="text"
+                                            value={editingPost.slug}
+                                            onChange={(e) => setEditingPost({ ...editingPost, slug: e.target.value })}
+                                            className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 transition-all"
+                                        />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Trạng thái</label>
-                                    <select value={editingPost.status} onChange={(e) => setEditingPost({ ...editingPost, status: e.target.value as 'DRAFT' | 'PUBLISHED' })} className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20">
+                                    <label className="block text-sm font-semibold text-muted-foreground mb-2">Trạng thái</label>
+                                    <select
+                                        value={editingPost.status}
+                                        onChange={(e) => setEditingPost({ ...editingPost, status: e.target.value as 'DRAFT' | 'PUBLISHED' })}
+                                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20"
+                                    >
                                         <option value="DRAFT">Draft</option>
                                         <option value="PUBLISHED">Published</option>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Excerpt (Tóm tắt)</label>
-                                    <textarea value={editingPost.excerpt || ''} onChange={(e) => setEditingPost({ ...editingPost, excerpt: e.target.value })} rows={2} className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 resize-none" />
+                                    <label className="block text-sm font-semibold text-muted-foreground mb-2">Excerpt (Tóm tắt)</label>
+                                    <textarea
+                                        value={editingPost.excerpt || ''}
+                                        onChange={(e) => setEditingPost({ ...editingPost, excerpt: e.target.value })}
+                                        rows={2}
+                                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 resize-none"
+                                    />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Nội dung</label>
-                                    <textarea value={editingPost.content} onChange={(e) => setEditingPost({ ...editingPost, content: e.target.value })} rows={8} className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 resize-none" />
+                                    <label className="block text-sm font-semibold text-muted-foreground mb-2">Nội dung</label>
+                                    <textarea
+                                        value={editingPost.content}
+                                        onChange={(e) => setEditingPost({ ...editingPost, content: e.target.value })}
+                                        rows={8}
+                                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 resize-none"
+                                    />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-300 mb-2">Meta Title</label>
-                                        <input type="text" value={editingPost.metaTitle || ''} onChange={(e) => setEditingPost({ ...editingPost, metaTitle: e.target.value })} className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20" />
+                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Meta Title</label>
+                                        <input
+                                            type="text"
+                                            value={editingPost.metaTitle || ''}
+                                            onChange={(e) => setEditingPost({ ...editingPost, metaTitle: e.target.value })}
+                                            className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20"
+                                        />
                                     </div>
+
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-300 mb-2">Meta Description</label>
-                                        <input type="text" value={editingPost.metaDescription || ''} onChange={(e) => setEditingPost({ ...editingPost, metaDescription: e.target.value })} className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20" />
+                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Meta Description</label>
+                                        <input
+                                            type="text"
+                                            value={editingPost.metaDescription || ''}
+                                            onChange={(e) => setEditingPost({ ...editingPost, metaDescription: e.target.value })}
+                                            className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20"
+                                        />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex gap-3 mt-8 pt-6 border-t border-gray-800">
-                            <button onClick={() => setEditingPost(null)} className="flex-1 px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
+                        <div className="flex gap-3 mt-8 pt-6 border-t border-border">
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setEditingPost(null)}
+                                className="flex-1 px-6 py-3 bg-muted border border-border text-foreground rounded-lg hover:bg-muted/80 transition-colors font-medium"
+                            >
                                 Hủy bỏ
-                            </button>
-                            <button onClick={handleSaveEdit} className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-lg shadow-green-600/25 font-bold flex items-center justify-center gap-2">
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleSaveEdit}
+                                className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-foreground rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-lg shadow-green-600/25 font-bold flex items-center justify-center gap-2"
+                            >
                                 <Save className="w-5 h-5" />
                                 Lưu bài viết
-                            </button>
+                            </motion.button>
                         </div>
                     </motion.div>
                 </motion.div>
@@ -563,23 +599,41 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                    className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
                     onClick={() => setShowDeleteConfirm(null)}
                 >
                     <motion.div
                         initial={{ scale: 0.9, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="relative bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-md w-full"
+                        className="relative bg-card border border-border rounded-2xl p-8 max-w-md w-full"
                     >
                         <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Trash2 className="w-8 h-8 text-white" />
+                            <Trash2 className="w-8 h-8 text-foreground" />
                         </div>
-                        <h3 className="text-2xl font-bold text-white text-center mb-2">Xóa bài viết</h3>
-                        <p className="text-gray-400 text-center mb-6">Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.</p>
+
+                        <h3 className="text-2xl font-bold text-foreground text-center mb-2">Xóa bài viết</h3>
+                        <p className="text-muted-foreground text-center mb-6">
+                            Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.
+                        </p>
+
                         <div className="flex gap-3">
-                            <button onClick={() => setShowDeleteConfirm(null)} className="flex-1 px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-colors">Hủy</button>
-                            <button onClick={() => handleDelete(showDeleteConfirm)} className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-600/25">Xóa</button>
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowDeleteConfirm(null)}
+                                className="flex-1 px-6 py-3 bg-muted border border-border text-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                            >
+                                Hủy
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleDelete(showDeleteConfirm)}
+                                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-foreground rounded-lg hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-600/25"
+                            >
+                                Xóa
+                            </motion.button>
                         </div>
                     </motion.div>
                 </motion.div>

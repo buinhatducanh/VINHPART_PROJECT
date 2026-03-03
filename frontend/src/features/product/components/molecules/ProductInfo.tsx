@@ -1,24 +1,14 @@
-import { Product, Review } from '@/shared/types';
+import { Product } from '@/shared/types';
 import { ProductBadge } from '../atoms/ProductBadge';
 import { PriceDisplay } from '../atoms/PriceDisplay';
 import { ProductTag } from '../atoms/ProductTag';
 import { Tag, Truck, ShieldCheck, Box, Star } from 'lucide-react';
-import { useProductReviews } from '@/hooks/useQueries';
-import { useMemo } from 'react';
 
 interface ProductInfoProps {
     product: Product;
 }
 
 export function ProductInfo({ product }: ProductInfoProps) {
-    const { data: reviews = [] } = useProductReviews(product.product_id);
-
-    const { avgRating, totalReviews } = useMemo(() => {
-        if (reviews.length === 0) return { avgRating: 0, totalReviews: 0 };
-        const sum = reviews.reduce((acc: number, r: Review) => acc + r.rating, 0);
-        return { avgRating: sum / reviews.length, totalReviews: reviews.length };
-    }, [reviews]);
-
     return (
         <div className="flex flex-col gap-6">
             {/* Header: Name & Badges */}
@@ -37,44 +27,36 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     {product.product_name}
                 </h1>
 
-                {/* Đánh giá sao - động từ dữ liệu thật */}
+
+                {/*evaluate*/}
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 text-red-500">
                         {[...Array(5)].map((_, index) => (
                             <Star
                                 key={index}
-                                className={`w-4 h-4 ${index < Math.round(avgRating)
-                                    ? 'fill-yellow-400 text-yellow-400'
-                                    : 'text-gray-600'
+                                className={`w-4 h-4 ${index < 5 ? 'fill-red-500 text-red-500' : 'text-gray-600'
                                     }`}
                             />
                         ))}
                     </div>
 
-                    {totalReviews > 0 ? (
-                        <>
-                            <span className="text-sm text-gray-300 font-medium">
-                                {avgRating.toFixed(1)}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                                ({totalReviews} đánh giá)
-                            </span>
-                        </>
-                    ) : (
-                        <span className="text-sm text-gray-500">
-                            Chưa có đánh giá
-                        </span>
-                    )}
+                    <span className="text-sm text-muted-foreground font-medium">
+                        4.8
+                    </span>
+
+                    <span className="text-sm text-muted-foreground">
+                        (124 đánh giá)
+                    </span>
                 </div>
 
                 {/*masp*/}
                 {product.sku && (
-                    <p className="text-sm text-gray-500 font-mono">SKU: {product.sku}</p>
+                    <p className="text-sm text-muted-foreground font-mono">SKU: {product.sku}</p>
                 )}
             </div>
 
             {/* Price */}
-            <div className="p-4 bg-gray-900/50 rounded-xl border border-gray-800">
+            <div className="p-4 bg-card/50 rounded-xl border border-border">
                 <PriceDisplay
                     price={product.price}
                     originalPrice={product.original_price}
@@ -83,11 +65,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 />
             </div>
             {/* Product short description */}
-            {product.description && (
-                <p className="text-sm text-gray-400 leading-relaxed">
-                    {product.description}
-                </p>
-            )}
+            <p className="text-sm text-muted-foreground leading-relaxed">
+                Phù hợp với hầu hết các dòng xe sport và naked. Thiết kế khí động học
+                KOSO Arrow với nhôm CNC cao cấp và kính chống chói xanh giúp quan sát
+                tốt trong mọi điều kiện ánh sáng.
+            </p>
 
             {/* Info Tags Grid */}
             <div className="grid grid-cols-2 gap-3">

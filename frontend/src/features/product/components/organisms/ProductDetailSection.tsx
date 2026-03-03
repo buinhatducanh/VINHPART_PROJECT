@@ -29,7 +29,7 @@ export function ProductDetailSection({ product, onAddToCart, onBuyNow }: Product
             <div className="flex flex-col h-full">
                 <ProductInfo product={product} />
 
-                <div className="mt-8 pt-8 border-t border-gray-800">
+                <div className="mt-8 pt-8 border-t border-border">
                     {/* Warranty / Shipping Info can go here if needed as extra molecules */}
 
                     <ProductActions

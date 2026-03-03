@@ -14,7 +14,7 @@ export function CategorySearch({ value, onChange }: CategorySearchProps) {
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder="Tìm kiếm danh mục..."
-                className="w-full pl-12 pr-4 py-4 bg-gray-900/50 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-orange-600/50 focus:ring-1 focus:ring-orange-600/20 transition-all text-sm"
+                className="w-full pl-12 pr-4 py-4 bg-card/50 border border-border rounded-xl text-foreground placeholder-gray-600 focus:outline-none focus:border-orange-600/50 focus:ring-1 focus:ring-orange-600/20 transition-all text-sm"
             />
         </div>
     );

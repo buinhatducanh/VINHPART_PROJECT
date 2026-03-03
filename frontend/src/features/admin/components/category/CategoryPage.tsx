@@ -207,7 +207,7 @@ export function CategoryPage({ onBack }: CategoryPageProps) {
     };
 
     return (
-        <div className="min-h-screen bg-black pb-20 selection:bg-orange-600/30">
+        <div className="min-h-screen bg-background pb-20 selection:bg-orange-600/30">
             {/* Background Particles */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20">
                 {[...Array(15)].map((_, i) => (
@@ -229,7 +229,7 @@ export function CategoryPage({ onBack }: CategoryPageProps) {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-4">
                         <div className="w-10 h-10 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
-                        <p className="text-gray-500 text-sm animate-pulse">Đang tải dữ liệu...</p>
+                        <p className="text-muted-foreground text-sm animate-pulse">Đang tải dữ liệu...</p>
                     </div>
                 ) : (
                     <CategoryTree
