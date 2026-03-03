@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productApi, ordersApi, dashboardApi, ProductFilters, Product } from '@/lib/api';
+import { productApi, ordersApi, dashboardApi, reviewsApi, ProductFilters, Product } from '@/lib/api';
 
 // Query Keys - centralized for cache invalidation
 export const queryKeys = {
@@ -8,6 +8,7 @@ export const queryKeys = {
     maxPrice: ['maxPrice'] as const,
     orders: ['orders'] as const,
     dashboardStats: ['dashboardStats'] as const,
+    productReviews: (productId: string) => ['reviews', productId] as const,
 };
 
 // ============ PRODUCTS HOOKS ============
@@ -113,5 +114,33 @@ export function useDashboardStats() {
         queryKey: queryKeys.dashboardStats,
         queryFn: dashboardApi.getStats,
         staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+}
+
+// ============ REVIEWS HOOKS ============
+
+/**
+ * Hook lấy đánh giá theo sản phẩm
+ */
+export function useProductReviews(productId: string) {
+    return useQuery({
+        queryKey: queryKeys.productReviews(productId),
+        queryFn: () => reviewsApi.getByProduct(productId),
+        enabled: !!productId,
+        staleTime: 5 * 60 * 1000,
+    });
+}
+
+/**
+ * Hook tạo đánh giá mới
+ */
+export function useCreateReview() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: reviewsApi.create,
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.productReviews(variables.product_id) });
+        },
     });
 }

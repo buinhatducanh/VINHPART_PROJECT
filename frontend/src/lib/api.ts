@@ -1,4 +1,4 @@
-import { Product, SEOPost } from '@/shared/types';
+import { Product, SEOPost, Review } from '@/shared/types';
 
 // API configuration
 export const API_BASE_URL = 'http://localhost:3001/api';
@@ -137,7 +137,7 @@ export const dashboardApi = {
         return response.json();
     },
 };
- 
+
 
 // Posts (SEO) API
 export const postsApi = {
@@ -188,5 +188,37 @@ export const postsApi = {
             method: 'DELETE',
         });
         if (!response.ok) throw new Error('Failed to delete post');
+    },
+};
+
+// Reviews API
+export const reviewsApi = {
+    // Lấy đánh giá theo sản phẩm (chỉ approved)
+    getByProduct: async (productId: string): Promise<Review[]> => {
+        const params = new URLSearchParams({
+            productId,
+            limit: '50',
+        });
+        const response = await fetch(`${API_BASE_URL}/reviews?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to fetch reviews');
+        return response.json();
+    },
+
+    // Tạo đánh giá mới
+    create: async (review: {
+        product_id: string;
+        customer_name: string;
+        customer_email: string;
+        rating: number;
+        title: string;
+        content: string;
+    }): Promise<Review> => {
+        const response = await fetch(`${API_BASE_URL}/reviews`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(review),
+        });
+        if (!response.ok) throw new Error('Failed to create review');
+        return response.json();
     },
 };
