@@ -94,26 +94,40 @@ router.post('/login', async (req, res) => {
 router.post('/google', async (req, res) => {
     const client = await pool.connect();
     try {
-        const { credential, clientId } = req.body;
+        const { credential, clientId, googleId: directGoogleId, email: directEmail, name: directName, picture: directPicture } = req.body;
 
-        if (!credential) {
-            res.status(400).json({ error: 'Google credential is required' });
+        let googleId: string | undefined;
+        let email: string | undefined;
+        let name: string | undefined;
+        let picture: string | undefined;
+
+        if (directGoogleId && directEmail) {
+            // Implicit flow: frontend already fetched user info from Google
+            googleId = directGoogleId;
+            email = directEmail;
+            name = directName;
+            picture = directPicture;
+        } else if (credential) {
+            // ID token flow: verify the token
+            const ticket = await googleClient.verifyIdToken({
+                idToken: credential,
+                audience: clientId,
+            });
+
+            const payload = ticket.getPayload();
+            if (!payload || !payload.email) {
+                res.status(400).json({ error: 'Invalid Google token' });
+                return;
+            }
+
+            googleId = payload.sub;
+            email = payload.email;
+            name = payload.name;
+            picture = payload.picture;
+        } else {
+            res.status(400).json({ error: 'Google credential or user info is required' });
             return;
         }
-
-        // Verify the Google ID token
-        const ticket = await googleClient.verifyIdToken({
-            idToken: credential,
-            audience: clientId,
-        });
-
-        const payload = ticket.getPayload();
-        if (!payload || !payload.email) {
-            res.status(400).json({ error: 'Invalid Google token' });
-            return;
-        }
-
-        const { sub: googleId, email, name, picture } = payload;
 
         await client.query('BEGIN');
 

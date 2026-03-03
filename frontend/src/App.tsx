@@ -46,7 +46,7 @@ export default function App() {
   // Apply theme class
   useEffect(() => {
     const root = window.document.documentElement;
-    
+
     const applyTheme = (currentTheme: string) => {
       if (currentTheme === 'auto') {
         const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -100,14 +100,12 @@ export default function App() {
   const handleAdminClick = () => {
     // TEMPORARY: Allow all users for verification
     setCurrentPage('admin');
-    return;
-    
-    if (!user || user.role !== 'admin') {
-      toast.error(t('auth.adminForbidden'));
-      return;
-    }
-
-    setCurrentPage('admin');
+    // TODO: Re-enable admin role check when ready:
+    // if (!user || user.role !== 'admin') {
+    //   toast.error(t('auth.adminForbidden'));
+    //   return;
+    // }
+    // setCurrentPage('admin');
   };
 
   const handleSearch = async (query: string) => {
@@ -287,7 +285,7 @@ export default function App() {
             onPostClick={handleBlogPostClick}
           />
         )}
-        <Toaster position="top-right" richColors />
+        <Toaster position="bottom-left" richColors />
       </div>
     </QueryClientProvider>
   );
