@@ -14,6 +14,7 @@ import { Toaster } from '@/shared/components/ui/sonner';
 import { toast } from 'sonner';
 import { Product, CartItem, User } from '@/shared/types';
 import { ProductDetailPage } from '@/features/product/pages/ProductDetailPage';
+import { WriteReviewPage } from '@/features/product/pages/WriteReviewPage';
 
 // Create QueryClient with default options
 const queryClient = new QueryClient({
@@ -28,8 +29,9 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'products' | 'cart' | 'checkout' | 'admin' | 'blog-list' | 'blog-detail' | 'product-detail'>('landing');
+  const [currentPage, setCurrentPage] = useState<'landing' | 'products' | 'cart' | 'checkout' | 'admin' | 'blog-list' | 'blog-detail' | 'product-detail' | 'write-review'>('landing');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [currentBlogPostId, setCurrentBlogPostId] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -160,6 +162,12 @@ export default function App() {
     window.scrollTo(0, 0);
   };
 
+  const handleReviewRedirect = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setCurrentPage('write-review');
+    window.scrollTo(0, 0);
+  };
+
   const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -178,6 +186,7 @@ export default function App() {
             onLogin={handleLogin}
             onLogout={handleLogout}
             onSearch={handleSearch}
+            onReviewRedirect={handleReviewRedirect}
           />
         )}
 
@@ -258,6 +267,13 @@ export default function App() {
             postId={currentBlogPostId}
             onBack={() => setCurrentPage('landing')}
             onPostClick={handleBlogPostClick}
+          />
+        )}
+
+        {currentPage === 'write-review' && selectedOrderId && (
+          <WriteReviewPage
+            orderId={selectedOrderId}
+            onBack={() => setCurrentPage('landing')}
           />
         )}
         <Toaster position="bottom-left" richColors />

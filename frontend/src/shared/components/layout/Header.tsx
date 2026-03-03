@@ -2,6 +2,7 @@ import { Search, ShoppingCart, User, Menu, X, LogOut, Package, Settings, FileTex
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthModal } from '@/features/auth/components/AuthModal';
+import { UserNotificationBell } from '@/features/notification/components/UserNotificationBell';
 
 import { User as UserType, Product } from '@/shared/types';
 import { productApi } from '@/lib/api';
@@ -16,9 +17,10 @@ interface HeaderProps {
   onLogin: (user: UserType) => void;
   onLogout: () => void;
   onSearch?: (query: string) => void;
+  onReviewRedirect?: (orderId: string) => void;
 }
 
-export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onLogout, onSearch }: HeaderProps) {
+export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onLogout, onSearch, onReviewRedirect }: HeaderProps) {
   const { siteName } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -422,22 +424,25 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
             </div>
 
             {/* Cart */}
-            <button
-              onClick={onCartClick}
-              className="relative p-2 hover:bg-gray-900 rounded-lg transition-colors group text-white"
-            >
-              <ShoppingCart className="w-5 h-5 lg:w-6 lg:h-6 group-hover:text-red-500 transition-colors" />
-              {cartCount > 0 && (
-                <motion.span
-                  key={cartCount}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg shadow-red-600/50"
-                >
-                  {cartCount}
-                </motion.span>
-              )}
-            </button>
+            <div className="flex items-center gap-1">
+              {user && <UserNotificationBell email={user.email} onReviewClick={onReviewRedirect} />}
+              <button
+                onClick={onCartClick}
+                className="relative p-2 hover:bg-gray-900 rounded-lg transition-colors group text-white"
+              >
+                <ShoppingCart className="w-5 h-5 lg:w-6 lg:h-6 group-hover:text-red-500 transition-colors" />
+                {cartCount > 0 && (
+                  <motion.span
+                    key={cartCount}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg shadow-red-600/50"
+                  >
+                    {cartCount}
+                  </motion.span>
+                )}
+              </button>
+            </div>
 
           </div>
         </div>

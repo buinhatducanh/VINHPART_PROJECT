@@ -4,6 +4,7 @@ import { LogOut, Home, DollarSign, ShoppingCart, Users, ArrowUpRight, ChevronRig
 import { AdminPage, DashboardStats } from '../types';
 import { getStatsConfig, NAV_MENU_CONFIG } from '../constants';
 import { useSettings } from '@/shared/hooks/useSettings';
+import { NotificationBell } from '@/features/notification/components/NotificationBell';
 import { useOrders } from '@/hooks/useQueries';
 
 interface DashboardHomeProps {
@@ -41,7 +42,7 @@ export const DashboardHome = memo(function DashboardHome({ stats, onNavigate, on
             <motion.header
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="relative border-b border-gray-800 bg-black/40 backdrop-blur-xl"
+                className="relative z-50 border-b border-gray-800 bg-black/40 backdrop-blur-xl"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
                     <div className="flex items-center justify-between">
@@ -63,7 +64,15 @@ export const DashboardHome = memo(function DashboardHome({ stats, onNavigate, on
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        {/* User Info & Actions */}
+                        <div className="flex items-center gap-4">
+                            <div className="hidden md:block text-right">
+                                <p className="text-sm font-semibold text-white">{siteName.toLowerCase()}@vinhpart.vn</p>
+                                <p className="text-xs text-gray-500">Quản trị viên</p>
+                            </div>
+
+                            <NotificationBell />
+
                             <button
                                 onClick={onBackToHome}
                                 className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white hover:border-gray-600 transition-all"
@@ -71,12 +80,15 @@ export const DashboardHome = memo(function DashboardHome({ stats, onNavigate, on
                                 <Home className="w-4 h-4" />
                                 Trang chủ
                             </button>
-                            <button
+
+                            <motion.button
                                 onClick={onLogoutRequest}
-                                className="group p-2.5 bg-gray-900 border border-gray-700 rounded-lg hover:border-red-600/50 transition-all"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="group relative p-2.5 bg-gray-900 border border-gray-700 rounded-lg hover:border-red-600/50 transition-all"
                             >
                                 <LogOut className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" />
-                            </button>
+                            </motion.button>
                         </div>
                     </div>
                 </div>
