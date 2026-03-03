@@ -7,6 +7,7 @@ import { hierarchicalCategories } from '@/shared/data/mockProducts';
 import { Product } from '@/shared/types';
 import { useProducts, useMaxPrice } from '@/hooks/useQueries';
 import { ProductCardSkeleton } from '@/shared/components/skeletons/ProductCardSkeleton';
+import { useI18n } from '@/shared/lib/i18n';
 
 interface ProductListingProps {
   selectedCategory: string;
@@ -34,6 +35,7 @@ export function ProductListing({
   const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc'>('default');
   const [currentPage, setCurrentPage] = useState(1);
   const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([0, 5000000]);
+  const { t } = useI18n();
 
   const itemsPerPage = 20;
 
@@ -102,9 +104,9 @@ export function ProductListing({
   const FilterSidebar = () => (
     <div className="space-y-6">
       {/* Categories với phân cấp */}
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-xl p-4 shadow-lg">
-        <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-          <span className="text-red-600">●</span> Danh mục
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-border rounded-xl p-4 shadow-lg">
+        <h3 className="text-foreground font-bold mb-4 flex items-center gap-2">
+          <span className="text-red-600">●</span> {t('settings.categories') || 'Danh mục'}
         </h3>
         <div className="space-y-1">
           <motion.button
@@ -112,11 +114,11 @@ export function ProductListing({
             whileHover={{ scale: 1.02, x: 2 }}
             whileTap={{ scale: 0.98 }}
             className={`w-full text-left px-4 py-3 rounded-lg transition-all font-medium ${selectedCategory === 'all'
-              ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/30'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-red-600/30 border border-transparent'
+              ? 'bg-gradient-to-r from-red-600 to-red-700 text-foreground shadow-lg shadow-red-600/30'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:border-red-600/30 border border-transparent'
               }`}
           >
-            Tất cả sản phẩm
+            {t('product.allProducts') || 'Tất cả sản phẩm'}
           </motion.button>
 
           {hierarchicalCategories.map(category => (
@@ -131,8 +133,8 @@ export function ProductListing({
                 whileHover={{ scale: 1.02, x: 2 }}
                 whileTap={{ scale: 0.98 }}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all flex items-center justify-between font-medium ${selectedCategory === category.id
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/30'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-red-600/30 border border-transparent'
+                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-foreground shadow-lg shadow-red-600/30'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:border-red-600/30 border border-transparent'
                   }`}
               >
                 <span>{category.name}</span>
@@ -163,7 +165,7 @@ export function ProductListing({
                           whileTap={{ scale: 0.98 }}
                           className={`w-full text-left px-4 py-2 text-sm rounded-lg transition-all flex items-center gap-2 ${selectedCategory === sub.id
                             ? 'bg-red-600/20 text-red-400 border border-red-600/50'
-                            : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700 hover:text-white'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                             }`}
                         >
                           <ChevronRight className="w-3 h-3" />
@@ -180,9 +182,9 @@ export function ProductListing({
       </div>
 
       {/* Brand Filter */}
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-xl p-4 shadow-lg">
-        <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-          <span className="text-red-600">●</span> Thương hiệu
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-border rounded-xl p-4 shadow-lg">
+        <h3 className="text-foreground font-bold mb-4 flex items-center gap-2">
+          <span className="text-red-600">●</span> {t('product.brand') || 'Thương hiệu'}
         </h3>
         <div className="space-y-2 max-h-64 overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
           <motion.button
@@ -190,11 +192,11 @@ export function ProductListing({
             whileHover={{ scale: 1.02, x: 2 }}
             whileTap={{ scale: 0.98 }}
             className={`w-full text-left px-4 py-3 rounded-lg transition-all font-medium break-words ${selectedBrand === 'all'
-              ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/30'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-red-600/30 border border-transparent'
+              ? 'bg-gradient-to-r from-red-600 to-red-700 text-foreground shadow-lg shadow-red-600/30'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:border-red-600/30 border border-transparent'
               }`}
           >
-            Tất cả
+            {t('common.all') || 'Tất cả'}
           </motion.button>
           {brands.map(brand => (
             <motion.button
@@ -203,8 +205,8 @@ export function ProductListing({
               whileHover={{ scale: 1.02, x: 2 }}
               whileTap={{ scale: 0.98 }}
               className={`w-full text-left px-4 py-3 rounded-lg transition-all font-medium break-words ${selectedBrand === brand
-                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/30'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-red-600/30 border border-transparent'
+                ? 'bg-gradient-to-r from-red-600 to-red-700 text-foreground shadow-lg shadow-red-600/30'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:border-red-600/30 border border-transparent'
                 }`}
             >
               {brand}
@@ -214,9 +216,9 @@ export function ProductListing({
       </div>
 
       {/* Price Range */}
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-xl p-4 shadow-lg">
-        <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-          <span className="text-red-600">●</span> Khoảng giá
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-border rounded-xl p-4 shadow-lg">
+        <h3 className="text-foreground font-bold mb-4 flex items-center gap-2">
+          <span className="text-red-600">●</span> {t('product.priceRange') || 'Khoảng giá'}
         </h3>
         <PriceRangeSlider
           min={0}
@@ -236,37 +238,37 @@ export function ProductListing({
   const skeletonItems = Array(8).fill(0);
 
   return (
-    <div className="pt-20 min-h-screen bg-black">
+    <div className="pt-20 min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Sản phẩm</h1>
-            <p className="text-gray-400">
-              {loading ? 'Đang tải...' : `Hiển thị ${products.length} / ${totalProducts} sản phẩm`}
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t('header.products')}</h1>
+            <p className="text-muted-foreground">
+              {loading ? t('common.searching') : `${t('common.display') || 'Hiển thị'} ${products.length} / ${totalProducts} ${t('header.products').toLowerCase()}`}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             {/* Sort by Price */}
-            <div className="flex items-center bg-gray-800 rounded-lg p-1">
+            <div className="flex items-center bg-muted rounded-lg p-1">
               <button
                 onClick={() => setSortBy('default')}
-                className={`p-2 rounded-md transition-all ${sortBy === 'default' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                className={`p-2 rounded-md transition-all ${sortBy === 'default' ? 'bg-red-600 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                 title="Mặc định"
               >
                 <ArrowUpDown className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setSortBy('price_asc')}
-                className={`p-2 rounded-md transition-all ${sortBy === 'price_asc' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                className={`p-2 rounded-md transition-all ${sortBy === 'price_asc' ? 'bg-red-600 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                 title="Giá tăng dần"
               >
                 <TrendingUp className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setSortBy('price_desc')}
-                className={`p-2 rounded-md transition-all ${sortBy === 'price_desc' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                className={`p-2 rounded-md transition-all ${sortBy === 'price_desc' ? 'bg-red-600 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                 title="Giá giảm dần"
               >
                 <TrendingDown className="w-4 h-4" />
@@ -276,7 +278,7 @@ export function ProductListing({
             {/* Mobile Filter Toggle */}
             <button
               onClick={() => setShowMobileFilter(true)}
-              className="lg:hidden flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg"
+              className="lg:hidden flex items-center gap-2 px-4 py-2 bg-red-600 text-foreground rounded-lg"
             >
               <Filter className="w-4 h-4" />
             </button>
@@ -300,22 +302,22 @@ export function ProductListing({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setShowMobileFilter(false)}
-                  className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+                  className="fixed inset-0 bg-background/80 z-40 lg:hidden"
                 />
                 <motion.div
                   initial={{ x: -300 }}
                   animate={{ x: 0 }}
                   exit={{ x: -300 }}
-                  className="fixed left-0 top-0 bottom-0 w-80 bg-gray-900 z-50 overflow-y-auto lg:hidden"
+                  className="fixed left-0 top-0 bottom-0 w-80 bg-card z-50 overflow-y-auto lg:hidden"
                 >
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-bold text-white">Bộ lọc</h2>
+                      <h2 className="text-xl font-bold text-foreground">Bộ lọc</h2>
                       <button
                         onClick={() => setShowMobileFilter(false)}
-                        className="p-2 hover:bg-gray-800 rounded-lg"
+                        className="p-2 hover:bg-muted rounded-lg"
                       >
-                        <X className="w-5 h-5 text-gray-400" />
+                        <X className="w-5 h-5 text-muted-foreground" />
                       </button>
                     </div>
                     <FilterSidebar />
@@ -335,7 +337,7 @@ export function ProductListing({
               </div>
             ) : products.length === 0 ? (
               <div className="text-center py-20">
-                <p className="text-gray-400 text-lg mb-4">Không tìm thấy sản phẩm phù hợp</p>
+                <p className="text-muted-foreground text-lg mb-4">Không tìm thấy sản phẩm phù hợp</p>
                 <button
                   onClick={() => {
                     onCategoryChange('all');
@@ -344,7 +346,7 @@ export function ProductListing({
                     setPriceRange([0, maxPrice]);
                     setAppliedPriceRange([0, maxPrice]);
                   }}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-all"
+                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-foreground font-bold rounded-lg transition-all"
                 >
                   Xóa bộ lọc
                 </button>
@@ -378,7 +380,7 @@ export function ProductListing({
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentPage(1)}
                       disabled={currentPage === 1}
-                      className="px-3 py-2 rounded-lg font-bold transition-all bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-700"
+                      className="px-3 py-2 rounded-lg font-bold transition-all bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed border border-border"
                     >
                       ««
                     </motion.button>
@@ -389,7 +391,7 @@ export function ProductListing({
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
-                      className="px-3 py-2 rounded-lg font-bold transition-all bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-700"
+                      className="px-3 py-2 rounded-lg font-bold transition-all bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed border border-border"
                     >
                       ‹
                     </motion.button>
@@ -413,8 +415,8 @@ export function ProductListing({
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setCurrentPage(i)}
                             className={`min-w-[2.5rem] px-4 py-2 rounded-lg font-bold transition-all ${currentPage === i
-                              ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/50 border-2 border-red-500'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700'
+                              ? 'bg-gradient-to-r from-red-600 to-red-700 text-foreground shadow-lg shadow-red-600/50 border-2 border-red-500'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80 border border-border'
                               }`}
                           >
                             {i}
@@ -430,7 +432,7 @@ export function ProductListing({
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages}
-                      className="px-3 py-2 rounded-lg font-bold transition-all bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-700"
+                      className="px-3 py-2 rounded-lg font-bold transition-all bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed border border-border"
                     >
                       ›
                     </motion.button>
@@ -441,7 +443,7 @@ export function ProductListing({
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentPage(totalPages)}
                       disabled={currentPage === totalPages}
-                      className="px-3 py-2 rounded-lg font-bold transition-all bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-700"
+                      className="px-3 py-2 rounded-lg font-bold transition-all bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed border border-border"
                     >
                       »»
                     </motion.button>

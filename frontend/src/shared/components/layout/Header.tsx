@@ -1,13 +1,13 @@
-import { Search, ShoppingCart, User, Menu, X, LogOut, Package, Settings, FileText } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, LogOut, Settings, FileText } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthModal } from '@/features/auth/components/AuthModal';
-import { UserNotificationBell } from '@/features/notification/components/UserNotificationBell';
 
 import { User as UserType, Product } from '@/shared/types';
 import { productApi } from '@/lib/api';
 import { productImages } from '@/shared/data/productImages';
 import { useSettings } from '@/shared/hooks/useSettings';
+import { useI18n } from '@/shared/lib/i18n';
 
 interface HeaderProps {
   cartCount: number;
@@ -17,11 +17,11 @@ interface HeaderProps {
   onLogin: (user: UserType) => void;
   onLogout: () => void;
   onSearch?: (query: string) => void;
-  onReviewRedirect?: (orderId: string) => void;
 }
 
-export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onLogout, onSearch, onReviewRedirect }: HeaderProps) {
+export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onLogout, onSearch }: HeaderProps) {
   const { siteName } = useSettings();
+  const { t, language } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
@@ -132,7 +132,7 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
       transition={{ duration: 0.3, ease: 'easeInOut' }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isAtTop
         ? 'bg-transparent border-b border-transparent'
-        : 'bg-black/95 backdrop-blur-md border-b border-red-600/20 shadow-lg shadow-red-600/10'
+        : 'bg-background/95 backdrop-blur-md border-b border-red-600/20 shadow-lg shadow-red-600/10'
         }`}
     >
       {showFeatureToast && (
@@ -140,16 +140,16 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-gray-900 border border-gray-700 text-white px-6 py-3 rounded-lg shadow-xl"
+          className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-card border border-border text-foreground px-6 py-3 rounded-lg shadow-xl"
         >
-          Tính năng đang được cải tiến
+          {t('common.featureInProgress')}
         </motion.div>
       )}
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Mobile Menu Button (Left on mobile, hidden on desktop) */}
           <button
-            className="md:hidden p-2 -ml-2 hover:bg-gray-900 rounded-lg transition-colors z-50 text-white"
+            className="md:hidden p-2 -ml-2 hover:bg-card rounded-lg transition-colors z-50 text-foreground"
             onClick={() => setIsMobileMenuOpen(true)}
           >
             <Menu className="w-5 h-5 lg:w-6 lg:h-6" />
@@ -224,8 +224,8 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                   <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-60"></div>
                 </span>
               </motion.div>
-              <div className="text-xs text-gray-400 tracking-[0.2em] font-bold mt-0.5">
-                Quản lý cửa hàng
+              <div className="text-xs text-muted-foreground tracking-[0.2em] font-bold mt-0.5">
+                {t('common.storeManagement')}
               </div>
             </div>
           </button>
@@ -233,10 +233,10 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
           {/* Search Bar - Desktop */}
           <div className="hidden md:flex flex-1 max-w-xl mx-8">
             <div className={`relative w-full transition-all ${searchFocused ? 'scale-105' : ''}`} ref={searchContainerRef}>
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Tìm kiếm phụ tùng, tên xe..."
+                placeholder={t('header.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
@@ -245,7 +245,7 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                     setShowSuggestions(false);
                   }
                 }}
-                className="w-full bg-gray-900 border border-gray-800 rounded-lg pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+                className="w-full bg-card border border-border rounded-lg pl-12 pr-4 py-3 text-foreground placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
                 onFocus={() => {
                   setSearchFocused(true);
                   if (searchQuery.trim().length >= 2) {
@@ -265,12 +265,12 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-800 rounded-lg shadow-xl overflow-hidden z-50"
+                    className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50"
                   >
                     {isSearching ? (
-                      <div className="p-4 text-center text-gray-400">
+                      <div className="p-4 text-center text-muted-foreground">
                         <div className="animate-spin w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-                        Đang tìm kiếm...
+                        {t('common.searching')}
                       </div>
                     ) : suggestions.length > 0 ? (
                       <div className="py-2">
@@ -278,9 +278,9 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                           <button
                             key={product.product_id}
                             onClick={() => handleSuggestionClick(product)}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-800 transition-colors flex items-center gap-3 group"
+                            className="w-full text-left px-4 py-3 hover:bg-muted transition-colors flex items-center gap-3 group"
                           >
-                            <div className="w-10 h-10 rounded-md bg-gray-800 overflow-hidden flex-shrink-0">
+                            <div className="w-10 h-10 rounded-md bg-muted overflow-hidden flex-shrink-0">
                               <img
                                 src={productImages[product.product_id] || product.product_image}
                                 alt={product.product_name}
@@ -291,19 +291,22 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                               />
                             </div>
                             <div>
-                              <p className="text-white font-medium text-sm group-hover:text-red-500 transition-colors line-clamp-1">
+                              <p className="text-foreground font-medium text-sm group-hover:text-red-500 transition-colors line-clamp-1">
                                 {product.product_name}
                               </p>
-                              <p className="text-gray-500 text-xs">
-                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
+                              <p className="text-muted-foreground text-xs">
+                                {new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US', { 
+                                  style: 'currency', 
+                                  currency: language === 'vi' ? 'VND' : 'USD' 
+                                }).format(language === 'vi' ? product.price : product.price / 25000)}
                               </p>
                             </div>
                           </button>
                         ))}
                       </div>
                     ) : (
-                      <div className="p-4 text-center text-gray-500 text-sm">
-                        Không tìm thấy sản phẩm nào
+                      <div className="p-4 text-center text-muted-foreground text-sm">
+                        {t('common.noResults')}
                       </div>
                     )}
                   </motion.div>
@@ -316,7 +319,7 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
           <div className="flex items-center gap-2 md:gap-4">
             {/* Search Icon - Mobile */}
             <button
-              className="md:hidden p-2 hover:bg-gray-900 rounded-lg transition-colors text-white"
+              className="md:hidden p-2 hover:bg-card rounded-lg transition-colors text-foreground"
               onClick={() => {
                 // Here you might want to open a mobile search overlay
                 // For now, let's just focus the search input if visible, or open mobile menu with search active
@@ -333,18 +336,9 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
             <div className="relative hidden md:block" ref={accountMenuRef}>
               <button
                 onClick={() => setShowAccountMenu(!showAccountMenu)}
-                className="p-2 hover:bg-gray-900 rounded-lg transition-colors relative"
+                className="p-2 hover:bg-card rounded-lg transition-colors relative"
               >
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-7 h-7 rounded-full object-cover border-2 border-gray-700 hover:border-red-600 transition-colors"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <User className="w-5 h-5 text-gray-400" />
-                )}
+                <User className="w-5 h-5 text-muted-foreground" />
               </button>
 
               <AnimatePresence>
@@ -353,44 +347,30 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 top-full mt-2 w-48 bg-gray-900 border border-gray-800 rounded-lg shadow-xl overflow-hidden"
+                    className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-lg shadow-xl overflow-hidden"
                   >
                     {user ? (
                       // Logged In Menu
                       <>
-                        <div className="px-4 py-3 border-b border-gray-800 flex items-center gap-3">
-                          {user.avatar ? (
-                            <img
-                              src={user.avatar}
-                              alt={user.name}
-                              className="w-9 h-9 rounded-full object-cover border-2 border-gray-700 flex-shrink-0"
-                              referrerPolicy="no-referrer"
-                            />
-                          ) : (
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 border border-gray-600 flex items-center justify-center flex-shrink-0">
-                              <User className="w-5 h-5 text-gray-300" />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-white font-bold truncate">{user.name}</p>
-                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                          </div>
+                        <div className="px-4 py-3 border-b border-border">
+                          <p className="text-foreground font-bold">{user.name}</p>
+                          <p className="text-xs text-muted-foreground">{user.email}</p>
                         </div>
-                        <button className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white" onClick={handleFeatureClick}>
-                          Tài khoản của tôi
+                        <button className="w-full px-4 py-3 text-left hover:bg-muted transition-colors text-foreground" onClick={handleFeatureClick}>
+                          {t('header.myAccount')}
                         </button>
-                        <button className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white" onClick={handleFeatureClick}>
-                          Đơn mua
+                        <button className="w-full px-4 py-3 text-left hover:bg-muted transition-colors text-foreground" onClick={handleFeatureClick}>
+                          {t('header.myOrders')}
                         </button>
-                        <div className="border-t border-gray-800"></div>
+                        <div className="border-t border-border"></div>
                         <button
                           onClick={() => {
                             onLogout();
                             setShowAccountMenu(false);
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-red-500 font-medium"
+                          className="w-full px-4 py-3 text-left hover:bg-muted transition-colors text-red-500 font-medium"
                         >
-                          Đăng xuất
+                          {t('common.logout')}
                         </button>
                       </>
                     ) : (
@@ -402,9 +382,9 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                             setShowAuthModal(true);
                             setShowAccountMenu(false);
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white"
+                          className="w-full px-4 py-3 text-left hover:bg-muted transition-colors text-foreground"
                         >
-                          Đăng nhập
+                          {t('common.login')}
                         </button>
                         <button
                           onClick={() => {
@@ -412,9 +392,9 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                             setShowAuthModal(true);
                             setShowAccountMenu(false);
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors text-white"
+                          className="w-full px-4 py-3 text-left hover:bg-muted transition-colors text-foreground"
                         >
-                          Đăng ký
+                          {t('common.signup')}
                         </button>
                       </>
                     )}
@@ -424,25 +404,22 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
             </div>
 
             {/* Cart */}
-            <div className="flex items-center gap-1">
-              {user && <UserNotificationBell email={user.email} onReviewClick={onReviewRedirect} />}
-              <button
-                onClick={onCartClick}
-                className="relative p-2 hover:bg-gray-900 rounded-lg transition-colors group text-white"
-              >
-                <ShoppingCart className="w-5 h-5 lg:w-6 lg:h-6 group-hover:text-red-500 transition-colors" />
-                {cartCount > 0 && (
-                  <motion.span
-                    key={cartCount}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg shadow-red-600/50"
-                  >
-                    {cartCount}
-                  </motion.span>
-                )}
-              </button>
-            </div>
+            <button
+              onClick={onCartClick}
+              className="relative p-2 hover:bg-card rounded-lg transition-colors group text-foreground"
+            >
+              <ShoppingCart className="w-5 h-5 lg:w-6 lg:h-6 group-hover:text-red-500 transition-colors" />
+              {cartCount > 0 && (
+                <motion.span
+                  key={cartCount}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -right-1 bg-red-600 text-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg shadow-red-600/50"
+                >
+                  {cartCount}
+                </motion.span>
+              )}
+            </button>
 
           </div>
         </div>
@@ -458,7 +435,7 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-background/80 backdrop-blur-sm"
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
@@ -468,32 +445,32 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute top-0 left-0 bottom-0 w-[85vw] max-w-sm bg-gray-950 border-r border-gray-800 shadow-2xl overflow-y-auto flex flex-col"
+              className="absolute top-0 left-0 bottom-0 w-[85vw] max-w-sm bg-background border-r border-border shadow-2xl overflow-y-auto flex flex-col"
             >
               {/* Drawer Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <div className="flex items-center justify-between p-4 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center font-black text-white text-xl">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center font-black text-foreground text-xl">
                     V
                   </div>
                   <span className="font-black text-lg bg-gradient-to-r from-white via-red-50 to-white bg-clip-text text-transparent">VINPART</span>
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-white"
+                  className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-6 h-6" />
                 </button>
               </div>
 
               {/* Mobile Search */}
-              <div className="p-4 border-b border-gray-800">
+              <div className="p-4 border-b border-border">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="mobile-search-input"
                     type="text"
-                    placeholder="Tìm kiếm phụ tùng..."
+                    placeholder={t('header.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
@@ -503,11 +480,11 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                         setIsMobileMenuOpen(false); // Close menu on search
                       }
                     }}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600"
+                    className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-3 text-foreground placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600"
                   />
                   {/* Simplistic version of suggestions for mobile */}
                   {showSuggestions && suggestions.length > 0 && searchQuery.trim().length >= 2 && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-800 rounded-lg shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto">
                       {suggestions.map((product) => (
                         <button
                           key={product.product_id}
@@ -515,19 +492,19 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                             handleSuggestionClick(product);
                             setIsMobileMenuOpen(false); // Close menu on select
                           }}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-800 transition-colors flex items-center gap-3"
+                          className="w-full text-left px-4 py-3 hover:bg-muted transition-colors flex items-center gap-3"
                         >
                           <img
                             src={productImages[product.product_id] || product.product_image}
                             alt={product.product_name}
-                            className="w-10 h-10 rounded-md object-cover bg-gray-800"
+                            className="w-10 h-10 rounded-md object-cover bg-muted"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = 'https://via.placeholder.com/40';
                             }}
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm truncate">{product.product_name}</p>
-                            <p className="text-gray-400 text-xs">
+                            <p className="text-foreground text-sm truncate">{product.product_name}</p>
+                            <p className="text-muted-foreground text-xs">
                               {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
                             </p>
                           </div>
@@ -539,16 +516,16 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
               </div>
 
               {/* User Section / Auth Links */}
-              <div className="p-4 border-b border-gray-800 flex-1">
+              <div className="p-4 border-b border-border flex-1">
                 {user ? (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3 mb-6 p-3 bg-gray-900/50 rounded-xl border border-gray-800/50">
+                    <div className="flex items-center gap-3 mb-6 p-3 bg-card/50 rounded-xl border border-border/50">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 border border-gray-600 flex items-center justify-center">
-                        <User className="w-6 h-6 text-gray-300" />
+                        <User className="w-6 h-6 text-muted-foreground" />
                       </div>
                       <div>
-                        <p className="text-white font-bold">{user.name}</p>
-                        <p className="text-sm text-gray-400">{user.email}</p>
+                        <p className="text-foreground font-bold">{user.name}</p>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
 
@@ -558,20 +535,18 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                           handleFeatureClick();
                           setIsMobileMenuOpen(false);
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-900 text-gray-300 hover:text-white transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-card text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <User className="w-5 h-5" />
-                        <span>Tài khoản của tôi</span>
+                        <span>{t('header.myAccount')}</span>
                       </button>
                       <button
                         onClick={() => {
                           handleFeatureClick();
                           setIsMobileMenuOpen(false);
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-900 text-gray-300 hover:text-white transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-card text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <Package className="w-5 h-5" />
-                        <span>Đơn mua</span>
+                        <span>{t('header.myOrders')}</span>
                       </button>
 
                       {user.role === 'admin' && (
@@ -585,7 +560,7 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-900/30 transition-colors"
                         >
                           <Settings className="w-5 h-5" />
-                          <span>Trang quản trị (Admin)</span>
+                          <span>{t('common.adminPage')}</span>
                         </button>
                       )}
                     </div>
@@ -598,9 +573,9 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                         setShowAuthModal(true);
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full py-3 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition-colors"
+                      className="w-full py-3 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-foreground font-bold transition-colors"
                     >
-                      Đăng nhập
+                      {t('common.login')}
                     </button>
                     <button
                       onClick={() => {
@@ -608,34 +583,34 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                         setShowAuthModal(true);
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full py-3 px-4 rounded-lg bg-gray-900 hover:bg-gray-800 border border-gray-700 text-white font-bold transition-colors"
+                      className="w-full py-3 px-4 rounded-lg bg-card hover:bg-muted border border-border text-foreground font-bold transition-colors"
                     >
-                      Đăng ký
+                      {t('common.signup')}
                     </button>
                   </div>
                 )}
 
                 {/* Navigation Links (Demo) */}
                 <div className="mt-8 space-y-1">
-                  <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Danh mục</p>
-                  <button onClick={() => { onLogoClick(); setIsMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-900 text-gray-300 rounded-lg flex items-center gap-3">
+                  <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t('admin.manageProducts.colCategory')}</p>
+                  <button onClick={() => { onLogoClick(); setIsMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-card text-muted-foreground rounded-lg flex items-center gap-3">
                     <span className="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
-                    Trang chủ
+                    {t('common.home')}
                   </button>
-                  <button onClick={() => { onSearch?.(''); setIsMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-900 text-gray-300 rounded-lg flex items-center gap-3">
+                  <button onClick={() => { onSearch?.(''); setIsMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-card text-muted-foreground rounded-lg flex items-center gap-3">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                    Sản phẩm
+                    {t('header.products')}
                   </button>
-                  <button onClick={() => { setIsMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-900 text-gray-300 rounded-lg flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-gray-500" />
-                    Báo giá & Dịch vụ
+                  <button onClick={() => { setIsMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-card text-muted-foreground rounded-lg flex items-center gap-3">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                    {t('header.services')}
                   </button>
                 </div>
               </div>
 
               {/* Drawer Footer */}
               {user && (
-                <div className="p-4 border-t border-gray-800">
+                <div className="p-4 border-t border-border">
                   <button
                     onClick={() => {
                       onLogout();
@@ -644,7 +619,7 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-red-950/50 text-red-500 transition-colors"
                   >
                     <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Đăng xuất</span>
+                    <span className="font-medium">{t('common.logout')}</span>
                   </button>
                 </div>
               )}

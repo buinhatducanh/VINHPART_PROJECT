@@ -3,7 +3,8 @@ import { Product, Review, User } from '@/shared/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { ProductSpecifications } from '../molecules/ProductSpecifications';
 import { Star, Send, CheckCircle, User as UserIcon, ThumbsUp, MessageSquare, ShieldCheck } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion'; // Changed from 'motion/react' to 'framer-motion' for AnimatePresence
+import { motion, AnimatePresence } from 'framer-motion';
+import { useI18n } from '@/shared/lib/i18n';
 
 interface ProductDescriptionSectionProps {
     product: Product;
@@ -11,6 +12,8 @@ interface ProductDescriptionSectionProps {
 }
 
 export function ProductDescriptionSection({ product, user }: ProductDescriptionSectionProps) {
+    const { t, language } = useI18n();
+
     // ==================== REVIEW STATE ====================
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loadingReviews, setLoadingReviews] = useState(false);
@@ -66,12 +69,12 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
         if (!product) return;
 
         if (!user) {
-            setSubmitError('Vui lòng đăng nhập để gửi đánh giá.');
+            setSubmitError(t('product.loginToReview') || 'Vui lòng đăng nhập để gửi đánh giá.');
             return;
         }
 
         if (formRating === 0) {
-            setSubmitError('Vui lòng chọn số sao đánh giá.');
+            setSubmitError(t('product.selectRating') || 'Vui lòng chọn số sao đánh giá.');
             return;
         }
 
@@ -106,10 +109,10 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                 
                 setTimeout(() => setSubmitSuccess(false), 5000);
             } else {
-                setSubmitError('Không thể gửi đánh giá. Vui lòng thử lại.');
+                setSubmitError(t('product.submitReviewError') || 'Không thể gửi đánh giá. Vui lòng thử lại.');
             }
         } catch {
-            setSubmitError('Lỗi kết nối. Vui lòng thử lại.');
+            setSubmitError(t('common.error') || 'Lỗi kết nối. Vui lòng thử lại.');
         } finally {
             setSubmitting(false);
         }
@@ -128,45 +131,56 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
     );
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('vi-VN', {
+        return new Date(dateString).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
         });
     };
 
+    const getRatingText = (rating: number) => {
+        switch (rating) {
+            case 5: return t('product.rating5') || 'Tuyệt vời';
+            case 4: return t('product.rating4') || 'Tốt';
+            case 3: return t('product.rating3') || 'Bình thường';
+            case 2: return t('product.rating2') || 'Tệ';
+            case 1: return t('product.rating1') || 'Rất tệ';
+            default: return '';
+        }
+    };
+
     return (
         <div className="mt-16 lg:mt-24">
             <Tabs defaultValue="description" className="w-full">
                 <div className="flex justify-center mb-8">
-                    <TabsList className="bg-gray-900 border border-gray-800 p-1">
+                    <TabsList className="bg-card border border-border p-1">
                         <TabsTrigger
                             value="description"
-                            className="px-6 py-2 rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-400"
+                            className="px-6 py-2 rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-foreground text-muted-foreground"
                         >
-                            Mô tả sản phẩm
+                            {t('product.description')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="specs"
-                            className="px-6 py-2 rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-400"
+                            className="px-6 py-2 rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-foreground text-muted-foreground"
                         >
-                            Thông số kỹ thuật
+                            {t('product.specifications')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="reviews"
-                            className="px-6 py-2 rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-400"
+                            className="px-6 py-2 rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-foreground text-muted-foreground"
                         >
-                            Đánh giá ({reviewCount})
+                            {t('product.reviews')} ({reviewCount})
                         </TabsTrigger>
                     </TabsList>
                 </div>
 
                 {/* ============ MÔ TẢ SẢN PHẨM ============ */}
                 <TabsContent value="description" className="mt-6 animate-fade-in">
-                    <div className="bg-gray-900/30 rounded-2xl p-6 lg:p-10 border border-gray-800">
-                        <h3 className="text-xl font-bold text-white mb-6">Chi tiết sản phẩm</h3>
-                        <div className="prose prose-invert max-w-none text-gray-300 leading-relaxed whitespace-pre-wrap">
-                            {product.description || "Chưa có mô tả chi tiết cho sản phẩm này."}
+                    <div className="bg-card/30 rounded-2xl p-6 lg:p-10 border border-border">
+                        <h3 className="text-xl font-bold text-foreground mb-6">{t('product.details')}</h3>
+                        <div className="prose prose-invert max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                            {product.description || t('product.noDescription')}
                         </div>
                     </div>
                 </TabsContent>
@@ -183,10 +197,10 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                     <div className="space-y-8">
 
                         {/* ---- TỔNG QUAN ĐÁNH GIÁ ---- */}
-                        <div className="bg-gray-900/30 rounded-2xl p-6 lg:p-10 border border-gray-800">
-                            <h3 className="text-xl font-bold text-white mb-8 flex items-center gap-2">
+                        <div className="bg-card/30 rounded-2xl p-6 lg:p-10 border border-border">
+                            <h3 className="text-xl font-bold text-foreground mb-8 flex items-center gap-2">
                                 <MessageSquare className="w-6 h-6 text-red-500" />
-                                Đánh giá từ khách hàng
+                                {t('product.customerReviews')}
                             </h3>
 
                             {loadingReviews ? (
@@ -196,15 +210,15 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                             ) : reviews.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8 lg:gap-12">
                                     {/* Left: Score summary */}
-                                    <div className="flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border border-gray-700/50">
-                                        <div className="text-6xl font-black text-white mb-2 bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-400">
+                                    <div className="flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border border-border/50">
+                                        <div className="text-6xl font-black text-foreground mb-2 bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-400">
                                             {averageRating}
                                         </div>
                                         <div className="mb-3">
                                             {renderStars(Math.round(Number(averageRating)), 'w-5 h-5')}
                                         </div>
-                                        <p className="text-sm text-gray-400">
-                                            {reviews.length} đánh giá
+                                        <p className="text-sm text-muted-foreground">
+                                            {reviews.length} {t('product.reviewsCount')}
                                         </p>
                                     </div>
 
@@ -212,8 +226,8 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                                     <div className="flex flex-col justify-center gap-3">
                                         {ratingDistribution.map(({ star, count, percentage }) => (
                                             <div key={star} className="flex items-center gap-3">
-                                                <span className="text-sm text-gray-400 w-12 text-right">{star} sao</span>
-                                                <div className="flex-1 h-3 bg-gray-800 rounded-full overflow-hidden">
+                                                <span className="text-sm text-muted-foreground w-12 text-right">{star} {t('product.stars')}</span>
+                                                <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
                                                     <motion.div
                                                         initial={{ width: 0 }}
                                                         animate={{ width: `${percentage}%` }}
@@ -226,7 +240,7 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                                                             }`}
                                                     />
                                                 </div>
-                                                <span className="text-sm text-gray-500 w-10">{count}</span>
+                                                <span className="text-sm text-muted-foreground w-10">{count}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -235,8 +249,8 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                                 /* Empty state */
                                 <div className="text-center py-10">
                                     <MessageSquare className="w-16 h-16 text-gray-700 mx-auto mb-4" />
-                                    <p className="text-gray-400 text-lg mb-1">Chưa có đánh giá nào</p>
-                                    <p className="text-gray-500 text-sm">Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+                                    <p className="text-muted-foreground text-lg mb-1">{t('product.noReviewsYet')}</p>
+                                    <p className="text-muted-foreground text-sm">{t('product.beTheFirst')}</p>
                                 </div>
                             )}
                         </div>
@@ -250,25 +264,25 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                                         initial={{ opacity: 0, y: 15 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: index * 0.06 }}
-                                        className="bg-gray-900/40 rounded-2xl p-6 border border-gray-800 hover:border-gray-700 transition-colors"
+                                        className="bg-card/40 rounded-2xl p-6 border border-border hover:border-border transition-colors"
                                     >
                                         {/* Review header */}
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-orange-500 flex items-center justify-center text-foreground font-bold text-sm">
                                                     {review.customer_name?.charAt(0)?.toUpperCase()}
                                                 </div>
                                                 <div>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-semibold text-white">{review.customer_name}</span>
+                                                        <span className="font-semibold text-foreground">{review.customer_name}</span>
                                                         {review.is_verified_purchase && (
                                                             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-900/30 text-green-400 text-xs rounded-full border border-green-800/50">
                                                                 <ShieldCheck className="w-3 h-3" />
-                                                                Đã mua hàng
+                                                                {t('product.verifiedPurchase')}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <span className="text-xs text-gray-500">{formatDate(review.created_at)}</span>
+                                                    <span className="text-xs text-muted-foreground">{formatDate(review.created_at)}</span>
                                                 </div>
                                             </div>
                                             {renderStars(review.rating)}
@@ -276,15 +290,15 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
 
                                         {/* Review title & content */}
                                         {review.title && (
-                                            <h4 className="font-bold text-white mb-2">{review.title}</h4>
+                                            <h4 className="font-bold text-foreground mb-2">{review.title}</h4>
                                         )}
-                                        <p className="text-gray-300 leading-relaxed">{review.content}</p>
+                                        <p className="text-muted-foreground leading-relaxed">{review.content}</p>
 
                                         {/* Review images */}
                                         {review.images && review.images.length > 0 && (
                                             <div className="flex gap-2 mt-4">
                                                 {review.images.map((img, idx) => (
-                                                    <div key={idx} className="w-20 h-20 rounded-lg overflow-hidden border border-gray-700">
+                                                    <div key={idx} className="w-20 h-20 rounded-lg overflow-hidden border border-border">
                                                         <img src={img} alt="" className="w-full h-full object-cover" />
                                                     </div>
                                                 ))}
@@ -293,10 +307,10 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
 
                                         {/* Helpful count */}
                                         {review.helpful_count > 0 && (
-                                            <div className="mt-4 pt-3 border-t border-gray-800/50">
-                                                <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+                                            <div className="mt-4 pt-3 border-t border-border/50">
+                                                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                                                     <ThumbsUp className="w-3.5 h-3.5" />
-                                                    {review.helpful_count} người thấy hữu ích
+                                                    {review.helpful_count} {t('product.peopleFoundHelpful')}
                                                 </span>
                                             </div>
                                         )}
@@ -306,10 +320,10 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                         )}
 
                         {/* ---- FORM VIẾT ĐÁNH GIÁ ---- */}
-                        <div className="bg-gray-900/30 rounded-2xl p-6 lg:p-10 border border-gray-800">
-                            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <div className="bg-card/30 rounded-2xl p-6 lg:p-10 border border-border">
+                            <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                                 <Star className="w-5 h-5 text-yellow-400" />
-                                Viết đánh giá của bạn
+                                {t('product.writeReview')}
                             </h3>
 
                             <AnimatePresence mode="wait">
@@ -324,8 +338,8 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                                         <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4 border border-green-500/30">
                                             <CheckCircle className="w-8 h-8 text-green-400" />
                                         </div>
-                                        <h4 className="text-lg font-bold text-white mb-2">Cảm ơn bạn đã đánh giá!</h4>
-                                        <p className="text-gray-400 text-sm">Đánh giá của bạn đang chờ được duyệt và sẽ sớm được hiển thị.</p>
+                                        <h4 className="text-lg font-bold text-foreground mb-2">{t('product.reviewSuccessTitle')}</h4>
+                                        <p className="text-muted-foreground text-sm">{t('product.reviewSuccessMsg')}</p>
                                     </motion.div>
                                 ) : !user ? (
                                     <motion.div
@@ -333,17 +347,16 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -10 }}
-                                        className="bg-gray-800/20 border border-gray-700/50 rounded-xl p-8 text-center"
+                                        className="bg-muted/20 border border-border/50 rounded-xl p-8 text-center"
                                     >
-                                        <UserIcon className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                                        <h4 className="text-lg font-medium text-white mb-2">Đăng nhập để đánh giá</h4>
-                                        <p className="text-gray-400 text-sm mb-6">
-                                            Chỉ những khách hàng đã đăng nhập mới có thể để lại đánh giá cho sản phẩm này.
+                                        <UserIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                                        <h4 className="text-lg font-medium text-foreground mb-2">{t('product.loginToReviewTitle')}</h4>
+                                        <p className="text-muted-foreground text-sm mb-6">
+                                            {t('product.loginToReviewMsg')}
                                         </p>
-                                        {/* Since AuthModal is in Header, we just tell them to use the header button, or we can just show a visual cue. */}
-                                        <div className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-800 text-gray-300 rounded-lg cursor-not-allowed">
+                                        <div className="inline-flex items-center gap-2 px-6 py-2.5 bg-muted text-muted-foreground rounded-lg cursor-not-allowed">
                                             <ShieldCheck className="w-4 h-4" />
-                                            Yêu cầu xác thực tài khoản
+                                            {t('auth.authRequired')}
                                         </div>
                                     </motion.div>
                                 ) : (
@@ -357,8 +370,8 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                                     >
                                         {/* Star rating picker */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-3">
-                                                Đánh giá của bạn <span className="text-red-400">*</span>
+                                            <label className="block text-sm font-medium text-muted-foreground mb-3">
+                                                {t('product.yourRating')} <span className="text-red-400">*</span>
                                             </label>
                                             <div className="flex gap-1">
                                                 {[1, 2, 3, 4, 5].map((star) => (
@@ -379,8 +392,8 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                                                     </button>
                                                 ))}
                                                 {formRating > 0 && (
-                                                    <span className="ml-3 text-sm text-gray-400 self-center">
-                                                        {formRating === 5 ? 'Tuyệt vời' : formRating === 4 ? 'Tốt' : formRating === 3 ? 'Bình thường' : formRating === 2 ? 'Tệ' : 'Rất tệ'}
+                                                    <span className="ml-3 text-sm text-muted-foreground self-center">
+                                                        {getRatingText(formRating)}
                                                     </span>
                                                 )}
                                             </div>
@@ -389,55 +402,55 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                                         {/* Name & Email row - Readonly from user state */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                                <label className="block text-sm font-medium text-muted-foreground mb-2">
                                                     <UserIcon className="w-4 h-4 inline mr-1" />
-                                                    Họ tên
+                                                    {t('checkout.fullName')}
                                                 </label>
                                                 <input
                                                     type="text"
                                                     value={user?.name || ''}
                                                     readOnly
-                                                    className="w-full px-4 py-3 bg-gray-800/30 border border-gray-700/50 rounded-xl text-gray-400 cursor-not-allowed focus:outline-none transition-all"
+                                                    className="w-full px-4 py-3 bg-muted/30 border border-border/50 rounded-xl text-muted-foreground cursor-not-allowed focus:outline-none transition-all"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                    Email
+                                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                    {t('auth.email')}
                                                 </label>
                                                 <input
                                                     type="email"
                                                     value={user?.email || ''}
                                                     readOnly
-                                                    className="w-full px-4 py-3 bg-gray-800/30 border border-gray-700/50 rounded-xl text-gray-400 cursor-not-allowed focus:outline-none transition-all"
+                                                    className="w-full px-4 py-3 bg-muted/30 border border-border/50 rounded-xl text-muted-foreground cursor-not-allowed focus:outline-none transition-all"
                                                 />
                                             </div>
                                         </div>
 
                                         {/* Title */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                Tiêu đề đánh giá
+                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                {t('product.reviewTitleLabel')}
                                             </label>
                                             <input
                                                 type="text"
                                                 value={formTitle}
                                                 onChange={(e) => setFormTitle(e.target.value)}
-                                                placeholder="Tóm tắt đánh giá của bạn"
-                                                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all"
+                                                placeholder={t('product.reviewTitlePlaceholder')}
+                                                className="w-full px-4 py-3 bg-muted/60 border border-border rounded-xl text-foreground placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all"
                                             />
                                         </div>
 
                                         {/* Content */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                Nội dung đánh giá <span className="text-red-400">*</span>
+                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                {t('product.reviewContentLabel')} <span className="text-red-400">*</span>
                                             </label>
                                             <textarea
                                                 value={formContent}
                                                 onChange={(e) => setFormContent(e.target.value)}
-                                                placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                                                placeholder={t('product.reviewContentPlaceholder')}
                                                 rows={4}
-                                                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all resize-none"
+                                                className="w-full px-4 py-3 bg-muted/60 border border-border rounded-xl text-foreground placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all resize-none"
                                                 required
                                             />
                                         </div>
@@ -453,14 +466,14 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                                             disabled={submitting}
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
-                                            className="w-full md:w-auto px-8 py-3.5 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            className="w-full md:w-auto px-8 py-3.5 bg-gradient-to-r from-red-600 to-red-700 text-foreground font-bold rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
                                             {submitting ? (
                                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                             ) : (
                                                 <Send className="w-4 h-4" />
                                             )}
-                                            {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
+                                            {submitting ? t('common.processing') : t('product.submitReview')}
                                         </motion.button>
                                     </motion.form>
                                 )}

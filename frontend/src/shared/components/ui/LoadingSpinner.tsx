@@ -15,7 +15,7 @@ export function LoadingSpinner() {
         <motion.div
           animate={{ rotate: -360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-2 border-4 border-gray-700/20 border-t-gray-400 rounded-full"
+          className="absolute inset-2 border-4 border-border/20 border-t-gray-400 rounded-full"
         />
         
         {/* Inner glow */}

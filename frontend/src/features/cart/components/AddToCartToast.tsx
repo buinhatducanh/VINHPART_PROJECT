@@ -67,7 +67,7 @@ export function AddToCartToast({ show, productName, onClose }: AddToCartToastPro
             initial={{ scale: 0.8 }}
             animate={{ scale: [0.8, 1.1, 1] }}
             transition={{ duration: 0.5, times: [0, 0.6, 1] }}
-            className="relative bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-4 rounded-xl shadow-2xl shadow-green-600/50 border-2 border-green-400 min-w-[300px] max-w-md"
+            className="relative bg-gradient-to-r from-green-600 to-green-500 text-foreground px-6 py-4 rounded-xl shadow-2xl shadow-green-600/50 border-2 border-green-400 min-w-[300px] max-w-md"
           >
             {/* Glow effect */}
             <div className="absolute inset-0 bg-green-400 rounded-xl blur-xl opacity-30 -z-10"></div>

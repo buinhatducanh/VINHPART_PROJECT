@@ -17,13 +17,13 @@ export function ProductSpecifications({ product }: ProductSpecificationsProps) {
     ];
 
     return (
-        <div className="rounded-xl border border-gray-800 overflow-hidden">
+        <div className="rounded-xl border border-border overflow-hidden">
             <Table>
                 <TableBody>
                     {specs.map((spec, index) => (
                         spec.value && (
-                            <TableRow key={index} className="hover:bg-gray-900/50 border-gray-800">
-                                <TableCell className="font-medium text-gray-400 w-1/3 bg-gray-900/30">
+                            <TableRow key={index} className="hover:bg-card/50 border-border">
+                                <TableCell className="font-medium text-muted-foreground w-1/3 bg-card/30">
                                     {spec.label}
                                 </TableCell>
                                 <TableCell className="text-gray-200">

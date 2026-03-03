@@ -31,25 +31,25 @@ export function QuantitySelector({
     };
 
     return (
-        <div className={cn("flex items-center border border-gray-700 rounded-lg p-1 bg-gray-900/50", className)}>
+        <div className={cn("flex items-center border border-border rounded-lg p-1 bg-card/50", className)}>
             <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 hover:bg-gray-800 text-gray-300"
+                className="h-8 w-8 hover:bg-muted text-muted-foreground"
                 onClick={handleDecrease}
                 disabled={disabled || value <= 1}
             >
                 <Minus className="h-3.5 w-3.5" />
             </Button>
 
-            <div className="w-10 text-center font-bold text-white tabular-nums">
+            <div className="w-10 text-center font-bold text-foreground tabular-nums">
                 {value}
             </div>
 
             <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 hover:bg-gray-800 text-gray-300"
+                className="h-8 w-8 hover:bg-muted text-muted-foreground"
                 onClick={handleIncrease}
                 disabled={disabled || value >= max}
             >

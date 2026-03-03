@@ -10,6 +10,7 @@ export interface DashboardStats {
 }
 
 export interface StatItem {
+    key?: string;
     label: string;
     value: string;
     icon: LucideIcon;
@@ -17,20 +18,14 @@ export interface StatItem {
     gradient: string;
     border: string;
     shadow: string;
-    targetPage?: AdminPage;
 }
 
-export interface NavMenuItem {
+export interface QuickActionConfig {
+    key?: string;
     label: string;
-    description: string;
     icon: LucideIcon;
     color: string;
-    bgColor: string;
-    borderColor: string;
-    targetPage: AdminPage;
-}
-
-export interface NavMenuGroup {
-    title: string;
-    items: NavMenuItem[];
+    hoverColor: string;
+    targetPage?: AdminPage;
+    isHome?: boolean;
 }

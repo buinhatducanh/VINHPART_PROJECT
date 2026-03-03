@@ -31,9 +31,9 @@ export function RelatedProductsSection({
     }
 
     return (
-        <div className="mt-20 lg:mt-32 border-t border-gray-800/50 pt-16">
+        <div className="mt-20 lg:mt-32 border-t border-border/50 pt-16">
             <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-white">Sản phẩm liên quan</h2>
+                <h2 className="text-2xl font-bold text-foreground">Sản phẩm liên quan</h2>
                 <a href="#" className="text-sm text-red-500 hover:text-red-400 font-medium">Xem tất cả &rarr;</a>
             </div>
 
