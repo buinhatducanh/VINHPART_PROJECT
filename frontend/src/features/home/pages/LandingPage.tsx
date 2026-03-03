@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Product } from '@/shared/types';
 import { Modal } from '@/shared/components/ui/Modal';
 import { modalContents, ModalContentType } from '@/shared/data/modalContent';
+import { useI18n } from '@/shared/lib/i18n';
 import {
   HeroSection,
   BenefitsSection,
@@ -33,6 +34,7 @@ export function LandingPage({
   onViewAllPosts,
   onProductClick,
 }: LandingPageProps) {
+  const { t } = useI18n();
   // State for data from API
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [latestPosts, setLatestPosts] = useState<any[]>([]);
@@ -89,7 +91,7 @@ export function LandingPage({
         <Modal
           isOpen={true}
           onClose={handleModalClose}
-          title={modalContents[activeModal].title}
+          title={t(`modals.${activeModal}`)}
         >
           {modalContents[activeModal].content}
         </Modal>

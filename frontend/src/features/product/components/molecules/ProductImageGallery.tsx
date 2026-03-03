@@ -17,7 +17,7 @@ export function ProductImageGallery({ images, productName }: ProductImageGallery
     return (
         <div className="flex flex-col gap-4">
             {/* Main Image */}
-            <div className="relative aspect-square bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 group">
+            <div className="relative aspect-square bg-card rounded-2xl overflow-hidden border border-border group">
                 <AnimatePresence mode="wait">
                     <motion.img
                         key={selectedIndex}
@@ -45,7 +45,7 @@ export function ProductImageGallery({ images, productName }: ProductImageGallery
                                 "relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
                                 selectedIndex === idx
                                     ? "border-red-600 ring-2 ring-red-600/30"
-                                    : "border-transparent opacity-70 hover:opacity-100 hover:border-gray-700"
+                                    : "border-transparent opacity-70 hover:opacity-100 hover:border-border"
                             )}
                         >
                             <img

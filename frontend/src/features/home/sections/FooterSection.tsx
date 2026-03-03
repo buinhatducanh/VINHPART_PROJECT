@@ -1,6 +1,8 @@
 import { motion } from 'motion/react';
 import { FOOTER_LINKS, CONTACT_INFO } from '../constants';
 import { ModalContentType } from '@/shared/data/modalContent';
+import { useI18n } from '@/shared/lib/i18n';
+import { useSettings } from '@/shared/hooks/useSettings';
 
 interface FooterSectionProps {
     onAdminClick?: () => void;
@@ -8,13 +10,17 @@ interface FooterSectionProps {
 }
 
 export function FooterSection({ onAdminClick, onModalOpen }: FooterSectionProps) {
+    const { t } = useI18n();
+    const { siteName } = useSettings();
+    const currentYear = new Date().getFullYear();
+
     return (
-        <footer className="bg-black border-t border-gray-800 py-12">
+        <footer className="bg-background border-t border-border py-12">
             <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     <div>
-                        <h3 className="text-white font-bold mb-4">Về chúng tôi</h3>
-                        <ul className="space-y-2 text-gray-400 text-sm">
+                        <h3 className="text-foreground font-bold mb-4">{t('footer.aboutTitle')}</h3>
+                        <ul className="space-y-2 text-muted-foreground text-sm">
                             {FOOTER_LINKS.about.map((link) => (
                                 <li key={link.key}>
                                     <a
@@ -22,15 +28,15 @@ export function FooterSection({ onAdminClick, onModalOpen }: FooterSectionProps)
                                         onClick={onModalOpen(link.key as ModalContentType)}
                                         className="hover:text-red-600 transition-colors"
                                     >
-                                        {link.label}
+                                        {t(`footer.links.${link.key}`)}
                                     </a>
                                 </li>
                             ))}
                         </ul>
                     </div>
                     <div>
-                        <h3 className="text-white font-bold mb-4">Chính sách</h3>
-                        <ul className="space-y-2 text-gray-400 text-sm">
+                        <h3 className="text-foreground font-bold mb-4">{t('footer.policyTitle')}</h3>
+                        <ul className="space-y-2 text-muted-foreground text-sm">
                             {FOOTER_LINKS.policy.map((link) => (
                                 <li key={link.key}>
                                     <a
@@ -38,15 +44,15 @@ export function FooterSection({ onAdminClick, onModalOpen }: FooterSectionProps)
                                         onClick={onModalOpen(link.key as ModalContentType)}
                                         className="hover:text-red-600 transition-colors"
                                     >
-                                        {link.label}
+                                        {t(`footer.links.${link.key}`)}
                                     </a>
                                 </li>
                             ))}
                         </ul>
                     </div>
                     <div>
-                        <h3 className="text-white font-bold mb-4">Hỗ trợ</h3>
-                        <ul className="space-y-2 text-gray-400 text-sm">
+                        <h3 className="text-foreground font-bold mb-4">{t('footer.supportTitle')}</h3>
+                        <ul className="space-y-2 text-muted-foreground text-sm">
                             {FOOTER_LINKS.support.map((link) => (
                                 <li key={link.key}>
                                     <a
@@ -54,29 +60,29 @@ export function FooterSection({ onAdminClick, onModalOpen }: FooterSectionProps)
                                         onClick={onModalOpen(link.key as ModalContentType)}
                                         className="hover:text-red-600 transition-colors"
                                     >
-                                        {link.label}
+                                        {t(`footer.links.${link.key}`)}
                                     </a>
                                 </li>
                             ))}
                         </ul>
                     </div>
                     <div>
-                        <h3 className="text-white font-bold mb-4">Liên hệ</h3>
-                        <ul className="space-y-2 text-gray-400 text-sm">
-                            <li>Hotline: {CONTACT_INFO.hotline}</li>
+                        <h3 className="text-foreground font-bold mb-4">{t('footer.contactTitle')}</h3>
+                        <ul className="space-y-2 text-muted-foreground text-sm">
+                            <li>{t('footer.hotline')}: {CONTACT_INFO.hotline}</li>
                             <li>Email: {CONTACT_INFO.email}</li>
-                            <li>Giờ làm việc: {CONTACT_INFO.workingHours}</li>
+                            <li>{t('footer.workingHours', { hours: CONTACT_INFO.workingHours })}</li>
                         </ul>
                     </div>
                 </div>
 
                 {/* Admin Access Button */}
-                <div className="border-t border-gray-800 pt-8 mb-8 flex justify-center">
+                <div className="border-t border-border pt-8 mb-8 flex justify-center">
                     <motion.button
                         onClick={onAdminClick}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-900 to-black border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-red-600/50"
+                        className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-900 to-black border border-border rounded-lg overflow-hidden transition-all duration-300 hover:border-red-600/50"
                     >
                         {/* Neon glow effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-red-600/0 via-red-600/10 to-red-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -84,7 +90,7 @@ export function FooterSection({ onAdminClick, onModalOpen }: FooterSectionProps)
                         {/* Icon with glow */}
                         <div className="relative">
                             <svg
-                                className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors duration-300"
+                                className="w-5 h-5 text-muted-foreground group-hover:text-red-600 transition-colors duration-300"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -95,8 +101,8 @@ export function FooterSection({ onAdminClick, onModalOpen }: FooterSectionProps)
                         </div>
 
                         {/* Text */}
-                        <span className="relative text-sm font-medium text-gray-400 group-hover:text-red-600 transition-colors duration-300">
-                            Quản trị viên
+                        <span className="relative text-sm font-medium text-muted-foreground group-hover:text-red-600 transition-colors duration-300">
+                            {t('footer.admin')}
                         </span>
 
                         {/* Corner accents */}
@@ -107,8 +113,8 @@ export function FooterSection({ onAdminClick, onModalOpen }: FooterSectionProps)
                     </motion.button>
                 </div>
 
-                <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
-                    <p>&copy; 2026 AutoParts. All rights reserved.</p>
+                <div className="border-t border-border pt-8 text-center text-muted-foreground text-sm">
+                    <p>{t('footer.copyright', { year: currentYear, siteName })}</p>
                 </div>
             </div>
         </footer>

@@ -1,9 +1,9 @@
-
 import { motion } from 'motion/react';
 import { Package, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { Product } from '@/shared/types';
+import { useI18n } from '@/shared/lib/i18n';
 
 interface ManageProductsPageProps {
   onBack: () => void;
@@ -12,23 +12,19 @@ interface ManageProductsPageProps {
 
 export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [products, setProducts] = useState<Product[]>([]); // Start empty
+  const [products, setProducts] = useState<Product[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t, language } = useI18n();
 
-  // ✅ Cloudinary Widget Ref for image upload
   const widgetRef = useRef<any>(null);
-
-  // ✅ Ref to track latest editingProduct (fix closure stale issue)
   const editingProductRef = useRef<Product | null>(null);
 
-  // Sync ref with state
   useEffect(() => {
     editingProductRef.current = editingProduct;
   }, [editingProduct]);
 
-  // ✅ Initialize Cloudinary widget
   useEffect(() => {
     if ((window as any).cloudinary) {
       widgetRef.current = (window as any).cloudinary.createUploadWidget(
@@ -65,41 +61,27 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
           }
         },
         (error: any, result: any) => {
-          // Debug: Log tất cả events
-          console.log('Cloudinary event (Edit):', result?.event, result);
-
           if (!error && result && result.event === "success") {
             const url = result.info.secure_url;
-            console.log('✅ Upload success (Edit):', url);
-
-            // ✅ FIX: Use ref to avoid stale closure
             const current = editingProductRef.current;
-            console.log('Current editing product ID:', current?.product_id);
-
             if (current) {
               setEditingProduct({ ...current, product_image: url });
-              console.log('📸 Updated editingProduct with new image:', url);
-              toast.success('Ảnh đã được tải lên thành công!');
-            } else {
-              console.warn('⚠️ No product being edited');
+              toast.success(t('admin.manageProducts.uploadSuccess'));
             }
           } else if (error) {
-            console.error('❌ Upload error (Edit):', error);
-            toast.error('Lỗi khi tải ảnh lên: ' + error.message);
+            toast.error(t('admin.manageProducts.uploadError') + error.message);
           }
         }
       );
     }
-  }, []); // ✅ FIX: Only initialize once on mount, not on every edit
+  }, [t]);
 
-  // Fetch products on mount
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const fetchProducts = () => {
     setLoading(true);
-    // Request a high limit to get all products for client-side management for now
     fetch('http://localhost:3001/api/products?limit=1000')
       .then(res => res.json())
       .then(data => {
@@ -113,7 +95,6 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
         setLoading(false);
       })
       .catch(err => {
-        console.error("Error fetching products:", err);
         setLoading(false);
       });
   };
@@ -125,10 +106,10 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   );
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('vi-VN', {
+    return new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
       style: 'currency',
-      currency: 'VND'
-    }).format(value);
+      currency: language === 'vi' ? 'VND' : 'USD'
+    }).format(language === 'vi' ? value : value / 25000); // Simple conversion for demo purpose if USD
   };
 
   const handleDelete = async (id: string) => {
@@ -139,20 +120,18 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
       if (res.ok) {
         setProducts(products.filter(p => p.product_id !== id));
         setShowDeleteConfirm(null);
-        toast.success("Đã xóa sản phẩm thành công");
+        toast.success(t('admin.manageProducts.deleteSuccess'));
       } else {
-        toast.error("Lỗi khi xóa sản phẩm");
+        toast.error(t('admin.manageProducts.deleteError'));
       }
     } catch (error) {
-      console.error("Delete error:", error);
-      toast.error("Lỗi kết nối");
+      toast.error(t('admin.manageProducts.connError'));
     }
   };
 
   const handleSaveEdit = async () => {
     if (editingProduct) {
       try {
-        // ✅ FIX: Send proper data structure matching API expectations
         const res = await fetch(`http://localhost:3001/api/products/${editingProduct.product_id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -169,167 +148,104 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
         });
 
         if (res.ok) {
-          await res.json(); // Consume body
+          await res.json();
           fetchProducts();
           setEditingProduct(null);
-          toast.success("Cập nhật thành công");
+          toast.success(t('admin.manageProducts.updateSuccess'));
         } else {
-          toast.error("Lỗi cập nhật");
+          toast.error(t('admin.manageProducts.updateError'));
         }
       } catch (error) {
-        console.error("Update error:", error);
-        toast.error("Lỗi kết nối");
+        toast.error(t('admin.manageProducts.connError'));
       }
     }
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading products...</div>;
+    return <div className="min-h-screen bg-background flex items-center justify-center text-foreground">{t('common.loading')}</div>;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black pb-20">
-      {/* Animated background particles */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-red-600/30 rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-            }}
-            animate={{
-              y: [null, Math.random() * window.innerHeight],
-              opacity: [0.3, 0.8, 0.3]
-            }}
-            transition={{
-              duration: Math.random() * 5 + 3,
-              repeat: Infinity,
-              delay: Math.random() * 2
-            }}
+            initial={{ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight }}
+            animate={{ y: [null, Math.random() * window.innerHeight], opacity: [0.3, 0.8, 0.3] }}
+            transition={{ duration: Math.random() * 5 + 3, repeat: Infinity, delay: Math.random() * 2 }}
           />
         ))}
       </div>
 
-      {/* Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="relative border-b border-gray-800 bg-black/40 backdrop-blur-xl sticky top-0 z-10"
+        className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <motion.button
-                onClick={onBack}
-                whileHover={{ scale: 1.05, x: -5 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-3 bg-gray-900 border border-gray-700 rounded-lg hover:border-red-600/50 transition-all group"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors" />
+              <motion.button onClick={onBack} whileHover={{ scale: 1.05, x: -5 }} whileTap={{ scale: 0.95 }} className="p-3 bg-card border border-border rounded-lg hover:border-red-600/50 transition-all group">
+                <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-red-600 transition-colors" />
               </motion.button>
 
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center">
-                  <Package className="w-6 h-6 text-white" />
+                  <Package className="w-6 h-6 text-foreground" />
                 </div>
                 <div className="text-left">
                   <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-blue-600 bg-clip-text">
-                    QUẢN LÝ SẢN PHẨM
+                    {t('admin.manageProducts.title')}
                   </h1>
-                  <p className="text-sm text-gray-500">{products.length} sản phẩm</p>
+                  <p className="text-sm text-muted-foreground">{t('admin.manageProducts.count', { count: products.length })}</p>
                 </div>
               </div>
             </div>
 
-            {/* Add Product Button */}
-            <motion.button
-              onClick={onAddProduct}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/25 flex items-center gap-2"
-            >
+            <motion.button onClick={onAddProduct} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-foreground rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/25 flex items-center gap-2">
               <Plus className="w-5 h-5" />
-              Thêm sản phẩm mới
+              {t('admin.manageProducts.addBtn')}
             </motion.button>
           </div>
         </div>
       </motion.div>
 
-      {/* Main Content */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-4 mb-6"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4 mb-6">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm sản phẩm theo tên, hãng, danh mục..."
-              className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all"
+              placeholder={t('admin.manageProducts.searchPlaceholder')}
+              className="w-full pl-12 pr-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all"
             />
           </div>
         </motion.div>
 
-        {/* Products Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl overflow-hidden"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Sản phẩm
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Hãng
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Danh mục
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Giá
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Tồn kho
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Thao tác
-                  </th>
+                <tr className="border-b border-border">
+                  {['colProduct', 'colBrand', 'colCategory', 'colPrice', 'colStock', 'colActions'].map(key => (
+                    <th key={key} className={`px-6 py-4 ${key === 'colActions' ? 'text-right' : 'text-left'} text-xs font-semibold text-muted-foreground uppercase tracking-wider`}>
+                      {t(`admin.manageProducts.${key}`)}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
                 {filteredProducts.map((product, index) => (
-                  <motion.tr
-                    key={product.product_id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="hover:bg-gray-800/30 transition-colors group"
-                  >
-                    {/* Product Info */}
+                  <motion.tr key={product.product_id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} className="hover:bg-muted/30 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-16 h-16 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
+                        <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                           {product.product_image ? (
-                            <img
-                              src={product.product_image}
-                              alt={product.product_name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64?text=No+Image';
-                              }}
-                            />
+                            <img src={product.product_image} alt={product.product_name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64?text=No+Image'; }} />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <Package className="w-8 h-8 text-gray-600" />
@@ -337,77 +253,48 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                           )}
                         </div>
                         <div>
-                          <p className="text-white font-semibold line-clamp-1">
-                            {product.product_name}
-                          </p>
-
+                          <p className="text-foreground font-semibold line-clamp-1">{product.product_name}</p>
                         </div>
                       </div>
                     </td>
 
-                    {/* Brand */}
                     <td className="px-6 py-4">
-                      <span className="text-white">{product.compatible_brand}</span>
+                      <span className="text-foreground">{product.compatible_brand}</span>
                     </td>
 
-                    {/* Category */}
                     <td className="px-6 py-4">
                       <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/50 rounded-lg text-blue-400 text-sm">
                         {product.sub_category || product.category}
                       </span>
                     </td>
 
-                    {/* Price */}
                     <td className="px-6 py-4">
                       <div className="whitespace-nowrap">
-                        <p className="text-white font-bold">
-                          {formatCurrency(product.discount_percentage
-                            ? product.price * (1 - product.discount_percentage / 100)
-                            : product.price
-                          )}
+                        <p className="text-foreground font-bold">
+                          {formatCurrency(product.discount_percentage ? product.price * (1 - product.discount_percentage / 100) : product.price)}
                         </p>
                         {product.discount_percentage && product.discount_percentage > 0 && (
-                          <p className="text-sm text-gray-500 line-through">
-                            {formatCurrency(product.price)}
-                          </p>
+                          <p className="text-sm text-muted-foreground line-through">{formatCurrency(product.price)}</p>
                         )}
                       </div>
                     </td>
-                    {/* Stock */}
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-white font-medium">{product.stock} sản phẩm</span>
-                        <span className={`px-2 py-0.5 rounded-md text-xs font-medium w-fit ${product.stock_status === 'in_stock'
-                          ? 'bg-green-500/10 text-green-400 border border-green-500/50'
-                          : product.stock_status === 'low_stock'
-                            ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/50'
-                            : 'bg-red-500/10 text-red-400 border border-red-500/50'
-                          }`}>
-                          {product.stock_status === 'in_stock' ? 'Còn hàng' :
-                            product.stock_status === 'low_stock' ? 'Sắp hết' : 'Hết hàng'}
+                        <span className="text-foreground font-medium">{t('admin.manageProducts.stockCount', { count: product.stock })}</span>
+                        <span className={`px-2 py-0.5 rounded-md text-xs font-medium w-fit ${product.stock_status === 'in_stock' ? 'bg-green-500/10 text-green-400 border border-green-500/50' : product.stock_status === 'low_stock' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/50' : 'bg-red-500/10 text-red-400 border border-red-500/50'}`}>
+                          {product.stock_status === 'in_stock' ? t('admin.manageProducts.inStock') : product.stock_status === 'low_stock' ? t('admin.manageProducts.lowStock') : t('admin.manageProducts.outOfStock')}
                         </span>
                       </div>
                     </td>
 
-                    {/* Actions */}
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setEditingProduct(product)}
-                          className="p-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-blue-600/50 transition-all group/edit"
-                        >
-                          <Edit className="w-4 h-4 text-gray-400 group-hover/edit:text-blue-600 transition-colors" />
+                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setEditingProduct(product)} className="p-2 bg-muted border border-border rounded-lg hover:border-blue-600/50 transition-all group/edit">
+                          <Edit className="w-4 h-4 text-muted-foreground group-hover/edit:text-blue-600 transition-colors" />
                         </motion.button>
 
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setShowDeleteConfirm(product.product_id)}
-                          className="p-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-red-600/50 transition-all group/delete"
-                        >
-                          <Trash2 className="w-4 h-4 text-gray-400 group-hover/delete:text-red-600 transition-colors" />
+                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setShowDeleteConfirm(product.product_id)} className="p-2 bg-muted border border-border rounded-lg hover:border-red-600/50 transition-all group/delete">
+                          <Trash2 className="w-4 h-4 text-muted-foreground group-hover/delete:text-red-600 transition-colors" />
                         </motion.button>
                       </div>
                     </td>
@@ -418,128 +305,68 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
           </div>
         </motion.div>
 
-        {/* Empty State */}
         {filteredProducts.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-xl p-12 text-center mt-6"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-12 text-center mt-6">
             <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Không tìm thấy sản phẩm</h3>
-            <p className="text-gray-500 mb-4">Không có sản phẩm nào phù hợp với tìm kiếm của bạn.</p>
-            <motion.button
-              onClick={() => setSearchQuery('')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-all"
-            >
-              Xóa bộ lọc
+            <h3 className="text-xl font-bold text-foreground mb-2">{t('admin.manageProducts.notFound')}</h3>
+            <p className="text-muted-foreground mb-4">{t('admin.manageProducts.notFoundDesc')}</p>
+            <motion.button onClick={() => setSearchQuery('')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-6 py-3 bg-muted border border-border text-foreground rounded-lg hover:bg-muted/80 transition-all">
+              {t('admin.manageProducts.clearFilter')}
             </motion.button>
           </motion.div>
         )}
       </div>
 
-      {/* Edit Modal */}
       {editingProduct && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setEditingProduct(null)}
-        >
-          <motion.div
-            initial={{ scale: 0.9, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto"
-          >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setEditingProduct(null)}>
+          <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} onClick={(e) => e.stopPropagation()} className="relative bg-card border border-border rounded-2xl p-8 max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent rounded-2xl pointer-events-none"></div>
 
             <div className="relative">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-transparent bg-gradient-to-r from-white to-blue-500 bg-clip-text">
-                  Chỉnh sửa sản phẩm
+                  {t('admin.manageProducts.editTitle')}
                 </h3>
-                <button
-                  onClick={() => setEditingProduct(null)}
-                  className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
-                >
+                <button onClick={() => setEditingProduct(null)} className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors">
                   <X className="w-6 h-6" />
                 </button>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Col: Image */}
                 <div className="lg:col-span-1 space-y-4">
-                  <div className="aspect-square bg-gray-800/50 rounded-xl overflow-hidden border-2 border-dashed border-gray-700 flex items-center justify-center relative group">
+                  <div className="aspect-square bg-muted rounded-xl overflow-hidden border-2 border-dashed border-border flex items-center justify-center relative group">
                     {editingProduct.product_image ? (
-                      <img
-                        key={editingProduct.product_image} // ✅ Force re-render when URL changes
-                        src={editingProduct.product_image}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300?text=No+Image';
-                        }}
-                      />
+                      <img key={editingProduct.product_image} src={editingProduct.product_image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300?text=No+Image'; }} />
                     ) : (
-                      <div className="text-center text-gray-500">
+                      <div className="text-center text-muted-foreground">
                         <Upload className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                        <span className="text-sm">Chưa có ảnh</span>
+                        <span className="text-sm">{t('admin.manageProducts.noImage')}</span>
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">URL Hình ảnh</label>
-                    <input
-                      type="url"
-                      value={editingProduct.product_image || ''}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, product_image: e.target.value })}
-                      placeholder="https://example.com/image.jpg"
-                      className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-600/50 transition-all"
-                    />
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">{t('admin.manageProducts.imageUrl')}</label>
+                    <input type="url" value={editingProduct.product_image || ''} onChange={(e) => setEditingProduct({ ...editingProduct, product_image: e.target.value })} placeholder="https://example.com/image.jpg" className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground text-sm focus:outline-none focus:border-blue-600/50 transition-all" />
                   </div>
 
-                  {/* Upload Button */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (widgetRef.current) {
-                        widgetRef.current.open();
-                      } else {
-                        toast.error('Widget chưa tải xong');
-                      }
-                    }}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20"
-                  >
+                  <button type="button" onClick={() => { if (widgetRef.current) { widgetRef.current.open(); } else { toast.error(t('admin.manageProducts.widgetError')); } }} className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-foreground font-medium rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20">
                     <Upload className="w-4 h-4" />
-                    Tải ảnh lên từ máy
+                    {t('admin.manageProducts.uploadBtn')}
                   </button>
                 </div>
 
-                {/* Right Col: Details */}
                 <div className="lg:col-span-2 space-y-5">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">Tên sản phẩm</label>
-                    <input
-                      type="text"
-                      value={editingProduct.product_name}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, product_name: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all"
-                    />
+                    <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.nameLabel')}</label>
+                    <input type="text" value={editingProduct.product_name} onChange={(e) => setEditingProduct({ ...editingProduct, product_name: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">Hãng xe</label>
-                      <select
-                        value={editingProduct.compatible_brand}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, compatible_brand: e.target.value })}
-                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20"
-                      >
-                        <option value="">Chọn hãng</option>
+                      <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.brandLabel')}</label>
+                      <select value={editingProduct.compatible_brand} onChange={(e) => setEditingProduct({ ...editingProduct, compatible_brand: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20">
+                        <option value="">{t('admin.manageProducts.brandSelect')}</option>
                         {['Honda', 'Yamaha', 'Suzuki', 'Toyota', 'Ford', 'Mazda'].map(b => (
                           <option key={b} value={b}>{b}</option>
                         ))}
@@ -547,20 +374,10 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">Danh mục</label>
-                      <select
-                        value={editingProduct.sub_category}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, sub_category: e.target.value })}
-                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20"
-                      >
-                        <option value="">Chọn danh mục</option>
-                        {[
-                          'Phụ tùng động cơ',
-                          'Phanh & Hệ thống phanh',
-                          'Lọc & Bảo dưỡng',
-                          'Điện & Đèn',
-                          'Phụ kiện ngoại thất'
-                        ].map(c => (
+                      <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.categoryLabel')}</label>
+                      <select value={editingProduct.sub_category} onChange={(e) => setEditingProduct({ ...editingProduct, sub_category: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20">
+                        <option value="">{t('admin.manageProducts.categorySelect')}</option>
+                        {['Phụ tùng động cơ', 'Phanh & Hệ thống phanh', 'Lọc & Bảo dưỡng', 'Điện & Đèn', 'Phụ kiện ngoại thất'].map(c => (
                           <option key={c} value={c}>{c}</option>
                         ))}
                       </select>
@@ -569,80 +386,42 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
                   <div className="grid grid-cols-3 gap-4">
                     <div className="col-span-1">
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">Giá (VNĐ)</label>
-                      <input
-                        type="number"
-                        value={editingProduct.price}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) })}
-                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20"
-                      />
+                      <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.priceLabel')}</label>
+                      <input type="number" value={editingProduct.price} onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20" />
                     </div>
                     <div className="col-span-1">
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">Giảm giá (%)</label>
-                      <input
-                        type="number"
-                        value={editingProduct.discount_percentage || 0}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, discount_percentage: parseFloat(e.target.value) })}
-                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20"
-                      />
+                      <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.discountLabel')}</label>
+                      <input type="number" value={editingProduct.discount_percentage || 0} onChange={(e) => setEditingProduct({ ...editingProduct, discount_percentage: parseFloat(e.target.value) })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20" />
                     </div>
                     <div className="col-span-1">
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">Tồn kho</label>
-                      <input
-                        type="number"
-                        value={editingProduct.stock || 0}
-                        onChange={(e) => setEditingProduct({
-                          ...editingProduct,
-                          stock: parseInt(e.target.value) || 0
-                        })}
-                        placeholder="0"
-                        className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20"
-                      />
+                      <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.stockLabel')}</label>
+                      <input type="number" value={editingProduct.stock || 0} onChange={(e) => setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) || 0 })} placeholder="0" className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">Tình trạng kho (Hiển thị)</label>
-                    <select
-                      value={editingProduct.stock_status}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, stock_status: e.target.value as any })}
-                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20"
-                    >
-                      <option value="in_stock">Còn hàng</option>
-                      <option value="low_stock">Sắp hết</option>
-                      <option value="out_of_stock">Hết hàng</option>
+                    <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.stockStatusLabel')}</label>
+                    <select value={editingProduct.stock_status} onChange={(e) => setEditingProduct({ ...editingProduct, stock_status: e.target.value as any })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20">
+                      <option value="in_stock">{t('admin.manageProducts.inStock')}</option>
+                      <option value="low_stock">{t('admin.manageProducts.lowStock')}</option>
+                      <option value="out_of_stock">{t('admin.manageProducts.outOfStock')}</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">Mô tả</label>
-                    <textarea
-                      value={editingProduct.description}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
-                      rows={5}
-                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 resize-none"
-                    />
+                    <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.descLabel')}</label>
+                    <textarea value={editingProduct.description} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} rows={5} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 resize-none" />
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-8 pt-6 border-t border-gray-800">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setEditingProduct(null)}
-                  className="flex-1 px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
-                >
-                  Hủy bỏ
+              <div className="flex gap-3 mt-8 pt-6 border-t border-border">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setEditingProduct(null)} className="flex-1 px-6 py-3 bg-muted border border-border text-foreground rounded-lg hover:bg-muted/80 transition-colors font-medium">
+                  {t('admin.manageProducts.cancel')}
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSaveEdit}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/25 font-bold flex items-center justify-center gap-2"
-                >
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSaveEdit} className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-foreground rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/25 font-bold flex items-center justify-center gap-2">
                   <Save className="w-5 h-5" />
-                  Lưu thay đổi
+                  {t('admin.manageProducts.save')}
                 </motion.button>
               </div>
             </div>
@@ -650,48 +429,25 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
         </motion.div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setShowDeleteConfirm(null)}
-        >
-          <motion.div
-            initial={{ scale: 0.9, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-md w-full"
-          >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowDeleteConfirm(null)}>
+          <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} onClick={(e) => e.stopPropagation()} className="relative bg-card border border-border rounded-2xl p-8 max-w-md w-full">
             <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 to-transparent rounded-2xl"></div>
 
             <div className="relative">
               <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8 text-white" />
+                <Trash2 className="w-8 h-8 text-foreground" />
               </div>
 
-              <h3 className="text-2xl font-bold text-white text-center mb-2">Xóa sản phẩm</h3>
-              <p className="text-gray-400 text-center mb-6">
-                Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác.
-              </p>
+              <h3 className="text-2xl font-bold text-foreground text-center mb-2">{t('admin.manageProducts.deleteTitle')}</h3>
+              <p className="text-muted-foreground text-center mb-6">{t('admin.manageProducts.deleteConfirm')}</p>
 
               <div className="flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowDeleteConfirm(null)}
-                  className="flex-1 px-6 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Hủy
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowDeleteConfirm(null)} className="flex-1 px-6 py-3 bg-muted border border-border text-foreground rounded-lg hover:bg-muted/80 transition-colors">
+                  {t('admin.manageProducts.cancel')}
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleDelete(showDeleteConfirm)}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-600/25"
-                >
-                  Xóa
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleDelete(showDeleteConfirm)} className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-foreground rounded-lg hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-600/25">
+                  {t('admin.manageProducts.deleteBtn')}
                 </motion.button>
               </div>
             </div>

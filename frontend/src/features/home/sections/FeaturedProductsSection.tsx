@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { ProductCard } from '@/features/product/components/ProductCard';
 import { Product } from '@/shared/types';
 import { CAROUSEL_OPTIONS, FADE_IN_VARIANTS } from '../constants';
+import { useI18n } from '@/shared/lib/i18n';
 import {
     Carousel,
     CarouselContent,
@@ -21,11 +22,12 @@ interface FeaturedProductsSectionProps {
 }
 
 export function FeaturedProductsSection({ products, onAddToCart, onBuyNow, isLoading, onProductClick }: FeaturedProductsSectionProps) {
+    const { t } = useI18n();
     // Generate dummy items for skeleton loading
     const skeletonItems = Array(4).fill(0);
 
     return (
-        <section className="py-20 bg-gray-900">
+        <section className="py-20 bg-card">
             <div className="container mx-auto px-4">
                 <motion.div
                     initial={FADE_IN_VARIANTS.initial}
@@ -33,10 +35,10 @@ export function FeaturedProductsSection({ products, onAddToCart, onBuyNow, isLoa
                     viewport={{ once: true }}
                     className="text-center mb-12"
                 >
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                        Sản phẩm nổi bật
+                    <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                        {t('home.featuredProductsTitle')}
                     </h2>
-                    <p className="text-gray-400">Được tin dùng bởi hàng nghìn khách hàng</p>
+                    <p className="text-muted-foreground">{t('home.featuredProductsSubtitle')}</p>
                 </motion.div>
 
                 <div className="mx-auto max-w-5xl px-4 lg:px-0">
@@ -78,8 +80,8 @@ export function FeaturedProductsSection({ products, onAddToCart, onBuyNow, isLoa
                                 ))
                             )}
                         </CarouselContent>
-                        <CarouselPrevious className="hidden md:flex -left-12 bg-gray-800 border-gray-700 text-white hover:bg-red-600 hover:border-red-600" />
-                        <CarouselNext className="hidden md:flex -right-12 bg-gray-800 border-gray-700 text-white hover:bg-red-600 hover:border-red-600" />
+                        <CarouselPrevious className="hidden md:flex -left-12 bg-muted border-border text-foreground hover:bg-red-600 hover:border-red-600" />
+                        <CarouselNext className="hidden md:flex -right-12 bg-muted border-border text-foreground hover:bg-red-600 hover:border-red-600" />
                     </Carousel>
                 </div>
             </div>

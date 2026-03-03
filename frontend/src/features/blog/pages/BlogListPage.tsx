@@ -75,7 +75,7 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
         >
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition-colors mb-6 group"
+            className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors mb-6 group"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             Quay lại trang chủ
@@ -84,7 +84,7 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-red-500 via-red-400 to-orange-500 bg-clip-text text-transparent">
             Tin Tức & Kiến Thức
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-muted-foreground text-lg">
             Khám phá các bài viết hữu ích về phụ tùng và bảo dưỡng xe máy
           </p>
         </motion.div>
@@ -98,13 +98,13 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
         >
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Tìm kiếm bài viết..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-gray-900/50 border-gray-800 focus:border-red-500 text-white"
+              className="pl-10 bg-card/50 border-border focus:border-red-500 text-foreground"
             />
           </div>
 
@@ -113,8 +113,8 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
             <button
               onClick={() => setSortBy('latest')}
               className={`px-4 py-2 rounded-lg transition-all ${sortBy === 'latest'
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-900/50 text-gray-400 hover:text-white border border-gray-800'
+                ? 'bg-red-500 text-foreground'
+                : 'bg-card/50 text-muted-foreground hover:text-foreground border border-border'
                 }`}
             >
               Mới nhất
@@ -122,8 +122,8 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
             <button
               onClick={() => setSortBy('popular')}
               className={`px-4 py-2 rounded-lg transition-all ${sortBy === 'popular'
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-900/50 text-gray-400 hover:text-white border border-gray-800'
+                ? 'bg-red-500 text-foreground'
+                : 'bg-card/50 text-muted-foreground hover:text-foreground border border-border'
                 }`}
             >
               Phổ biến
@@ -144,7 +144,7 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <p className="text-gray-400 text-lg">Không tìm thấy bài viết nào</p>
+            <p className="text-muted-foreground text-lg">Không tìm thấy bài viết nào</p>
           </motion.div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -155,7 +155,7 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => onPostClick(post.slug)}
-                className="bg-gray-900/30 border border-gray-800 rounded-lg overflow-hidden cursor-pointer hover:border-red-500/50 transition-all group hover:shadow-lg hover:shadow-red-500/10"
+                className="bg-card/30 border border-border rounded-lg overflow-hidden cursor-pointer hover:border-red-500/50 transition-all group hover:shadow-lg hover:shadow-red-500/10"
               >
                 {/* Featured Image */}
                 {post.featuredImage && (
@@ -178,12 +178,12 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
                   <h2 className="text-xl font-bold mb-2 line-clamp-2 group-hover:text-red-500 transition-colors">
                     {post.title}
                   </h2>
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-3">
+                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
                     {post.excerpt}
                   </p>
 
                   {/* Meta */}
-                  <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-800">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-3 h-3" />
                       <span>{post.publishedAt ? formatDate(post.publishedAt) : 'N/A'}</span>
@@ -204,7 +204,7 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-8 text-center text-gray-500 text-sm"
+          className="mt-8 text-center text-muted-foreground text-sm"
         >
           Hiển thị {filteredPosts.length} / {posts.length} bài viết
         </motion.div>

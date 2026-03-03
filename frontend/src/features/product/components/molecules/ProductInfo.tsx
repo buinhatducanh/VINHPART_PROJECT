@@ -40,23 +40,23 @@ export function ProductInfo({ product }: ProductInfoProps) {
                         ))}
                     </div>
 
-                    <span className="text-sm text-gray-300 font-medium">
+                    <span className="text-sm text-muted-foreground font-medium">
                         4.8
                     </span>
 
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-muted-foreground">
                         (124 đánh giá)
                     </span>
                 </div>
 
                 {/*masp*/}
                 {product.sku && (
-                    <p className="text-sm text-gray-500 font-mono">SKU: {product.sku}</p>
+                    <p className="text-sm text-muted-foreground font-mono">SKU: {product.sku}</p>
                 )}
             </div>
 
             {/* Price */}
-            <div className="p-4 bg-gray-900/50 rounded-xl border border-gray-800">
+            <div className="p-4 bg-card/50 rounded-xl border border-border">
                 <PriceDisplay
                     price={product.price}
                     originalPrice={product.original_price}
@@ -65,7 +65,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 />
             </div>
             {/* Product short description */}
-            <p className="text-sm text-gray-400 leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed">
                 Phù hợp với hầu hết các dòng xe sport và naked. Thiết kế khí động học
                 KOSO Arrow với nhôm CNC cao cấp và kính chống chói xanh giúp quan sát
                 tốt trong mọi điều kiện ánh sáng.

@@ -112,7 +112,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
       <motion.div 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="relative border-b border-gray-800 bg-black/40 backdrop-blur-xl sticky top-0 z-10"
+        className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
@@ -121,34 +121,34 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
                 onClick={onBack}
                 whileHover={{ scale: 1.05, x: -5 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-3 bg-gray-900 border border-gray-700 rounded-lg hover:border-red-600/50 transition-all group"
+                className="p-3 bg-card border border-border rounded-lg hover:border-red-600/50 transition-all group"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors" />
+                <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-red-600 transition-colors" />
               </motion.button>
               
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-800 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-white" />
+                  <TrendingUp className="w-6 h-6 text-foreground" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-green-600 bg-clip-text">
                     THỐNG KÊ & BÁO CÁO
                   </h1>
-                  <p className="text-sm text-gray-500">Phân tích doanh thu và hiệu suất</p>
+                  <p className="text-sm text-muted-foreground">Phân tích doanh thu và hiệu suất</p>
                 </div>
               </div>
             </div>
 
             {/* Time Range Selector */}
-            <div className="hidden md:flex items-center gap-2 bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-lg p-1">
+            <div className="hidden md:flex items-center gap-2 bg-card/50 backdrop-blur-xl border border-border rounded-lg p-1">
               {(['week', 'month', 'year'] as const).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
                     timeRange === range
-                      ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-600/25'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      ? 'bg-gradient-to-r from-green-600 to-green-700 text-foreground shadow-lg shadow-green-600/25'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
                   {range === 'week' ? 'Tuần' : range === 'month' ? 'Tháng' : 'Năm'}
@@ -172,17 +172,17 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
               whileHover={{ y: -5, scale: 1.02 }}
               className="group relative"
             >
-              <div className={`relative bg-gray-900/50 backdrop-blur-xl border ${stat.border} rounded-2xl p-6 overflow-hidden`}>
+              <div className={`relative bg-card/50 backdrop-blur-xl border ${stat.border} rounded-2xl p-6 overflow-hidden`}>
                 <div className={`absolute inset-0 ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
                 
                 <div className="relative">
                   <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center mb-4`}>
-                    <stat.icon className="w-6 h-6 text-white" />
+                    <stat.icon className="w-6 h-6 text-foreground" />
                   </div>
                   
-                  <p className="text-3xl font-black text-white mb-1">{stat.value}</p>
-                  <p className="text-gray-400 text-sm mb-2">{stat.label}</p>
-                  <p className={`text-sm font-semibold ${stat.change.startsWith('+') ? 'text-green-500' : 'text-gray-400'}`}>
+                  <p className="text-3xl font-black text-foreground mb-1">{stat.value}</p>
+                  <p className="text-muted-foreground text-sm mb-2">{stat.label}</p>
+                  <p className={`text-sm font-semibold ${stat.change.startsWith('+') ? 'text-green-500' : 'text-muted-foreground'}`}>
                     {stat.change}
                   </p>
                 </div>
@@ -198,12 +198,12 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl p-6"
+            className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">Doanh thu theo thời gian</h3>
-                <p className="text-sm text-gray-500">Biểu đồ doanh thu 7 ngày gần nhất</p>
+                <h3 className="text-xl font-bold text-foreground mb-1">Doanh thu theo thời gian</h3>
+                <p className="text-sm text-muted-foreground">Biểu đồ doanh thu 7 ngày gần nhất</p>
               </div>
               <Calendar className="w-6 h-6 text-green-600" />
             </div>
@@ -241,12 +241,12 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl p-6"
+            className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">Sản phẩm bán chạy</h3>
-                <p className="text-sm text-gray-500">Top 5 sản phẩm theo doanh số</p>
+                <h3 className="text-xl font-bold text-foreground mb-1">Sản phẩm bán chạy</h3>
+                <p className="text-sm text-muted-foreground">Top 5 sản phẩm theo doanh số</p>
               </div>
               <ShoppingCart className="w-6 h-6 text-blue-600" />
             </div>
@@ -278,12 +278,12 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl p-6"
+            className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">Phân bố danh mục</h3>
-                <p className="text-sm text-gray-500">Tỷ lệ bán hàng theo danh mục</p>
+                <h3 className="text-xl font-bold text-foreground mb-1">Phân bố danh mục</h3>
+                <p className="text-sm text-muted-foreground">Tỷ lệ bán hàng theo danh mục</p>
               </div>
             </div>
             
@@ -321,7 +321,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
               {categoryData.map((cat) => (
                 <div key={cat.name} className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded" style={{ backgroundColor: cat.color }}></div>
-                  <span className="text-sm text-gray-400">{cat.name}</span>
+                  <span className="text-sm text-muted-foreground">{cat.name}</span>
                 </div>
               ))}
             </div>
@@ -332,21 +332,21 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl p-6"
+            className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">Chỉ số hiệu suất</h3>
-                <p className="text-sm text-gray-500">Các chỉ số quan trọng</p>
+                <h3 className="text-xl font-bold text-foreground mb-1">Chỉ số hiệu suất</h3>
+                <p className="text-sm text-muted-foreground">Các chỉ số quan trọng</p>
               </div>
             </div>
 
             <div className="space-y-4">
               {/* Metric Item */}
-              <div className="bg-gray-800/50 rounded-xl p-4">
+              <div className="bg-muted rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-400 text-sm">Giá trị đơn hàng trung bình</span>
-                  <span className="text-white font-bold">287.9K</span>
+                  <span className="text-muted-foreground text-sm">Giá trị đơn hàng trung bình</span>
+                  <span className="text-foreground font-bold">287.9K</span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
@@ -358,10 +358,10 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
                 </div>
               </div>
 
-              <div className="bg-gray-800/50 rounded-xl p-4">
+              <div className="bg-muted rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-400 text-sm">Tỷ lệ chuyển đổi</span>
-                  <span className="text-white font-bold">4.3%</span>
+                  <span className="text-muted-foreground text-sm">Tỷ lệ chuyển đổi</span>
+                  <span className="text-foreground font-bold">4.3%</span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
@@ -373,10 +373,10 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
                 </div>
               </div>
 
-              <div className="bg-gray-800/50 rounded-xl p-4">
+              <div className="bg-muted rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-400 text-sm">Khách hàng quay lại</span>
-                  <span className="text-white font-bold">68%</span>
+                  <span className="text-muted-foreground text-sm">Khách hàng quay lại</span>
+                  <span className="text-foreground font-bold">68%</span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
@@ -388,10 +388,10 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
                 </div>
               </div>
 
-              <div className="bg-gray-800/50 rounded-xl p-4">
+              <div className="bg-muted rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-400 text-sm">Đánh giá tích cực</span>
-                  <span className="text-white font-bold">94%</span>
+                  <span className="text-muted-foreground text-sm">Đánh giá tích cực</span>
+                  <span className="text-foreground font-bold">94%</span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div

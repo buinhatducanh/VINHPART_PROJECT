@@ -75,7 +75,7 @@ export function CategoryTree({
 
     if (filteredRootCategories.length === 0) {
         return (
-            <div className="text-center py-20 bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl">
+            <div className="text-center py-20 bg-card/20 border border-dashed border-border rounded-2xl">
                 <Folder className="w-12 h-12 text-gray-800 mx-auto mb-4" />
                 <p className="text-gray-600 text-sm font-medium">Không có danh mục nào được tìm thấy</p>
             </div>

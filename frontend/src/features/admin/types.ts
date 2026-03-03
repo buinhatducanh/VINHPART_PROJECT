@@ -10,6 +10,7 @@ export interface DashboardStats {
 }
 
 export interface StatItem {
+    key?: string;
     label: string;
     value: string;
     icon: LucideIcon;
@@ -20,6 +21,7 @@ export interface StatItem {
 }
 
 export interface QuickActionConfig {
+    key?: string;
     label: string;
     icon: LucideIcon;
     color: string;

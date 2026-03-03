@@ -35,7 +35,7 @@ export function PriceDisplay({
             {discountPercentage && discountPercentage > 0 ? (
                 <>
                     <div className="flex items-center gap-2">
-                        <span className={cn("text-gray-400 line-through font-medium", sizeClasses[size].original)}>
+                        <span className={cn("text-muted-foreground line-through font-medium", sizeClasses[size].original)}>
                             {originalPrice && formatPrice(originalPrice)}
                         </span>
                         <span className="text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded text-xs font-bold">

@@ -41,30 +41,30 @@ export const FADE_IN_VARIANTS = {
 // Benefits Data
 export interface Benefit {
     icon: LucideIcon;
-    title: string;
-    description: string;
+    titleKey: string;
+    descriptionKey: string;
 }
 
 export const BENEFITS_DATA: Benefit[] = [
     {
         icon: Shield,
-        title: 'Chính hãng 100%',
-        description: 'Bảo hành đầy đủ, nguồn gốc rõ ràng',
+        titleKey: 'benefits.authentic',
+        descriptionKey: 'benefits.authenticDesc',
     },
     {
         icon: Zap,
-        title: 'Phù hợp từng loại xe',
-        description: 'Tư vấn chính xác theo hãng & model',
+        titleKey: 'benefits.fit',
+        descriptionKey: 'benefits.fitDesc',
     },
     {
         icon: Truck,
-        title: 'Giao hàng nhanh',
-        description: 'Miễn phí vận chuyển đơn > 500k',
+        titleKey: 'benefits.delivery',
+        descriptionKey: 'benefits.deliveryDesc',
     },
     {
         icon: RefreshCw,
-        title: 'Đổi trả dễ dàng',
-        description: '30 ngày đổi trả không điều kiện',
+        titleKey: 'benefits.returns',
+        descriptionKey: 'benefits.returnsDesc',
     },
 ];
 

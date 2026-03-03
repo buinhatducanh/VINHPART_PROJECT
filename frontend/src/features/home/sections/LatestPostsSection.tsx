@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { Calendar, Eye, ArrowRight } from 'lucide-react';
 import { formatDate, FADE_IN_VARIANTS } from '../constants';
+import { useI18n } from '@/shared/lib/i18n';
 
 interface BlogPost {
     id: string;
@@ -24,11 +25,12 @@ interface LatestPostsSectionProps {
 }
 
 export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts, isLoading }: LatestPostsSectionProps) {
+    const { t } = useI18n();
     // Generate dummy items for skeleton loading
     const skeletonItems = Array(3).fill(0);
 
     return (
-        <section className="py-20 bg-black">
+        <section className="py-20 bg-background">
             <div className="container mx-auto px-4">
                 <motion.div
                     initial={FADE_IN_VARIANTS.initial}
@@ -36,10 +38,10 @@ export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts, isL
                     viewport={{ once: true }}
                     className="text-center mb-12"
                 >
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                        Bài viết mới nhất
+                    <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                        {t('home.latestPostsTitle')}
                     </h2>
-                    <p className="text-gray-400">Kiến thức và kinh nghiệm chăm sóc xe máy</p>
+                    <p className="text-muted-foreground">{t('home.latestPostsSubtitle')}</p>
                 </motion.div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -58,8 +60,8 @@ export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts, isL
                                 onClick={() => onBlogPostClick?.(post.slug)}
                                 className="
                 group
-                bg-gray-900
-                border border-gray-800
+                bg-card
+                border border-border
                 rounded-xl
                 overflow-hidden
                 cursor-pointer
@@ -89,28 +91,28 @@ export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts, isL
 
                                 {/* Content */}
                                 <div className="p-6">
-                                    <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-red-500 transition-colors">
+                                    <h3 className="text-xl font-bold text-foreground mb-3 line-clamp-2 group-hover:text-red-500 transition-colors">
                                         {post.title}
                                     </h3>
-                                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
                                         {post.excerpt}
                                     </p>
 
                                     {/* Meta Info */}
-                                    <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
                                         <div className="flex items-center gap-1">
                                             <Calendar className="w-3 h-3" />
                                             <span>{formatDate(post.publishedAt || new Date().toISOString())}</span>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <Eye className="w-3 h-3" />
-                                            <span>{post.viewCount} lượt xem</span>
+                                            <span>{t('blog.viewsCount', { count: post.viewCount })}</span>
                                         </div>
                                     </div>
 
                                     {/* Read More Button */}
                                     <button className="flex items-center gap-2 text-red-500 font-semibold text-sm group-hover:gap-3 transition-all">
-                                        <span>Đọc thêm</span>
+                                        <span>{t('blog.readMore')}</span>
                                         <ArrowRight className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -130,9 +132,9 @@ export function LatestPostsSection({ posts, onBlogPostClick, onViewAllPosts, isL
                         onClick={onViewAllPosts}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-lg shadow-lg shadow-red-600/50 hover:shadow-red-600/80 transition-all"
+                        className="px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 text-foreground font-bold rounded-lg shadow-lg shadow-red-600/50 hover:shadow-red-600/80 transition-all"
                     >
-                        Xem tất cả bài viết
+                        {t('blog.viewAll')}
                     </motion.button>
                 </motion.div>
             </div>
