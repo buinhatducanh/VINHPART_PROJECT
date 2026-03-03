@@ -245,7 +245,7 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
                   <div key={item.product.product_id} className="flex gap-3">
                     <div className="w-16 h-16 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
                       <img
-                        src={productImages[item.product.product_id]}
+                        src={productImages[item.product.product_id] || item.product.product_image}
                         alt={item.product.product_name}
                         className="w-full h-full object-cover"
                       />
