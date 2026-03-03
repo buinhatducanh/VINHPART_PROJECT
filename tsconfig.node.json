@@ -3,7 +3,7 @@
         "composite": true,
         "skipLibCheck": true,
         "module": "ESNext",
-        "moduleResolution": "bundler",
+        "moduleResolution": "node",
         "allowSyntheticDefaultImports": true,
         "strict": true,
         "types": [
@@ -12,6 +12,7 @@
     },
     "include": [
         "frontend/vite.config.ts",
-        "backend/prisma.config.ts"
+        "backend/prisma.config.ts",
+        "prisma.config.ts"
     ]
 }

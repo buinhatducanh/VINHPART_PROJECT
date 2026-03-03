@@ -31,7 +31,8 @@
     },
     "include": [
         "frontend/src",
-        "backend/src"
+        "backend/src",
+        "prisma.config.ts"
     ],
     "references": [
         {
