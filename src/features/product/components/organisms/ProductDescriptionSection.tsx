@@ -1,6 +1,7 @@
 import { Product } from '@/shared/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { ProductSpecifications } from '../molecules/ProductSpecifications';
+import { ProductReviewsTab } from '../molecules/ProductReviewsTab';
 
 interface ProductDescriptionSectionProps {
     product: Product;
@@ -42,6 +43,19 @@ export function ProductDescriptionSection({ product }: ProductDescriptionSection
                     </div>
                 </TabsContent>
             </Tabs>
-        </div>
+
+            {/* Đánh giá section - Luôn hiển thị ngoài Tabs */}
+            <div className="mt-16 pt-12 border-t border-gray-800">
+                <h2 className="text-2xl font-bold text-white mb-8 text-center uppercase tracking-wider">
+                    Đánh Giá Sản Phẩm
+                </h2>
+                <div className="bg-gray-900/30 rounded-2xl p-6 lg:p-10 border border-gray-800">
+                    <ProductReviewsTab
+                        productId={product.product_id}
+                        productName={product.product_name}
+                    />
+                </div>
+            </div>
+        </div >
     );
 }
