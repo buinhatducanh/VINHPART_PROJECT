@@ -1,5 +1,3 @@
-// Load .env for local dev
-try { const { config } = await import('dotenv'); config(); } catch { }
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
