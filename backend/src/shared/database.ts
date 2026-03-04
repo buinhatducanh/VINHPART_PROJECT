@@ -1,5 +1,8 @@
 import pg from 'pg';
 
+// Load .env for local dev (dotenv is a devDependency, unavailable on Vercel)
+try { const { config } = await import('dotenv'); config(); } catch { }
+
 const { Pool } = pg;
 
 const rawUrl = process.env.DATABASE_URL;

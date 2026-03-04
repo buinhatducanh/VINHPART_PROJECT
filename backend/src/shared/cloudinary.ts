@@ -1,5 +1,8 @@
 import { v2 as cloudinary } from 'cloudinary';
 
+// Load .env for local dev (dotenv is a devDependency, unavailable on Vercel)
+try { const { config } = await import('dotenv'); config(); } catch { }
+
 try {
     if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
         console.warn('⚠️ Cloudinary environment variables are missing. Image uploads will fail.');
