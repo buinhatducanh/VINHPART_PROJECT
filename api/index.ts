@@ -4,8 +4,7 @@ let app: any;
 let loadError: string | null = null;
 
 try {
-    // Static import that Vercel can bundle
-    const serverModule = require('../backend/src/server');
+    const serverModule = await import('../backend/src/server');
     app = serverModule.default || serverModule;
 } catch (err: any) {
     loadError = err?.message || String(err);
