@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
-    "start": "cross-env NODE_ENV=production tsx backend/src/server.ts",
+    "start": "cross-env NODE_ENV=production tsx --env-file=.env backend/src/server.ts",
     "dev:client": "vite --config frontend/vite.config.ts",
-    "dev:server": "tsx watch backend/src/server.ts",
+    "dev:server": "tsx --env-file=.env watch backend/src/server.ts",
     "build": "prisma generate --schema backend/prisma/schema.prisma && vite build --config frontend/vite.config.ts",
     "postinstall": "prisma generate --schema backend/prisma/schema.prisma",
     "db:generate": "prisma generate --schema backend/prisma/schema.prisma",
@@ -15,8 +15,8 @@
     "db:migrate": "prisma migrate dev --schema backend/prisma/schema.prisma",
     "db:migrate:deploy": "prisma migrate deploy --schema backend/prisma/schema.prisma",
     "db:studio": "prisma studio --schema backend/prisma/schema.prisma",
-    "db:seed": "tsx backend/prisma/seed.ts",
-    "db:api": "tsx backend/src/server.ts"
+    "db:seed": "tsx --env-file=.env backend/prisma/seed.ts",
+    "db:api": "tsx --env-file=.env backend/src/server.ts"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
