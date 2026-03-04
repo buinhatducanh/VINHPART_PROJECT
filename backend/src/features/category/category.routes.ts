@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 const router = Router();
 
 // GET /api/categories
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
     try {
         const query = `
             SELECT id, name, slug, description, image, "parentId", "createdAt", "updatedAt"

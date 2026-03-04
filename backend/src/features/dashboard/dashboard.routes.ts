@@ -4,7 +4,7 @@ import { pool } from '../../shared/database';
 const router = Router();
 
 // GET /api/dashboard/stats
-router.get('/stats', async (req, res) => {
+router.get('/stats', async (_req, res) => {
     try {
         const productCountResult = await pool.query('SELECT COUNT(*) FROM products');
         const categoryCountResult = await pool.query('SELECT COUNT(*) FROM categories');

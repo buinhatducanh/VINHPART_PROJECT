@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 const router = Router();
 
 // GET /api/products/max-price - MUST BE BEFORE /:id
-router.get('/max-price', async (req, res) => {
+router.get('/max-price', async (_req, res) => {
     try {
         const result = await pool.query('SELECT MAX(price) as max_price FROM products WHERE "isActive" = true');
         const maxPrice = result.rows[0]?.max_price || 5000000;
