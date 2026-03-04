@@ -1,7 +1,7 @@
 import { Product, SEOPost, Review } from '@/shared/types';
 
-// API configuration
-export const API_BASE_URL = 'http://localhost:3001/api';
+// API configuration — use relative URL so it works both locally (Vite proxy) and on Vercel (serverless rewrites)
+export const API_BASE_URL = '/api';
 
 // Re-export Product type for convenience
 export type { Product };

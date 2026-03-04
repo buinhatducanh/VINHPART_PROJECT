@@ -82,7 +82,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
   const fetchProducts = () => {
     setLoading(true);
-    fetch('http://localhost:3001/api/products?limit=1000')
+    fetch('/api/products?limit=1000')
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -114,7 +114,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/products/${id}`, {
+      const res = await fetch(`/api/products/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -132,7 +132,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   const handleSaveEdit = async () => {
     if (editingProduct) {
       try {
-        const res = await fetch(`http://localhost:3001/api/products/${editingProduct.product_id}`, {
+        const res = await fetch(`/api/products/${editingProduct.product_id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

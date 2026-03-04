@@ -19,7 +19,8 @@ export function formatImageUrl(url: string | undefined, width = 400) {
     }
 
     // Local URL (starts with / or just filename)
-    const baseUrl = 'http://localhost:3001';
+    // Use relative URL — works with both Vite proxy (dev) and Vercel (production)
+    const baseUrl = '';
 
     if (url.startsWith('/')) {
         // If it already has /uploads prefix or similar

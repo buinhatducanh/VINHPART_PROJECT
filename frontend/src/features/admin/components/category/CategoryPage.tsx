@@ -43,7 +43,7 @@ export function CategoryPage({ onBack }: CategoryPageProps) {
     const fetchCategories = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:3001/api/categories');
+            const res = await fetch('/api/categories');
             if (res.ok) {
                 const data = await res.json();
                 const mapped = data.map((cat: any) => ({
@@ -119,8 +119,8 @@ export function CategoryPage({ onBack }: CategoryPageProps) {
         setSubmitting(true);
         try {
             const url = editingCategory
-                ? `http://localhost:3001/api/categories/${editingCategory.id}`
-                : 'http://localhost:3001/api/categories';
+                ? `/api/categories/${editingCategory.id}`
+                : '/api/categories';
 
             const method = editingCategory ? 'PATCH' : 'POST';
 
@@ -178,7 +178,7 @@ export function CategoryPage({ onBack }: CategoryPageProps) {
         }, 100);
 
         try {
-            const res = await fetch(`http://localhost:3001/api/categories/${id}`, {
+            const res = await fetch(`/api/categories/${id}`, {
                 method: 'DELETE'
             });
 

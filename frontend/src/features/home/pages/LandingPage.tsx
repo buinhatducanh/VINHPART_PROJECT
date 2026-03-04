@@ -46,7 +46,7 @@ export function LandingPage({
     const fetchData = async () => {
       try {
         // Fetch products (limit 10, can add filters later)
-        const productsRes = await fetch('http://localhost:3001/api/products?limit=10');
+        const productsRes = await fetch('/api/products?limit=10');
         if (productsRes.ok) {
           const productsData = await productsRes.json();
           // Handle API response structure: {data: [], metadata: {...}}
@@ -55,7 +55,7 @@ export function LandingPage({
         }
 
         // Fetch published blog posts (limit 3)
-        const postsRes = await fetch('http://localhost:3001/api/posts?status=PUBLISHED&limit=3');
+        const postsRes = await fetch('/api/posts?status=PUBLISHED&limit=3');
         if (postsRes.ok) {
           const postsData = await postsRes.json();
           setLatestPosts(postsData);

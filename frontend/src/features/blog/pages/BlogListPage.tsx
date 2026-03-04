@@ -20,7 +20,7 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/posts?status=PUBLISHED');
+        const res = await fetch('/api/posts?status=PUBLISHED');
         if (res.ok) {
           const data = await res.json();
           setPosts(data);

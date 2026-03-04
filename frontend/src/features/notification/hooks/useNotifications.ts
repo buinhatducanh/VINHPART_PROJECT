@@ -18,8 +18,8 @@ export function useNotifications(userEmail?: string) {
     const fetchNotifications = async () => {
         try {
             const url = userEmail
-                ? `http://localhost:3001/api/notifications/user?email=${encodeURIComponent(userEmail)}`
-                : 'http://localhost:3001/api/notifications';
+                ? `/api/notifications/user?email=${encodeURIComponent(userEmail)}`
+                : '/api/notifications';
             const response = await fetch(url);
             const data = await response.json();
             setNotifications(data);

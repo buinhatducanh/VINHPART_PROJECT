@@ -23,7 +23,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
   const { t, language } = useI18n();
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/orders')
+    fetch('/api/orders')
       .then(res => res.json())
       .then(data => {
         setOrders(data);

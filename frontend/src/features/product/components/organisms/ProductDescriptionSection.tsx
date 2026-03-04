@@ -32,7 +32,7 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
     const fetchReviews = async () => {
         try {
             setLoadingReviews(true);
-            const res = await fetch(`http://localhost:3001/api/reviews?productId=${product.product_id}&status=approved`);
+            const res = await fetch(`/api/reviews?productId=${product.product_id}&status=approved`);
             if (res.ok) {
                 const data = await res.json();
                 setReviews(data);
@@ -82,7 +82,7 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
         setSubmitError('');
 
         try {
-            const res = await fetch('http://localhost:3001/api/reviews', {
+            const res = await fetch('/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -103,10 +103,10 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
                 setFormHoverRating(0);
                 setFormTitle('');
                 setFormContent('');
-                
+
                 // Fetch reviews again to potentially show the new one (if auto-approved, or just to refresh state)
                 fetchReviews();
-                
+
                 setTimeout(() => setSubmitSuccess(false), 5000);
             } else {
                 setSubmitError(t('product.submitReviewError') || 'Không thể gửi đánh giá. Vui lòng thử lại.');

@@ -31,7 +31,7 @@ export function WriteReviewPage({ orderId, onBack }: WriteReviewPageProps) {
     useEffect(() => {
         const fetchOrderDetails = async () => {
             try {
-                const response = await fetch(`http://localhost:3001/api/orders/${orderId}`);
+                const response = await fetch(`/api/orders/${orderId}`);
                 const data = await response.json();
                 setOrder(data);
 

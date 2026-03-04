@@ -21,13 +21,13 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
       try {
         setLoading(true); // Ensure loading is true on id change
         // Fetch post by slug (postId is actually slug in this case)
-        const res = await fetch(`http://localhost:3001/api/posts/${postId}`);
+        const res = await fetch(`/api/posts/${postId}`);
         if (res.ok) {
           const data = await res.json();
           setPost(data);
 
           // Fetch related posts
-          const relatedRes = await fetch('http://localhost:3001/api/posts?status=PUBLISHED&limit=4');
+          const relatedRes = await fetch('/api/posts?status=PUBLISHED&limit=4');
           if (relatedRes.ok) {
             const relatedData = await relatedRes.json();
             // Filter out current post and limit to 3

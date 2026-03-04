@@ -115,7 +115,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
 
     const fetchPosts = () => {
         setLoading(true);
-        fetch('http://localhost:3001/api/posts?limit=1000')
+        fetch('/api/posts?limit=1000')
             .then(res => res.json())
             .then(data => {
                 setPosts(Array.isArray(data) ? data : []);
@@ -134,7 +134,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
 
     const handleDelete = async (id: string) => {
         try {
-            const res = await fetch(`http://localhost:3001/api/posts/${id}`, {
+            const res = await fetch(`/api/posts/${id}`, {
                 method: 'DELETE'
             });
             if (res.ok) {
@@ -153,7 +153,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
     const handleSaveEdit = async () => {
         if (editingPost) {
             try {
-                const url = editingPost.id ? `http://localhost:3001/api/posts/${editingPost.id}` : 'http://localhost:3001/api/posts';
+                const url = editingPost.id ? `/api/posts/${editingPost.id}` : '/api/posts';
                 const method = editingPost.id ? 'PUT' : 'POST';
 
                 const res = await fetch(url, {
@@ -334,8 +334,8 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
 
                                         <td className="px-6 py-4">
                                             <span className={`px-3 py-1 rounded-lg text-sm font-medium ${post.status === 'PUBLISHED'
-                                                    ? 'bg-green-500/10 border border-green-500/50 text-green-400'
-                                                    : 'bg-yellow-500/10 border border-yellow-500/50 text-yellow-400'
+                                                ? 'bg-green-500/10 border border-green-500/50 text-green-400'
+                                                : 'bg-yellow-500/10 border border-yellow-500/50 text-yellow-400'
                                                 }`}>
                                                 {post.status === 'PUBLISHED' ? 'Published' : 'Draft'}
                                             </span>
