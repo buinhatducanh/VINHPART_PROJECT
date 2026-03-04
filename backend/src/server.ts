@@ -1,8 +1,7 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { pool } from './shared/database';
 
 // Feature routes
@@ -16,17 +15,15 @@ import dashboardRoutes from './features/dashboard/dashboard.routes';
 import uploadRoutes from './features/upload/upload.routes';
 import notificationRoutes from './features/notification/notification.routes';
 
-dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Use process.cwd() instead of import.meta.url for better Vercel compatibility
+const rootDir = process.cwd();
 
 const app = express();
 const port = 3001;
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+app.use('/uploads', express.static(path.join(rootDir, 'uploads')));
 
 // Register feature routes
 app.use('/api/auth', authRoutes);
@@ -41,10 +38,10 @@ app.use('/api/notifications', notificationRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../../dist')));
+    app.use(express.static(path.join(rootDir, 'dist')));
 
     app.get(/.*/, (_req, res) => {
-        res.sendFile(path.join(__dirname, '../../dist', 'index.html'));
+        res.sendFile(path.join(rootDir, 'dist', 'index.html'));
     });
 }
 
