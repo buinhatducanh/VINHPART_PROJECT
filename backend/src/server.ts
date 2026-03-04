@@ -62,13 +62,20 @@ async function migrate() {
 }
 
 // Run migrations on startup (needed for googleId/avatar columns)
-migrate().then(() => {
-    // Only bind port locally — on Vercel, the app is imported as a serverless function
-    if (!process.env.VERCEL) {
-        app.listen(port, () => {
-            console.log(`API Server running at http://localhost:${port}`);
-        });
-    }
-});
+// Non-blocking: don't let migration failure crash the serverless function
+migrate()
+    .then(() => {
+        console.log('Migrations completed successfully');
+    })
+    .catch((err) => {
+        console.error('Migration failed (non-fatal):', err);
+    });
+
+// Only bind port locally — on Vercel, the app is imported as a serverless function
+if (!process.env.VERCEL) {
+    app.listen(port, () => {
+        console.log(`API Server running at http://localhost:${port}`);
+    });
+}
 
 export default app;
