@@ -133,7 +133,7 @@ router.get('/', async (req, res) => {
         }
 
         const countResult = await sql.query(`SELECT COUNT(*) ${baseQuery}`, params);
-        const total = parseInt(countResult.rows[0].count);
+        const total = parseInt(countResult[0].count);
 
         const dataQuery = `
             SELECT p.id, p.name, p."categoryId", p.brand, p.price, p."salePrice", p.stock, p.images, p.description,
@@ -145,9 +145,9 @@ router.get('/', async (req, res) => {
 
         params.push(Number(limit), offset);
 
-        const { rows: products } = await sql.query(dataQuery, params);
+        const products = await sql.query(dataQuery, params);
 
-        const mappedProducts = products.map(p => {
+        const mappedProducts = products.map((p: any) => {
             let status = 'out_of_stock';
             if (p.stock > 10) status = 'in_stock';
             else if (p.stock > 0) status = 'low_stock';
@@ -332,7 +332,7 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const result = await sql.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
-        if (result.rowCount === 0) {
+        if (result.length === 0) {
             return res.status(404).json({ error: 'Product not found' });
         }
         res.json({ success: true });

@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
             params.push(parseInt(limit as string));
         }
 
-        const { rows } = await sql.query(query, params);
+        const rows = await sql.query(query, params);
         res.json(rows);
     } catch (error) {
         console.error('Error fetching posts:', error);
@@ -184,7 +184,7 @@ router.delete('/:id', async (req, res) => {
         const { id } = req.params;
 
         const result = await sql.query('DELETE FROM posts WHERE id = $1 RETURNING id', [id]);
-        if (result.rowCount === 0) {
+        if (result.length === 0) {
             return res.status(404).json({ error: 'Post not found' });
         }
 

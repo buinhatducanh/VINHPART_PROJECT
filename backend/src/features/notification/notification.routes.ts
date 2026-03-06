@@ -14,9 +14,9 @@ router.get('/', async (_req, res) => {
             ORDER BY "createdAt" DESC
             LIMIT 10
         `;
-        const { rows } = await sql.query(query);
+        const rows = await sql.query(query);
 
-        const notifications = rows.map(order => ({
+        const notifications = rows.map((order: any) => ({
             id: order.id,
             type: 'order',
             title: 'Đơn hàng mới',
@@ -49,9 +49,9 @@ router.get('/user', async (req, res) => {
             ORDER BY "updatedAt" DESC
             LIMIT 20
         `;
-        const { rows } = await sql.query(query, [email]);
+        const rows = await sql.query(query, [email]);
 
-        const notifications = rows.map(order => {
+        const notifications = rows.map((order: any) => {
             let title = '';
             let message = '';
 

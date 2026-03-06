@@ -12,7 +12,7 @@ router.get('/', async (_req, res) => {
             FROM categories
             ORDER BY "parentId" ASC NULLS FIRST, "createdAt" ASC
         `;
-        const { rows } = await sql.query(query);
+        const rows = await sql.query(query);
         res.json(rows);
     } catch (error) {
         console.error('Error fetching categories:', error);
