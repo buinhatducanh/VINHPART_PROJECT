@@ -1,23 +1,20 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import ws from 'ws';
+import pg from 'pg';
 
-// Use native WebSocket (available on Vercel Node 20+) with ws as fallback
-neonConfig.webSocketConstructor = globalThis.WebSocket ?? ws;
+const connectionString = process.env.DATABASE_URL || '';
 
-const rawUrl = process.env.DATABASE_URL;
-if (!rawUrl) {
-    console.error('❌ DATABASE_URL is not set. ALL database connections will fail.');
+if (!connectionString) {
+    console.error('❌ DATABASE_URL is not set.');
 }
 
-// Strip channel_binding from connection string (not supported by driver in some environments)
-const connectionString = (rawUrl || '').replace(/[&?]channel_binding=[^&]*/g, '');
-
-// Pool for all queries (uses WebSocket via @neondatabase/serverless)
-export const pool = new Pool({
+// Use standard pg Pool — works on both local and Vercel serverless (TCP)
+export const pool = new pg.Pool({
     connectionString,
-    max: 5,
+    ssl: connectionString.includes('sslmode=require')
+        ? { rejectUnauthorized: false }
+        : false,
+    max: 10,
 });
 
-pool.on('error', (err: any) => {
+pool.on('error', (err) => {
     console.error('Unexpected pool error:', err);
 });
