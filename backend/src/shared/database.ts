@@ -1,17 +1,8 @@
 import { Pool, neon, neonConfig } from '@neondatabase/serverless';
+import ws from 'ws';
 
-// Use native WebSocket (available on Vercel Node 18+) with ws as fallback
-try {
-    if (typeof globalThis.WebSocket !== 'undefined') {
-        neonConfig.webSocketConstructor = globalThis.WebSocket;
-    } else {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const ws = require('ws');
-        neonConfig.webSocketConstructor = ws;
-    }
-} catch {
-    console.warn('⚠️ No WebSocket implementation found. Pool transactions may not work.');
-}
+// Use native WebSocket (available on Vercel Node 20+) with ws as fallback
+neonConfig.webSocketConstructor = globalThis.WebSocket ?? ws;
 
 const rawUrl = process.env.DATABASE_URL;
 if (!rawUrl) {
@@ -21,8 +12,9 @@ if (!rawUrl) {
 // Strip channel_binding from connection string (not supported by driver in some environments)
 const connectionString = (rawUrl || '').replace(/[&?]channel_binding=[^&]*/g, '');
 
-// HTTP-based SQL function — best for serverless (no WebSocket, no connection pool)
-// Use this for simple queries: await sql`SELECT * FROM users WHERE id = ${id}`
+// HTTP-based SQL function — best for serverless (no WebSocket, no connection pool needed)
+// Use for simple queries: await sql`SELECT * FROM users WHERE id = ${id}`
+// Or parameterized: await sql.query('SELECT * FROM users WHERE id = $1', [id])
 export const sql = neon(connectionString);
 
 // Pool for transactions (uses WebSocket)
