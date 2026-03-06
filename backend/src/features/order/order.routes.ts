@@ -12,9 +12,9 @@ router.get('/', async (_req, res) => {
             FROM orders o
             ORDER BY o."createdAt" DESC
         `;
-        const { rows } = await sql.query(query);
+        const rows = await sql.query(query);
 
-        const mappedOrders = rows.map(order => ({
+        const mappedOrders = rows.map((order: any) => ({
             id: order.id,
             orderNumber: order.orderNumber,
             customerName: order.customerName,
@@ -112,16 +112,16 @@ router.get('/:id', async (req, res) => {
         `;
 
         const orderResult = await sql.query(orderQuery, [id]);
-        if (orderResult.rows.length === 0) {
+        if (orderResult.length === 0) {
             return res.status(404).json({ error: 'Order not found' });
         }
 
         const itemsResult = await sql.query(itemsQuery, [id]);
 
-        const order = orderResult.rows[0];
+        const order = orderResult[0];
         res.json({
             ...order,
-            items: itemsResult.rows
+            items: itemsResult
         });
     } catch (error) {
         console.error('Error fetching order details:', error);

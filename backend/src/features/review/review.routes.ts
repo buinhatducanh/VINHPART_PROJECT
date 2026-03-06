@@ -37,9 +37,9 @@ router.get('/', async (req, res) => {
         query += ` LIMIT $${paramIndex++}`;
         params.push(Number(limit));
 
-        const { rows } = await sql.query(query, params);
+        const rows = await sql.query(query, params);
 
-        const reviews = rows.map(r => ({
+        const reviews = rows.map((r: any) => ({
             id: r.id,
             product_id: r.productId,
             product_name: r.productName,
@@ -167,8 +167,8 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await sql.query('DELETE FROM reviews WHERE id = $1', [id]);
-        if (result.rowCount === 0) {
+        const result = await sql.query('DELETE FROM reviews WHERE id = $1 RETURNING id', [id]);
+        if (result.length === 0) {
             return res.status(404).json({ error: 'Review not found' });
         }
         res.json({ success: true });
