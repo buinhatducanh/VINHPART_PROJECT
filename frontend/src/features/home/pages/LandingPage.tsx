@@ -58,7 +58,8 @@ export function LandingPage({
         const postsRes = await fetch('/api/posts?status=PUBLISHED&limit=3');
         if (postsRes.ok) {
           const postsData = await postsRes.json();
-          setLatestPosts(postsData);
+          // Safely check if postsData is an array to prevent "e.map is not a function"
+          setLatestPosts(Array.isArray(postsData) ? postsData : []);
         }
 
         // Reviews - keep empty for now (can implement later)

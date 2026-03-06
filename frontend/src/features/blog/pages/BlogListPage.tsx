@@ -23,7 +23,7 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
         const res = await fetch('/api/posts?status=PUBLISHED');
         if (res.ok) {
           const data = await res.json();
-          setPosts(data);
+          setPosts(Array.isArray(data) ? data : []);
         }
       } catch (error) {
         console.error('Failed to fetch posts:', error);
