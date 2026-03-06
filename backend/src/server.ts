@@ -21,32 +21,25 @@ const rootDir = process.cwd();
 const app = express();
 const port = 3001;
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        /\.vercel\.app$/,
+    ],
+    credentials: true,
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(rootDir, 'uploads')));
 
-// Health check endpoint for diagnosing Vercel deployment issues
+// Health check
 app.get('/api/health', async (_req, res) => {
-    const checks: Record<string, any> = {
-        env: {
-            NODE_ENV: process.env.NODE_ENV,
-            VERCEL: !!process.env.VERCEL,
-            DATABASE_URL_SET: !!process.env.DATABASE_URL,
-            DATABASE_URL_PREFIX: process.env.DATABASE_URL?.substring(0, 30) + '...',
-        },
-        timestamp: new Date().toISOString(),
-    };
-
-    // Test pool connection (WebSocket-based via @neondatabase/serverless)
     try {
-        const result = await pool.query('SELECT 1 as ok, now() as server_time');
-        checks.database = { status: 'ok', server_time: result.rows[0]?.server_time };
+        const result = await pool.query('SELECT now() as server_time');
+        res.json({ status: 'ok', server_time: result.rows[0]?.server_time });
     } catch (err: any) {
-        checks.database = { status: 'error', message: err.message, stack: err.stack?.split('\n').slice(0, 3) };
+        res.status(503).json({ status: 'error', message: err.message });
     }
-
-    const allOk = checks.database?.status === 'ok';
-    res.status(allOk ? 200 : 503).json(checks);
 });
 
 // Register feature routes
@@ -60,15 +53,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(rootDir, 'dist')));
-
-    app.get(/.*/, (_req, res) => {
-        res.sendFile(path.join(rootDir, 'dist', 'index.html'));
-    });
-}
-
+// Startup migration (non-fatal)
 async function migrate() {
     const client = await pool.connect();
     try {
@@ -82,22 +67,12 @@ async function migrate() {
     }
 }
 
-// Run migrations on startup (only locally — on Vercel, schema is managed via db:push)
-if (!process.env.VERCEL) {
-    migrate()
-        .then(() => {
-            console.log('Migrations completed successfully');
-        })
-        .catch((err) => {
-            console.error('Migration failed (non-fatal):', err);
-        });
-}
+migrate()
+    .then(() => console.log('Migrations completed'))
+    .catch((err) => console.error('Migration failed (non-fatal):', err));
 
-// Only bind port locally — on Vercel, the app is imported as a serverless function
-if (!process.env.VERCEL) {
-    app.listen(port, () => {
-        console.log(`API Server running at http://localhost:${port}`);
-    });
-}
+app.listen(port, () => {
+    console.log(`API Server running at http://localhost:${port}`);
+});
 
 export default app;

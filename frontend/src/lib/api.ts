@@ -1,7 +1,9 @@
 import { Product, SEOPost, Review } from '@/shared/types';
 
-// API configuration — use relative URL so it works both locally (Vite proxy) and on Vercel (serverless rewrites)
-export const API_BASE_URL = '/api';
+// API configuration
+// Local dev: Vite proxy handles /api → localhost:3001
+// Production: VITE_API_URL points to the separate backend server
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Re-export Product type for convenience
 export type { Product };
