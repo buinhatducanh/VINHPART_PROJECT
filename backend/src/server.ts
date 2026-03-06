@@ -2,7 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-import { pool } from './shared/database';
+import { pool, sql } from './shared/database';
 
 // Feature routes
 import authRoutes from './features/auth/auth.routes';
@@ -24,6 +24,38 @@ const port = 3001;
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(rootDir, 'uploads')));
+
+// Health check endpoint for diagnosing Vercel deployment issues
+app.get('/api/health', async (_req, res) => {
+    const checks: Record<string, any> = {
+        env: {
+            NODE_ENV: process.env.NODE_ENV,
+            VERCEL: !!process.env.VERCEL,
+            DATABASE_URL_SET: !!process.env.DATABASE_URL,
+            DATABASE_URL_PREFIX: process.env.DATABASE_URL?.substring(0, 30) + '...',
+        },
+        timestamp: new Date().toISOString(),
+    };
+
+    // Test database connection using HTTP-based sql (most reliable for serverless)
+    try {
+        const result = await sql`SELECT 1 as ok, now() as server_time`;
+        checks.database_sql = { status: 'ok', server_time: result[0]?.server_time };
+    } catch (err: any) {
+        checks.database_sql = { status: 'error', message: err.message };
+    }
+
+    // Test pool connection
+    try {
+        const result = await pool.query('SELECT 1 as ok');
+        checks.database_pool = { status: 'ok', result: result.rows[0] };
+    } catch (err: any) {
+        checks.database_pool = { status: 'error', message: err.message };
+    }
+
+    const allOk = checks.database_sql?.status === 'ok';
+    res.status(allOk ? 200 : 503).json(checks);
+});
 
 // Register feature routes
 app.use('/api/auth', authRoutes);
