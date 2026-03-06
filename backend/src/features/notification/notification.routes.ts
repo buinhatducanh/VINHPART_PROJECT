@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { sql } from '../../shared/database';
+import { pool } from '../../shared/database';
 
 const router = Router();
 
@@ -14,7 +14,7 @@ router.get('/', async (_req, res) => {
             ORDER BY "createdAt" DESC
             LIMIT 10
         `;
-        const rows = await sql.query(query);
+        const { rows } = await pool.query(query);
 
         const notifications = rows.map((order: any) => ({
             id: order.id,
@@ -49,7 +49,7 @@ router.get('/user', async (req, res) => {
             ORDER BY "updatedAt" DESC
             LIMIT 20
         `;
-        const rows = await sql.query(query, [email]);
+        const { rows } = await pool.query(query, [email]);
 
         const notifications = rows.map((order: any) => {
             let title = '';

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { pool, sql } from '../../shared/database';
+import { pool } from '../../shared/database';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
             params.push(parseInt(limit as string));
         }
 
-        const rows = await sql.query(query, params);
+        const { rows } = await pool.query(query, params);
         res.json(rows);
     } catch (error) {
         console.error('Error fetching posts:', error);
@@ -183,8 +183,8 @@ router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
-        const result = await sql.query('DELETE FROM posts WHERE id = $1 RETURNING id', [id]);
-        if (result.length === 0) {
+        const result = await pool.query('DELETE FROM posts WHERE id = $1 RETURNING id', [id]);
+        if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Post not found' });
         }
 
