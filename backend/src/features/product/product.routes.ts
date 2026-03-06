@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { pool } from '../../shared/database';
+import { pool, sql } from '../../shared/database';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
@@ -7,8 +7,8 @@ const router = Router();
 // GET /api/products/max-price - MUST BE BEFORE /:id
 router.get('/max-price', async (_req, res) => {
     try {
-        const result = await pool.query('SELECT MAX(price) as max_price FROM products WHERE "isActive" = true');
-        const maxPrice = result.rows[0]?.max_price || 5000000;
+        const result = await sql`SELECT MAX(price) as max_price FROM products WHERE "isActive" = true`;
+        const maxPrice = result[0]?.max_price || 5000000;
         res.json({ maxPrice: Number(maxPrice) });
     } catch (error) {
         console.error('Error fetching max price:', error);
@@ -20,13 +20,12 @@ router.get('/max-price', async (_req, res) => {
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const query = `
+        const rows = await sql`
             SELECT p.*, c.name as category_name, c.slug as category_slug
             FROM products p
             LEFT JOIN categories c ON p."categoryId" = c.id
-            WHERE p.id = $1 AND p."isActive" = true
+            WHERE p.id = ${id} AND p."isActive" = true
         `;
-        const { rows } = await pool.query(query, [id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Product not found' });
@@ -133,7 +132,7 @@ router.get('/', async (req, res) => {
             }
         }
 
-        const countResult = await pool.query(`SELECT COUNT(*) ${baseQuery}`, params);
+        const countResult = await sql.query(`SELECT COUNT(*) ${baseQuery}`, params);
         const total = parseInt(countResult.rows[0].count);
 
         const dataQuery = `
@@ -146,7 +145,7 @@ router.get('/', async (req, res) => {
 
         params.push(Number(limit), offset);
 
-        const { rows: products } = await pool.query(dataQuery, params);
+        const { rows: products } = await sql.query(dataQuery, params);
 
         const mappedProducts = products.map(p => {
             let status = 'out_of_stock';
@@ -332,7 +331,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
+        const result = await sql.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Product not found' });
         }

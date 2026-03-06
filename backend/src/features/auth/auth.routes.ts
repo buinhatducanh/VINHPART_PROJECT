@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { pool } from '../../shared/database';
+import { pool, sql } from '../../shared/database';
 import { hashPassword, verifyPassword } from '../../shared/auth-helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { OAuth2Client } from 'google-auth-library';
@@ -58,7 +58,7 @@ router.post('/login', async (req, res) => {
         const cleanEmail = email ? email.trim().toLowerCase() : '';
         console.log(`Login attempt for: '${cleanEmail}'`);
 
-        const result = await pool.query('SELECT * FROM users WHERE email = $1', [cleanEmail]);
+        const result = await sql.query('SELECT * FROM users WHERE email = $1', [cleanEmail]);
 
         if (result.rows.length === 0) {
             console.log(`User not found: '${cleanEmail}'`);

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { pool } from '../../shared/database';
+import { pool, sql } from '../../shared/database';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
         query += ` LIMIT $${paramIndex++}`;
         params.push(Number(limit));
 
-        const { rows } = await pool.query(query, params);
+        const { rows } = await sql.query(query, params);
 
         const reviews = rows.map(r => ({
             id: r.id,
@@ -167,7 +167,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pool.query('DELETE FROM reviews WHERE id = $1', [id]);
+        const result = await sql.query('DELETE FROM reviews WHERE id = $1', [id]);
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Review not found' });
         }
