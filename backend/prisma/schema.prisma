@@ -11,11 +11,11 @@ model User {
   email     String   @unique
   name      String?
   password  String?
-  googleId  String?  @unique
-  avatar    String?
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  googleId  String?  @unique
+  avatar    String?
   orders    Order[]
   posts     Post[]
 
