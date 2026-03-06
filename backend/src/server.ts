@@ -2,7 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-import { pool, sql } from './shared/database';
+import { pool } from './shared/database';
 
 // Feature routes
 import authRoutes from './features/auth/auth.routes';
@@ -37,23 +37,15 @@ app.get('/api/health', async (_req, res) => {
         timestamp: new Date().toISOString(),
     };
 
-    // Test database connection using HTTP-based sql (most reliable for serverless)
+    // Test pool connection (WebSocket-based via @neondatabase/serverless)
     try {
-        const result = await sql`SELECT 1 as ok, now() as server_time`;
-        checks.database_sql = { status: 'ok', server_time: result[0]?.server_time };
+        const result = await pool.query('SELECT 1 as ok, now() as server_time');
+        checks.database = { status: 'ok', server_time: result.rows[0]?.server_time };
     } catch (err: any) {
-        checks.database_sql = { status: 'error', message: err.message };
+        checks.database = { status: 'error', message: err.message, stack: err.stack?.split('\n').slice(0, 3) };
     }
 
-    // Test pool connection
-    try {
-        const result = await pool.query('SELECT 1 as ok');
-        checks.database_pool = { status: 'ok', result: result.rows[0] };
-    } catch (err: any) {
-        checks.database_pool = { status: 'error', message: err.message };
-    }
-
-    const allOk = checks.database_sql?.status === 'ok';
+    const allOk = checks.database?.status === 'ok';
     res.status(allOk ? 200 : 503).json(checks);
 });
 

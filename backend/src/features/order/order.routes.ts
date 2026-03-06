@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { pool, sql } from '../../shared/database';
+import { pool } from '../../shared/database';
 
 const router = Router();
 
@@ -12,9 +12,9 @@ router.get('/', async (_req, res) => {
             FROM orders o
             ORDER BY o."createdAt" DESC
         `;
-        const rows = await sql.query(query);
+        const { rows } = await pool.query(query);
 
-        const mappedOrders = rows.map((order: any) => ({
+        const mappedOrders = rows.map(order => ({
             id: order.id,
             orderNumber: order.orderNumber,
             customerName: order.customerName,
@@ -111,17 +111,17 @@ router.get('/:id', async (req, res) => {
             SELECT * FROM order_items WHERE "orderId" = $1
         `;
 
-        const orderResult = await sql.query(orderQuery, [id]);
-        if (orderResult.length === 0) {
+        const orderResult = await pool.query(orderQuery, [id]);
+        if (orderResult.rows.length === 0) {
             return res.status(404).json({ error: 'Order not found' });
         }
 
-        const itemsResult = await sql.query(itemsQuery, [id]);
+        const itemsResult = await pool.query(itemsQuery, [id]);
 
-        const order = orderResult[0];
+        const order = orderResult.rows[0];
         res.json({
             ...order,
-            items: itemsResult
+            items: itemsResult.rows
         });
     } catch (error) {
         console.error('Error fetching order details:', error);
