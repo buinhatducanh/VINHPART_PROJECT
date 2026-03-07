@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { Package, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
@@ -17,6 +18,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const { t, language } = useI18n();
+  const a = useFirstVisit('manage-products');
 
   const widgetRef = useRef<any>(null);
   const editingProductRef = useRef<Product | null>(null);
@@ -180,7 +182,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
       </div>
 
       <motion.div
-        initial={{ y: -20, opacity: 0 }}
+        initial={a && { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
       >
@@ -213,7 +215,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
       </motion.div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4 mb-6">
+        <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4 mb-6">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
@@ -226,7 +228,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl overflow-hidden">
+        <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -240,7 +242,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
               </thead>
               <tbody className="divide-y divide-gray-800">
                 {filteredProducts.map((product, index) => (
-                  <motion.tr key={product.product_id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} className="hover:bg-muted/30 transition-colors group">
+                  <motion.tr key={product.product_id} initial={a && { opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} className="hover:bg-muted/30 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
@@ -306,7 +308,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
         </motion.div>
 
         {filteredProducts.length === 0 && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-12 text-center mt-6">
+          <motion.div initial={a && { opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-12 text-center mt-6">
             <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-foreground mb-2">{t('admin.manageProducts.notFound')}</h3>
             <p className="text-muted-foreground mb-4">{t('admin.manageProducts.notFoundDesc')}</p>

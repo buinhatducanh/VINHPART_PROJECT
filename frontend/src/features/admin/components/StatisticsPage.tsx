@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { TrendingUp, DollarSign, ShoppingCart, Users, ArrowLeft, Calendar } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useState } from 'react';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 
 interface StatisticsPageProps {
   onBack: () => void;
@@ -9,6 +10,7 @@ interface StatisticsPageProps {
 
 export function StatisticsPage({ onBack }: StatisticsPageProps) {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
+  const a = useFirstVisit('statistics');
 
   // Mock data - Doanh thu theo thời gian
   const revenueData = [
@@ -110,7 +112,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
 
       {/* Header */}
       <motion.div 
-        initial={{ y: -20, opacity: 0 }}
+        initial={a && { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
       >
@@ -166,7 +168,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
           {summaryStats.map((stat, index) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
+              initial={a && { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -5, scale: 1.02 }}
@@ -195,7 +197,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Revenue Chart */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={a && { opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
             className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
@@ -238,7 +240,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
 
           {/* Top Products Chart */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={a && { opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
             className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
@@ -275,7 +277,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Category Distribution */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={a && { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
             className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
@@ -329,7 +331,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
 
           {/* Performance Metrics */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={a && { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
             className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
@@ -350,7 +352,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
-                    initial={{ width: 0 }}
+                    initial={a && { width: 0 }}
                     animate={{ width: '72%' }}
                     transition={{ duration: 1, delay: 0.8 }}
                     className="bg-gradient-to-r from-green-600 to-green-500 h-2 rounded-full"
@@ -365,7 +367,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
-                    initial={{ width: 0 }}
+                    initial={a && { width: 0 }}
                     animate={{ width: '43%' }}
                     transition={{ duration: 1, delay: 0.9 }}
                     className="bg-gradient-to-r from-blue-600 to-blue-500 h-2 rounded-full"
@@ -380,7 +382,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
-                    initial={{ width: 0 }}
+                    initial={a && { width: 0 }}
                     animate={{ width: '68%' }}
                     transition={{ duration: 1, delay: 1.0 }}
                     className="bg-gradient-to-r from-purple-600 to-purple-500 h-2 rounded-full"
@@ -395,7 +397,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
-                    initial={{ width: 0 }}
+                    initial={a && { width: 0 }}
                     animate={{ width: '94%' }}
                     transition={{ duration: 1, delay: 1.1 }}
                     className="bg-gradient-to-r from-orange-600 to-orange-500 h-2 rounded-full"

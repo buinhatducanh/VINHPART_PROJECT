@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Eye, Calendar, Save, X, Upload } from 'lucide-react';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { useState, useRef, useEffect } from 'react';
 import { SEOPost } from '@/shared/types';
 import { postsApi } from "@/lib/api";
@@ -11,6 +12,7 @@ interface ManageSEOPageProps {
 }
 //FIXED zz
 export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
+  const a = useFirstVisit('manage-seo');
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'PUBLISHED' | 'DRAFT'>('all');
@@ -165,7 +167,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
 
       {/* Header */}
       <motion.div
-        initial={{ y: -20, opacity: 0 }}
+        initial={a && { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
       >
@@ -224,7 +226,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
         <motion.div
-           initial={{ opacity: 0, y: 20 }}
+           initial={a && { opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
            className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4 mb-6"
         >
@@ -262,7 +264,7 @@ export function ManageSEOPage({ onBack }: ManageSEOPageProps) {
           {filteredPosts.map((post, index) => (
             <motion.div
               key={post.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={a && { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               className="group relative bg-card/50 backdrop-blur-xl border border-border rounded-xl overflow-hidden hover:border-purple-600/50 transition-all"

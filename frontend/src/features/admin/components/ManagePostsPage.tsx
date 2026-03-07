@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X, Eye, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 
 interface Post {
     id: string;
@@ -30,6 +31,8 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
     const [editingPost, setEditingPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
+    const a = useFirstVisit('manage-posts');
+    const [draftPost, setDraftPost] = useState<Post | null>(null);
 
     // Cloudinary Widget Refs
     const featuredImageWidgetRef = useRef<any>(null);
@@ -142,7 +145,8 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                 setShowDeleteConfirm(null);
                 toast.success("Đã xóa bài viết thành công");
             } else {
-                toast.error("Lỗi khi xóa bài viết");
+                const errorData = await res.json().catch(() => null);
+                toast.error(errorData?.error || "Lỗi khi xóa bài viết");
             }
         } catch (error) {
             console.error("Delete error:", error);
@@ -173,6 +177,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                 });
 
                 if (res.ok) {
+                    setDraftPost(null);
                     fetchPosts();
                     setEditingPost(null);
                     toast.success(editingPost.id ? "Cập nhật thành công" : "Thêm bài viết thành công");
@@ -187,7 +192,20 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
         }
     };
 
+    const closeAndSaveDraft = () => {
+        if (editingPost && !editingPost.id) {
+            setDraftPost(editingPost);
+            toast.info('Đã lưu bản nháp tạm thời');
+        }
+        setEditingPost(null);
+    };
+
     const createNewPost = () => {
+        if (draftPost) {
+            setEditingPost(draftPost);
+            setDraftPost(null);
+            return;
+        }
         setEditingPost({
             id: '',
             title: '',
@@ -213,7 +231,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
         <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black pb-20">
             {/* Header */}
             <motion.div
-                initial={{ y: -20, opacity: 0 }}
+                initial={a && { y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
             >
@@ -249,7 +267,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-foreground rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-lg shadow-green-600/25 flex items-center gap-2"
                         >
                             <Plus className="w-5 h-5" />
-                            Thêm bài viết mới
+                            {draftPost ? 'Tiếp tục bản nháp' : 'Thêm bài viết mới'}
                         </motion.button>
                     </div>
                 </div>
@@ -259,7 +277,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Search Bar */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={a && { opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4 mb-6"
                 >
@@ -277,7 +295,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
 
                 {/* Posts Table */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={a && { opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                     className="bg-card/50 backdrop-blur-xl border border-border rounded-xl overflow-hidden"
@@ -307,7 +325,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                 {filteredPosts.map((post, index) => (
                                     <motion.tr
                                         key={post.id}
-                                        initial={{ opacity: 0, x: -20 }}
+                                        initial={a && { opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: index * 0.05 }}
                                         className="hover:bg-muted/30 transition-colors group"
@@ -386,7 +404,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                 {/* Empty State */}
                 {filteredPosts.length === 0 && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
+                        initial={a && { opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-12 text-center mt-6"
                     >
@@ -411,7 +429,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-                    onClick={() => setEditingPost(null)}
+                    onClick={closeAndSaveDraft}
                 >
                     <motion.div
                         initial={{ scale: 0.9, y: 20 }}
@@ -424,7 +442,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                 {editingPost.id ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'}
                             </h3>
                             <button
-                                onClick={() => setEditingPost(null)}
+                                onClick={closeAndSaveDraft}
                                 className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 <X className="w-6 h-6" />
@@ -575,7 +593,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => setEditingPost(null)}
+                                onClick={closeAndSaveDraft}
                                 className="flex-1 px-6 py-3 bg-muted border border-border text-foreground rounded-lg hover:bg-muted/80 transition-colors font-medium"
                             >
                                 Hủy bỏ

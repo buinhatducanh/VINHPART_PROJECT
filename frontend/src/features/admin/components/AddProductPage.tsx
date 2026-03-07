@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Package, Upload, X, ArrowLeft, Save } from 'lucide-react';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { useI18n } from '@/shared/lib/i18n';
@@ -9,6 +10,7 @@ interface AddProductPageProps {
 }
 
 export function AddProductPage({ onBack }: AddProductPageProps) {
+  const a = useFirstVisit('add-product');
   const { t, language } = useI18n();
   // Format helpers
   const formatNumber = (num: number): string => {
@@ -196,7 +198,7 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
       </div>
 
       <motion.div
-        initial={{ y: -20, opacity: 0 }}
+        initial={a && { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
       >
@@ -224,7 +226,7 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-1">
+            <motion.div initial={a && { opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-1">
               <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6 sticky top-24">
                 <h3 className="text-lg font-bold text-foreground mb-4">{t("admin.product.image")}</h3>
 
@@ -252,7 +254,7 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
               </div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-2">
+            <motion.div initial={a && { opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-2">
               <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-foreground mb-6">{t("admin.product.infoTitle")}</h3>
 

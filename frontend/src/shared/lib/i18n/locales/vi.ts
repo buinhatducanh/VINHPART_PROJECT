@@ -229,6 +229,11 @@ export const vi = {
         logoutSuccess: 'Đã đăng xuất thành công',
         adminRequired: 'Vui lòng đăng nhập tài khoản Admin để truy cập',
         adminForbidden: 'Bạn không có quyền truy cập trang quản trị',
+        googleLoginFailed: 'Đăng nhập Google thất bại. Vui lòng thử lại.',
+        invalidCredentials: 'Email hoặc mật khẩu không đúng.',
+        emailExists: 'Email này đã được đăng ký.',
+        registrationFailed: 'Đăng ký thất bại. Vui lòng thử lại.',
+        loginFailed: 'Đăng nhập thất bại. Vui lòng thử lại.',
     },
     modals: {
         about: 'Giới thiệu',

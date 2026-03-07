@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Settings, ArrowLeft, Bell, Lock, Palette, Globe, Mail, Save } from 'lucide-react';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { useSettings } from '@/shared/hooks/useSettings';
@@ -10,6 +11,7 @@ interface SettingsPageProps {
 }
 
 export function SettingsPage({ onBack }: SettingsPageProps) {
+  const a = useFirstVisit('settings');
   const { t, setLanguage } = useI18n();
   const { siteName: persistedSiteName, setSiteName: savePersistedSiteName, language: persistedLanguage, theme: persistedTheme, setTheme: savePersistedTheme } = useSettings();
   
@@ -80,7 +82,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
       {/* Header */}
       <motion.div
-        initial={{ y: -20, opacity: 0 }}
+        initial={a && { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
       >
@@ -115,7 +117,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
         <div className="space-y-6">
           {/* General Settings */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={a && { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
           >
@@ -174,7 +176,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
           {/* Email Settings */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={a && { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
@@ -232,7 +234,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
           {/* Notifications */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={a && { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
@@ -278,7 +280,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
           {/* Theme Settings */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={a && { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
@@ -309,7 +311,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
           {/* Security */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={a && { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
             className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
@@ -340,7 +342,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
           {/* Save Button */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={a && { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="flex justify-end gap-4 pt-4"

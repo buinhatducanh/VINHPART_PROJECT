@@ -185,10 +185,11 @@ router.delete('/:id', async (req, res) => {
 
         const result = await pool.query('DELETE FROM posts WHERE id = $1 RETURNING id', [id]);
         if (result.rowCount === 0) {
-            return res.status(404).json({ error: 'Post not found' });
+            res.status(404).json({ error: 'Post not found' });
+            return;
         }
 
-        res.status(204).send();
+        res.json({ message: 'Post deleted', id });
     } catch (error) {
         console.error('Error deleting post:', error);
         res.status(500).json({ error: 'Failed to delete post' });
