@@ -8,6 +8,7 @@ import { SettingsPage } from '../components/SettingsPage';
 import { ManageSEOPage } from '../components/ManageSEOPage';
 import { CategoryPage as ManageCategoriesPage } from '../components/category';
 import { ManageReviewsPage } from '../components/ManageReviewsPage';
+import { ManageBodyKitPage } from '../components/ManageBodyKitPage';
 import { DashboardHome } from '../components/DashboardHome';
 import { LogoutModal } from '../components/LogoutModal';
 import { AdminPage } from '../types';
@@ -64,6 +65,10 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
 
   if (currentPage === 'managePosts') {
     return <ManagePostsPage onBack={() => setCurrentPage('dashboard')} />;
+  }
+
+  if (currentPage === 'manageBodyKit') {
+    return <ManageBodyKitPage onBack={() => setCurrentPage('dashboard')} />;
   }
 
   return (

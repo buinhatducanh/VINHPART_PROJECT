@@ -1,4 +1,4 @@
-import { Package, ShoppingCart, Folder, Image, Plus, ClipboardList, TrendingUp, Edit, FileText, MessageSquare } from 'lucide-react';
+import { Package, ShoppingCart, Folder, Image, Plus, ClipboardList, TrendingUp, Edit, FileText, MessageSquare, Layers } from 'lucide-react';
 import { DashboardStats, StatItem, QuickActionConfig } from './types';
 
 export const getStatsConfig = (stats: DashboardStats): StatItem[] => [
@@ -53,4 +53,5 @@ export const QUICK_ACTIONS_CONFIG: QuickActionConfig[] = [
     { key: 'manageSEO', label: 'Quản lý bài viết SEO', icon: FileText, color: 'text-purple-400', hoverColor: 'hover:bg-purple-500/10', targetPage: 'manageSEO' },
     { key: 'manageCategories', label: 'Quản lý danh mục', icon: Folder, color: 'text-yellow-400', hoverColor: 'hover:bg-yellow-500/10', targetPage: 'manageCategories' },
     { key: 'manageReviews', label: 'Quản lý đánh giá', icon: MessageSquare, color: 'text-cyan-400', hoverColor: 'hover:bg-cyan-500/10', targetPage: 'manageReviews' },
+    { key: 'manageBodyKit', label: 'Quản lý dàn áo', icon: Layers, color: 'text-red-400', hoverColor: 'hover:bg-red-500/10', targetPage: 'manageBodyKit' },
 ];

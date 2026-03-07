@@ -1,4 +1,4 @@
-import { Product, SEOPost, Review } from '@/shared/types';
+import { Product, SEOPost, Review, Vehicle, VehicleDetail } from '@/shared/types';
 
 // API configuration
 // Local dev: Vite proxy handles /api → localhost:3001
@@ -222,5 +222,81 @@ export const reviewsApi = {
         });
         if (!response.ok) throw new Error('Failed to create review');
         return response.json();
+    },
+};
+
+export interface VehiclesResponse {
+    data: Vehicle[];
+    metadata: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    };
+}
+
+export const bodykitApi = {
+    getVehicles: async (filters?: { page?: number; limit?: number; brand?: string; search?: string }): Promise<VehiclesResponse> => {
+        const params = new URLSearchParams();
+        if (filters?.page) params.append('page', filters.page.toString());
+        if (filters?.limit) params.append('limit', filters.limit.toString());
+        if (filters?.brand && filters.brand !== 'all') params.append('brand', filters.brand);
+        if (filters?.search) params.append('search', filters.search);
+
+        const response = await fetch(`${API_BASE_URL}/bodykit/vehicles?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to fetch vehicles');
+        return response.json();
+    },
+
+    getVehicleDetail: async (id: string): Promise<VehicleDetail> => {
+        const response = await fetch(`${API_BASE_URL}/bodykit/vehicles/${id}`);
+        if (!response.ok) throw new Error('Failed to fetch vehicle detail');
+        return response.json();
+    },
+
+    getAdminVehicles: async (): Promise<Vehicle[]> => {
+        const response = await fetch(`${API_BASE_URL}/bodykit/vehicles-admin`);
+        if (!response.ok) throw new Error('Failed to fetch admin vehicles');
+        return response.json();
+    },
+
+    createVehicle: async (data: { name: string; brand: string; model: string; year?: number; image?: string; description?: string }): Promise<any> => {
+        const response = await fetch(`${API_BASE_URL}/bodykit/vehicles`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to create vehicle');
+        return response.json();
+    },
+
+    updateVehicle: async (id: string, data: Partial<{ name: string; brand: string; model: string; year: number; image: string; description: string; isActive: boolean }>): Promise<any> => {
+        const response = await fetch(`${API_BASE_URL}/bodykit/vehicles/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to update vehicle');
+        return response.json();
+    },
+
+    deleteVehicle: async (id: string): Promise<void> => {
+        const response = await fetch(`${API_BASE_URL}/bodykit/vehicles/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Failed to delete vehicle');
+    },
+
+    addParts: async (vehicleId: string, productIds: string[], position?: string): Promise<any> => {
+        const response = await fetch(`${API_BASE_URL}/bodykit/vehicles/${vehicleId}/parts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productIds, position }),
+        });
+        if (!response.ok) throw new Error('Failed to add parts');
+        return response.json();
+    },
+
+    removePart: async (vehicleId: string, productId: string): Promise<void> => {
+        const response = await fetch(`${API_BASE_URL}/bodykit/vehicles/${vehicleId}/parts/${productId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Failed to remove part');
     },
 };

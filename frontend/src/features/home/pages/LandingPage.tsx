@@ -22,6 +22,7 @@ interface LandingPageProps {
   onBlogPostClick?: (postId: string) => void;
   onViewAllPosts?: () => void;
   onProductClick?: (productId: string) => void;
+  onBodyKitClick?: () => void;
 }
 
 export function LandingPage({
@@ -33,6 +34,7 @@ export function LandingPage({
   onBlogPostClick,
   onViewAllPosts,
   onProductClick,
+  onBodyKitClick,
 }: LandingPageProps) {
   const { t } = useI18n();
   // State for data from API
@@ -99,7 +101,7 @@ export function LandingPage({
       )}
 
       {/* Section Components */}
-      <HeroSection onShopNow={onShopNow} onViewCatalog={onViewCatalog} />
+      <HeroSection onShopNow={onShopNow} onViewCatalog={onViewCatalog} onBodyKitClick={onBodyKitClick} />
       <BenefitsSection />
       <FeaturedProductsSection
         products={featuredProducts}

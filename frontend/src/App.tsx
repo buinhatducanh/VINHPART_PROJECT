@@ -14,6 +14,8 @@ import { Toaster } from '@/shared/components/ui/sonner';
 import { toast } from 'sonner';
 import { Product, CartItem, User } from '@/shared/types';
 import { ProductDetailPage } from '@/features/product/pages/ProductDetailPage';
+import { BodyKitLandingPage } from '@/features/bodykit/pages/BodyKitLandingPage';
+import { BodyKitDetailPage } from '@/features/bodykit/pages/BodyKitDetailPage';
 import { useI18n } from '@/shared/lib/i18n';
 import { useSettings } from '@/shared/hooks/useSettings';
 
@@ -32,8 +34,9 @@ const queryClient = new QueryClient({
 export default function App() {
   const { t } = useI18n();
   const { theme } = useSettings();
-  const [currentPage, setCurrentPage] = useState<'landing' | 'products' | 'cart' | 'checkout' | 'admin' | 'blog-list' | 'blog-detail' | 'product-detail'>('landing');
+  const [currentPage, setCurrentPage] = useState<'landing' | 'products' | 'cart' | 'checkout' | 'admin' | 'blog-list' | 'blog-detail' | 'product-detail' | 'bodykit' | 'bodykit-detail'>('landing');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [currentBlogPostId, setCurrentBlogPostId] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -222,6 +225,7 @@ export default function App() {
             onBlogPostClick={handleBlogPostClick}
             onViewAllPosts={handleViewAllPosts}
             onProductClick={handleProductClick}
+            onBodyKitClick={() => setCurrentPage('bodykit')}
           />
         )}
 
@@ -268,6 +272,25 @@ export default function App() {
         {currentPage === 'admin' && (
           <AdminDashboard
             onBackToHome={handleLogout}
+          />
+        )}
+
+        {currentPage === 'bodykit' && (
+          <BodyKitLandingPage
+            onVehicleClick={(vehicleId) => {
+              setSelectedVehicleId(vehicleId);
+              setCurrentPage('bodykit-detail');
+              window.scrollTo(0, 0);
+            }}
+            onBack={() => setCurrentPage('landing')}
+          />
+        )}
+
+        {currentPage === 'bodykit-detail' && selectedVehicleId && (
+          <BodyKitDetailPage
+            vehicleId={selectedVehicleId}
+            onBack={() => setCurrentPage('bodykit')}
+            onAddToCart={handleAddToCart}
           />
         )}
 
