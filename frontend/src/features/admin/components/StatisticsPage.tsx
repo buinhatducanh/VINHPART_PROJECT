@@ -161,6 +161,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
         )}
 
         {!isLoading && (
+        <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {summaryStats.map((stat, index) => (
             <motion.div
@@ -413,6 +414,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
             </div>
           </motion.div>
         </div>
+        </>
         )}
       </div>
     </div>
