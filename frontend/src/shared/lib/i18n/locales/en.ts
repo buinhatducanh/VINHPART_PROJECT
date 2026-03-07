@@ -230,6 +230,10 @@ export const en = {
         adminRequired: 'Please login with an Admin account to access',
         adminForbidden: 'You do not have permission to access the admin page',
         googleLoginFailed: 'Google login failed. Please try again.',
+        invalidCredentials: 'Incorrect email or password.',
+        emailExists: 'This email is already registered.',
+        registrationFailed: 'Registration failed. Please try again.',
+        loginFailed: 'Login failed. Please try again.',
     },
     modals: {
         about: 'About',

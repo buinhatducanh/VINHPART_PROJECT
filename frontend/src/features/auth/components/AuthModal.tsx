@@ -106,7 +106,18 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
       onLogin(data); // data is User object from backend
       onClose();
     } catch (err: any) {
-      toast.error(err.message || t('common.error'));
+      const msg: string = err.message || '';
+      if (msg === 'Invalid credentials') {
+        toast.error(t('auth.invalidCredentials'));
+      } else if (msg === 'Email already exists') {
+        toast.error(t('auth.emailExists'));
+      } else if (msg === 'Registration failed') {
+        toast.error(t('auth.registrationFailed'));
+      } else if (msg === 'Login failed') {
+        toast.error(t('auth.loginFailed'));
+      } else {
+        toast.error(msg || t('common.error'));
+      }
     } finally {
       setLoading(false);
     }
