@@ -23,7 +23,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
   const [currentPage, setCurrentPage] = useState<AdminPage>('dashboard');
 
   const { data: dashboardStats } = useDashboardStats();
-  const stats = dashboardStats ?? { products: 0, orders: 0, categories: 0, banners: 0 };
+  const stats = dashboardStats ?? { products: 0, orders: 0, categories: 0, vehicles: 0 };
 
   const handleLogout = () => {
     setShowLogoutConfirm(false);

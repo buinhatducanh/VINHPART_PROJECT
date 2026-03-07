@@ -1,4 +1,4 @@
-import { Package, ShoppingCart, Folder, Image, Plus, ClipboardList, TrendingUp, Edit, FileText, MessageSquare, Layers } from 'lucide-react';
+import { Package, ShoppingCart, Folder, Plus, ClipboardList, TrendingUp, Edit, FileText, MessageSquare, Layers } from 'lucide-react';
 import { DashboardStats, StatItem, QuickActionConfig } from './types';
 
 export const getStatsConfig = (stats: DashboardStats): StatItem[] => [
@@ -33,10 +33,10 @@ export const getStatsConfig = (stats: DashboardStats): StatItem[] => [
         shadow: 'shadow-orange-500/25'
     },
     {
-        key: 'banners',
-        label: 'Banner',
-        value: stats.banners.toString(),
-        icon: Image,
+        key: 'vehicles',
+        label: 'Dàn áo xe',
+        value: stats.vehicles.toString(),
+        icon: Layers,
         color: 'from-green-500 to-emerald-500',
         gradient: 'bg-gradient-to-br from-green-500/20 to-emerald-500/20',
         border: 'border-green-500/50',

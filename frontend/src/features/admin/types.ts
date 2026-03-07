@@ -6,7 +6,7 @@ export interface DashboardStats {
     products: number;
     orders: number;
     categories: number;
-    banners: number;
+    vehicles: number;
 }
 
 export interface StatItem {
