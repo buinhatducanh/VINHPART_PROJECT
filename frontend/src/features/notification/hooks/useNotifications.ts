@@ -37,6 +37,33 @@ export function useNotifications(userEmail?: string) {
         JSON.parse(localStorage.getItem('notified_ids') || '[]')
     ));
 
+    const [readIds, setReadIds] = useState<Set<string>>(() => {
+        return new Set(JSON.parse(localStorage.getItem('read_notification_ids') || '[]'));
+    });
+
+    const markAsRead = (id: string, event?: React.MouseEvent) => {
+        if (event) {
+            event.stopPropagation();
+        }
+        setReadIds(prev => {
+            const next = new Set(prev).add(id);
+            localStorage.setItem('read_notification_ids', JSON.stringify(Array.from(next)));
+            return next;
+        });
+    };
+
+    const markAllAsRead = (event?: React.MouseEvent) => {
+        if (event) {
+            event.stopPropagation();
+        }
+        setReadIds(prev => {
+            const next = new Set(prev);
+            notifications.forEach(n => next.add(n.id));
+            localStorage.setItem('read_notification_ids', JSON.stringify(Array.from(next)));
+            return next;
+        });
+    };
+
     const requestPermission = async () => {
         if ('Notification' in window && Notification.permission === 'default') {
             await Notification.requestPermission();
@@ -101,9 +128,14 @@ export function useNotifications(userEmail?: string) {
         return () => clearInterval(interval);
     }, [userEmail]);
 
+    const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;
+
     return {
         notifications,
-        unreadCount: notifications.length,
+        unreadCount,
+        readIds,
+        markAsRead,
+        markAllAsRead,
         loading,
         refresh: fetchNotifications
     };

@@ -13,9 +13,9 @@ interface UserNotificationBellProps {
 export function UserNotificationBell({ email, isAdmin, onReviewClick }: UserNotificationBellProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [previewOrderId, setPreviewOrderId] = useState<string | null>(null);
-    const { notifications: userNotifs, unreadCount: userUnread } = useNotifications(email);
+    const { notifications: userNotifs, unreadCount: userUnread, readIds: userReadIds, markAsRead: userMarkAsRead, markAllAsRead: userMarkAllAsRead } = useNotifications(email);
     // If admin, also fetch admin notifications
-    const { notifications: adminNotifs, unreadCount: adminUnread } = useNotifications(isAdmin ? undefined : 'DO_NOT_FETCH');
+    const { notifications: adminNotifs, unreadCount: adminUnread, readIds: adminReadIds, markAsRead: adminMarkAsRead, markAllAsRead: adminMarkAllAsRead } = useNotifications(isAdmin ? undefined : 'DO_NOT_FETCH');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -44,10 +44,23 @@ export function UserNotificationBell({ email, isAdmin, onReviewClick }: UserNoti
     };
 
     const handleNotificationClick = (notif: any) => {
+        if (notif.type === 'order' && isAdmin) {
+            adminMarkAsRead(notif.id);
+        } else {
+            userMarkAsRead(notif.id);
+        }
+
         if (notif.orderId || notif.id) {
             setPreviewOrderId(notif.orderId || notif.id);
         }
         setIsOpen(false);
+    };
+
+    const handleMarkAllAsRead = (e: React.MouseEvent) => {
+        userMarkAllAsRead(e);
+        if (isAdmin) {
+            adminMarkAllAsRead(e);
+        }
     };
 
     // Combine and sort notifications
@@ -82,64 +95,83 @@ export function UserNotificationBell({ email, isAdmin, onReviewClick }: UserNoti
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         className="absolute right-0 mt-2 w-80 bg-gray-950 border border-gray-800 rounded-xl shadow-2xl overflow-hidden z-[9999]"
                     >
-                        <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-black/40">
-                            <h3 className="text-white font-bold text-sm">Thông báo của bạn</h3>
-                            <span className="text-[10px] text-gray-500 uppercase tracking-wider">Mới nhất</span>
+                        <div className="p-4 border-b border-gray-800 flex flex-col sm:flex-row justify-between sm:items-center bg-black/40 gap-2 sm:gap-0">
+                            <h3 className="text-white font-bold text-sm leading-none">Thông báo của bạn</h3>
+                            <div className="flex items-center gap-3">
+                                {totalUnread > 0 && (
+                                    <button
+                                        onClick={handleMarkAllAsRead}
+                                        className="text-[10px] text-gray-400 hover:text-white transition-colors uppercase tracking-wider underline cursor-pointer leading-none mt-0.5"
+                                    >
+                                        Đánh dấu đã đọc
+                                    </button>
+                                )}
+                                <span className="text-[10px] text-gray-500 uppercase tracking-wider leading-none mt-0.5">Mới nhất</span>
+                            </div>
                         </div>
 
                         <div className="max-h-96 overflow-y-auto">
                             {allNotifications.length > 0 ? (
-                                allNotifications.map((notif) => (
-                                    <div
-                                        key={notif.id}
-                                        onClick={() => handleNotificationClick(notif)}
-                                        className="p-4 border-b border-gray-800/50 hover:bg-gray-900/50 transition-colors cursor-pointer group"
-                                    >
-                                        <div className="flex gap-3">
-                                            <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-red-600/10 transition-colors">
-                                                {notif.type === 'order' ? (
-                                                    <Package className="w-5 h-5 text-red-500" />
-                                                ) : (
-                                                    getStatusIcon(notif.status || '')
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-white mb-1">
-                                                    {notif.type === 'order' && <span className="text-[10px] bg-red-600 text-white px-1 mr-1 rounded">Admin</span>}
-                                                    {notif.title}
-                                                </p>
-                                                <p className="text-xs text-gray-400 line-clamp-2 mb-2 leading-relaxed">
-                                                    {notif.message}
-                                                </p>
+                                allNotifications.map((notif) => {
+                                    const isRead = notif.type === 'order' && isAdmin
+                                        ? adminReadIds.has(notif.id)
+                                        : userReadIds.has(notif.id);
 
-                                                <div className="flex justify-between items-center">
-                                                    <span className="flex items-center gap-1 text-[10px] text-gray-500">
-                                                        <Clock className="w-3 h-3" />
-                                                        {formatTime(notif.createdAt)}
-                                                    </span>
-
-                                                    {notif.status === 'DELIVERED' && (
-                                                        <span
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (onReviewClick) {
-                                                                    onReviewClick(notif.orderId);
-                                                                } else {
-                                                                    window.location.href = `/write-review?orderId=${notif.orderId}`;
-                                                                }
-                                                                setIsOpen(false);
-                                                            }}
-                                                            className="flex items-center gap-1 px-2 py-0.5 bg-red-600/20 text-red-500 text-[10px] font-bold rounded-full animate-bounce hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
-                                                        >
-                                                            <Star className="w-3 h-3 fill-current" />
-                                                            Đánh giá ngay
-                                                        </span>
+                                    return (
+                                        <div
+                                            key={notif.id}
+                                            onClick={() => handleNotificationClick(notif)}
+                                            className={`p-4 border-b border-gray-800/50 hover:bg-gray-900/50 transition-colors cursor-pointer group ${isRead ? 'opacity-60' : ''}`}
+                                        >
+                                            <div className="flex gap-3">
+                                                <div className={`w-10 h-10 ${isRead ? 'bg-gray-900' : 'bg-gray-800'} rounded-lg flex items-center justify-center flex-shrink-0 transition-colors`}>
+                                                    {notif.type === 'order' ? (
+                                                        <Package className={`w-5 h-5 ${isRead ? 'text-gray-500' : 'text-red-500'}`} />
+                                                    ) : (
+                                                        getStatusIcon(notif.status || '')
                                                     )}
                                                 </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-sm ${isRead ? 'font-medium text-gray-300' : 'font-bold text-white'} mb-1`}>
+                                                        {notif.type === 'order' && <span className="text-[10px] bg-red-600 text-white px-1 mr-1 rounded opacity-90">Admin</span>}
+                                                        {notif.title}
+                                                    </p>
+                                                    <p className={`text-xs ${isRead ? 'text-gray-500' : 'text-gray-400'} line-clamp-2 mb-2 leading-relaxed`}>
+                                                        {notif.message}
+                                                    </p>
+
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                                                            <Clock className="w-3 h-3" />
+                                                            {formatTime(notif.createdAt)}
+                                                        </span>
+
+                                                        {notif.status === 'DELIVERED' && (
+                                                            <span
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    if (onReviewClick) {
+                                                                        onReviewClick(notif.orderId);
+                                                                    } else {
+                                                                        window.location.href = `/write-review?orderId=${notif.orderId}`;
+                                                                    }
+                                                                    setIsOpen(false);
+                                                                }}
+                                                                className={`flex items-center gap-1 px-2 py-0.5 ${isRead ? 'bg-gray-800 text-gray-400' : 'bg-red-600/20 text-red-500 animate-bounce'} text-[10px] font-bold rounded-full hover:bg-red-600 hover:text-white transition-colors cursor-pointer`}
+                                                            >
+                                                                <Star className="w-3 h-3 fill-current" />
+                                                                Đánh giá ngay
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {!isRead && (
+                                                    <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 flex-shrink-0 animate-pulse"></div>
+                                                )}
                                             </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             ) : (
                                 <div className="p-8 text-center">
                                     <Bell className="w-8 h-8 text-gray-800 mx-auto mb-3" />
