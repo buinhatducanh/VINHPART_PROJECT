@@ -129,4 +129,35 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// PATCH /api/orders/:id/status
+router.patch('/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const validStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: 'Invalid status' });
+        }
+
+        const updateQuery = `
+            UPDATE orders 
+            SET status = $1, "updatedAt" = NOW()
+            WHERE id = $2
+            RETURNING id, "orderNumber", status
+        `;
+
+        const { rows } = await pool.query(updateQuery, [status, id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        res.json({ message: 'Order status updated successfully', order: rows[0] });
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 export default router;
