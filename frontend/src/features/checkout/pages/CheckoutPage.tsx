@@ -13,7 +13,21 @@ interface CheckoutPageProps {
 
 export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: CheckoutPageProps) {
   const [orderComplete, setOrderComplete] = useState(false);
+  const [formData, setFormData] = useState({
+    customerName: '',
+    customerPhone: '',
+    customerEmail: '',
+    address: '',
+    notes: '',
+    city: 'Hồ Chí Minh'
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { t, language } = useI18n();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
@@ -27,15 +41,21 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
   const total = subtotal + shipping;
 
   const handlePlaceOrder = async () => {
+    // Basic validation
+    if (!formData.customerName || !formData.customerPhone || !formData.address) {
+      alert('Vui lòng điền đầy đủ các trường bắt buộc (*)');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      // Mock order data from form (in a real app, this would come from state)
       const orderData = {
-        customerName: 'Nguyễn Văn A',
-        customerEmail: 'example@email.com',
-        customerPhone: '0901234567',
-        address: 'Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố',
-        city: 'Hồ Chí Minh',
-        notes: 'Yêu cầu đặc biệt về đơn hàng...',
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail,
+        customerPhone: formData.customerPhone,
+        address: formData.address,
+        city: formData.city,
+        notes: formData.notes,
         totalAmount: total,
         items: cartItems.map(item => ({
           productId: item.product.product_id,
@@ -55,10 +75,14 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
 
       if (response.ok) {
         setOrderComplete(true);
+      } else {
+        alert('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!');
       }
     } catch (error) {
       console.error('Error placing order:', error);
       alert('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -146,6 +170,9 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
                   <label className="block text-muted-foreground mb-2">{t('checkout.fullName')} *</label>
                   <input
                     type="text"
+                    name="customerName"
+                    value={formData.customerName}
+                    onChange={handleInputChange}
                     placeholder={t('checkout.fullNamePlaceholder') || "Nguyễn Văn A"}
                     className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
                   />
@@ -155,6 +182,9 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
                   <label className="block text-muted-foreground mb-2">{t('checkout.phone')} *</label>
                   <input
                     type="tel"
+                    name="customerPhone"
+                    value={formData.customerPhone}
+                    onChange={handleInputChange}
                     placeholder={t('checkout.phonePlaceholder') || "0901234567"}
                     className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
                   />
@@ -164,6 +194,9 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
                   <label className="block text-muted-foreground mb-2">{t('checkout.email')}</label>
                   <input
                     type="email"
+                    name="customerEmail"
+                    value={formData.customerEmail}
+                    onChange={handleInputChange}
                     placeholder="example@email.com"
                     className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
                   />
@@ -173,6 +206,9 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
                   <label className="block text-muted-foreground mb-2">{t('checkout.address')} *</label>
                   <textarea
                     rows={3}
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
                     placeholder={t('checkout.addressPlaceholder') || "Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"}
                     className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all resize-none"
                   />
@@ -182,6 +218,9 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
                   <label className="block text-muted-foreground mb-2">{t('checkout.notes')}</label>
                   <textarea
                     rows={2}
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleInputChange}
                     placeholder={t('checkout.notesPlaceholder') || "Yêu cầu đặc biệt về đơn hàng..."}
                     className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all resize-none"
                   />
@@ -287,9 +326,10 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handlePlaceOrder}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-foreground font-bold py-4 rounded-lg shadow-lg shadow-red-600/50 hover:shadow-red-600/80 transition-all"
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-red-800 disabled:to-red-900 text-foreground font-bold py-4 rounded-lg shadow-lg shadow-red-600/50 hover:shadow-red-600/80 transition-all flex justify-center items-center"
               >
-                {t('checkout.placeOrder')}
+                {isSubmitting ? 'Đang xử lý...' : t('checkout.placeOrder')}
               </motion.button>
 
               {/* Trust Badges */}

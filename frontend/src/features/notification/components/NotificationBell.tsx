@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { Bell, Package, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNotifications } from '../hooks/useNotifications';
+import { OrderDetailsModal } from '@/features/admin/components/OrderDetailsModal';
 
 export function NotificationBell() {
     const [isOpen, setIsOpen] = useState(false);
+    const [previewOrderId, setPreviewOrderId] = useState<string | null>(null);
     const { notifications, unreadCount } = useNotifications();
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -28,6 +30,11 @@ export function NotificationBell() {
             style: 'currency',
             currency: 'VND'
         }).format(price);
+    };
+
+    const handleNotificationClick = (notif: any) => {
+        setPreviewOrderId(notif.orderId || notif.id);
+        setIsOpen(false);
     };
 
     return (
@@ -67,6 +74,7 @@ export function NotificationBell() {
                                 notifications.map((notif) => (
                                     <div
                                         key={notif.id}
+                                        onClick={() => handleNotificationClick(notif)}
                                         className="p-4 border-b border-gray-800 hover:bg-gray-800/50 transition-colors cursor-pointer group"
                                     >
                                         <div className="flex gap-3">
@@ -100,13 +108,27 @@ export function NotificationBell() {
                         </div>
 
                         {notifications.length > 0 && (
-                            <button className="w-full p-3 text-center text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+                            <button
+                                onClick={() => {
+                                    window.location.href = '/admin?page=manageOrders';
+                                    setIsOpen(false);
+                                }}
+                                className="w-full p-3 text-center text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                            >
                                 Xem tất cả đơn hàng
                             </button>
                         )}
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {previewOrderId && (
+                <OrderDetailsModal
+                    orderId={previewOrderId}
+                    isOpen={!!previewOrderId}
+                    onClose={() => setPreviewOrderId(null)}
+                />
+            )}
         </div>
     );
 }

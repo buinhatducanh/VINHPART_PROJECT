@@ -3,6 +3,7 @@ import { ClipboardList, ArrowLeft, Eye, Truck, CheckCircle, XCircle, Clock, X } 
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/shared/lib/i18n';
 import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
+import { NotificationBell } from '@/features/notification/components/NotificationBell';
 
 interface ManageOrdersPageProps {
   onBack: () => void;
@@ -38,6 +39,13 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
 
   useEffect(() => {
     fetchOrders();
+
+    // Check if there's an orderId in the URL to open automatically
+    const params = new URLSearchParams(window.location.search);
+    const orderIdParam = params.get('orderId');
+    if (orderIdParam) {
+      handleViewOrder(orderIdParam);
+    }
   }, []);
 
   const handleViewOrder = async (id: string) => {
@@ -138,7 +146,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
       <motion.div
         initial={a && { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
+        className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-50"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
@@ -158,6 +166,10 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
                   <p className="text-sm text-muted-foreground">{t('admin.manageOrders.subtitle')}</p>
                 </div>
               </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <NotificationBell />
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { getStatsConfig, QUICK_ACTIONS_CONFIG } from '../constants';
 import { useSettings } from '@/shared/hooks/useSettings';
 import { useI18n } from '@/shared/lib/i18n';
 import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
+import { NotificationBell } from '@/features/notification/components/NotificationBell';
 
 interface DashboardHomeProps {
     stats: DashboardStats;
@@ -36,7 +37,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
             <motion.header
                 initial={a && { y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="relative border-b border-border bg-background/40 backdrop-blur-xl"
+                className="relative border-b border-border bg-background/40 backdrop-blur-xl z-50 sticky top-0"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-between">
@@ -69,6 +70,8 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                                 <p className="text-sm font-semibold text-foreground">{siteName.toLowerCase()}@vinhpart.vn</p>
                                 <p className="text-xs text-muted-foreground">{t('common.admin')}</p>
                             </div>
+
+                            <NotificationBell />
 
                             <motion.button
                                 onClick={onLogoutRequest}

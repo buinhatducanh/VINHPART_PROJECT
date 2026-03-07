@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { Product } from '@/shared/types';
 import { useI18n } from '@/shared/lib/i18n';
+import { NotificationBell } from '@/features/notification/components/NotificationBell';
 
 interface ManageProductsPageProps {
   onBack: () => void;
@@ -184,7 +185,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
       <motion.div
         initial={a && { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
+        className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-50"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -206,10 +207,13 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
               </div>
             </div>
 
-            <motion.button onClick={onAddProduct} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-foreground rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/25 flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              {t('admin.manageProducts.addBtn')}
-            </motion.button>
+            <div className="flex items-center gap-4">
+              <NotificationBell />
+              <motion.button onClick={onAddProduct} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-foreground rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/25 flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                {t('admin.manageProducts.addBtn')}
+              </motion.button>
+            </div>
           </div>
         </div>
       </motion.div>

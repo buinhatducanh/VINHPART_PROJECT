@@ -2,8 +2,8 @@ import { Search, ShoppingCart, User, Menu, X, LogOut, Settings, FileText } from 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthModal } from '@/features/auth/components/AuthModal';
-
 import { User as UserType, Product } from '@/shared/types';
+import { UserNotificationBell } from '@/features/notification/components/UserNotificationBell';
 import { productApi } from '@/lib/api';
 import { productImages } from '@/shared/data/productImages';
 import { useSettings } from '@/shared/hooks/useSettings';
@@ -295,9 +295,9 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                                 {product.product_name}
                               </p>
                               <p className="text-muted-foreground text-xs">
-                                {new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US', { 
-                                  style: 'currency', 
-                                  currency: language === 'vi' ? 'VND' : 'USD' 
+                                {new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
+                                  style: 'currency',
+                                  currency: language === 'vi' ? 'VND' : 'USD'
                                 }).format(language === 'vi' ? product.price : product.price / 25000)}
                               </p>
                             </div>
@@ -402,6 +402,13 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Notification Bell (Logged-in User & Admin) */}
+            {user && (
+              <div className="hidden md:flex items-center gap-2">
+                <UserNotificationBell email={user.email} isAdmin={user.role === 'admin'} />
+              </div>
+            )}
 
             {/* Cart */}
             <button

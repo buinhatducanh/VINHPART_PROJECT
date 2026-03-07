@@ -45,7 +45,6 @@ router.get('/user', async (req, res) => {
             SELECT id, "orderNumber", "totalAmount", status, "updatedAt"
             FROM orders
             WHERE "customerEmail" = $1
-            AND status != 'PENDING'
             ORDER BY "updatedAt" DESC
             LIMIT 20
         `;
@@ -56,6 +55,10 @@ router.get('/user', async (req, res) => {
             let message = '';
 
             switch (order.status) {
+                case 'PENDING':
+                    title = 'Đặt hàng thành công';
+                    message = `Đơn hàng ${order.orderNumber} của bạn đã được đặt thành công và đang chờ xử lý.`;
+                    break;
                 case 'CONFIRMED':
                     title = 'Đã nhận đơn';
                     message = `Đơn hàng ${order.orderNumber} đã được hệ thống tiếp nhận.`;

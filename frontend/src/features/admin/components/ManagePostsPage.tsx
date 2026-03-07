@@ -3,6 +3,7 @@ import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X, Eye, 
 import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
+import { NotificationBell } from '@/features/notification/components/NotificationBell';
 
 interface Post {
     id: string;
@@ -233,7 +234,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
             <motion.div
                 initial={a && { y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
+                className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-50"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -260,15 +261,18 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             </div>
                         </div>
 
-                        <motion.button
-                            onClick={createNewPost}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-foreground rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-lg shadow-green-600/25 flex items-center gap-2"
-                        >
-                            <Plus className="w-5 h-5" />
-                            {draftPost ? 'Tiếp tục bản nháp' : 'Thêm bài viết mới'}
-                        </motion.button>
+                        <div className="flex items-center gap-4">
+                            <NotificationBell />
+                            <motion.button
+                                onClick={createNewPost}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-foreground rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-lg shadow-green-600/25 flex items-center gap-2"
+                            >
+                                <Plus className="w-5 h-5" />
+                                {draftPost ? 'Tiếp tục bản nháp' : 'Thêm bài viết mới'}
+                            </motion.button>
+                        </div>
                     </div>
                 </div>
             </motion.div>
