@@ -112,6 +112,7 @@ export const en = {
         description: 'Premium quality, outstanding performance, suitable for all vehicles',
         buyNow: 'Buy Now',
         viewCatalog: 'View Catalog',
+        bodyKit: 'Body Kit',
     },
     benefits: {
         authentic: '100% Genuine',
