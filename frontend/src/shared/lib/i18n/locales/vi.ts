@@ -229,6 +229,7 @@ export const vi = {
         logoutSuccess: 'Đã đăng xuất thành công',
         adminRequired: 'Vui lòng đăng nhập tài khoản Admin để truy cập',
         adminForbidden: 'Bạn không có quyền truy cập trang quản trị',
+        googleLoginFailed: 'Đăng nhập Google thất bại. Vui lòng thử lại.',
     },
     modals: {
         about: 'Giới thiệu',

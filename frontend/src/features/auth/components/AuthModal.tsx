@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useI18n } from '@/shared/lib/i18n';
 import { useGoogleLogin } from '@react-oauth/google';
+import { toast } from 'sonner';
 
 import { User } from '@/shared/types';
 
@@ -24,7 +25,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
     confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { t } = useI18n();
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -32,7 +32,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
     flow: 'implicit',
     onSuccess: async (tokenResponse) => {
       setGoogleLoading(true);
-      setError(null);
       try {
         // Exchange access token for user info from Google
         const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -63,24 +62,23 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
         onLogin(data);
         onClose();
       } catch (err: any) {
-        setError(err.message);
+        toast.error(err.message || t('auth.googleLoginFailed'));
       } finally {
         setGoogleLoading(false);
       }
     },
     onError: (error) => {
       console.error('Google login error:', error);
-      setError('Google login failed. Please try again.');
+      toast.error(t('auth.googleLoginFailed'));
     },
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     if (mode === 'signup' && formData.password !== formData.confirmPassword) {
-      setError(t('auth.passwordMismatch'));
+      toast.error(t('auth.passwordMismatch'));
       setLoading(false);
       return;
     }
@@ -108,7 +106,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
       onLogin(data); // data is User object from backend
       onClose();
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message || t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -184,11 +182,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
                     <h2 className="text-2xl font-black text-foreground mb-2">
                       {mode === 'login' ? t('auth.login') : t('auth.signup')}
                     </h2>
-                    {error && (
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4 text-center">
-                        <p className="text-red-500 text-sm font-medium">{error}</p>
-                      </div>
-                    )}
                     <p className="text-muted-foreground text-sm">
                       {mode === 'login'
                         ? t('auth.loginSubtitle')

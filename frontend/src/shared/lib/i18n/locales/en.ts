@@ -229,6 +229,7 @@ export const en = {
         logoutSuccess: 'Logged out successfully',
         adminRequired: 'Please login with an Admin account to access',
         adminForbidden: 'You do not have permission to access the admin page',
+        googleLoginFailed: 'Google login failed. Please try again.',
     },
     modals: {
         about: 'About',
