@@ -112,6 +112,7 @@ export const vi = {
         description: 'Chất lượng cao cấp, hiệu suất vượt trội, phù hợp mọi loại xe',
         buyNow: 'Mua ngay',
         viewCatalog: 'Xem danh mục',
+        bodyKit: 'Dàn Áo Xe',
     },
     benefits: {
         authentic: 'Chính hãng 100%',

@@ -8,6 +8,7 @@ import { SettingsPage } from '../components/SettingsPage';
 import { ManageSEOPage } from '../components/ManageSEOPage';
 import { CategoryPage as ManageCategoriesPage } from '../components/category';
 import { ManageReviewsPage } from '../components/ManageReviewsPage';
+import { ManageBodyKitPage } from '../components/ManageBodyKitPage';
 import { DashboardHome } from '../components/DashboardHome';
 import { LogoutModal } from '../components/LogoutModal';
 import { AdminPage } from '../types';
@@ -22,7 +23,7 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
   const [currentPage, setCurrentPage] = useState<AdminPage>('dashboard');
 
   const { data: dashboardStats } = useDashboardStats();
-  const stats = dashboardStats ?? { products: 0, orders: 0, categories: 0, banners: 0 };
+  const stats = dashboardStats ?? { products: 0, orders: 0, categories: 0, vehicles: 0 };
 
   const handleLogout = () => {
     setShowLogoutConfirm(false);
@@ -64,6 +65,10 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
 
   if (currentPage === 'managePosts') {
     return <ManagePostsPage onBack={() => setCurrentPage('dashboard')} />;
+  }
+
+  if (currentPage === 'manageBodyKit') {
+    return <ManageBodyKitPage onBack={() => setCurrentPage('dashboard')} />;
   }
 
   return (

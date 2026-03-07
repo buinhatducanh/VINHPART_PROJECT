@@ -86,3 +86,44 @@ export interface User {
   role: 'admin' | 'user';
   avatar?: string | null;
 }
+
+export interface Vehicle {
+  id: string;
+  name: string;
+  slug: string;
+  brand: string;
+  model: string;
+  year?: number;
+  image?: string;
+  description?: string;
+  partsCount: number;
+  totalPrice: number;
+  isActive?: boolean;
+  createdAt: string;
+}
+
+export interface BodyKitPart {
+  bodyKitPartId: string;
+  position?: string;
+  sortOrder: number;
+  product: {
+    product_id: string;
+    product_name: string;
+    price: number;
+    original_price: number;
+    discount_percentage: number;
+    stock: number;
+    stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
+    product_image: string;
+    images: string[];
+    description: string;
+    brand: string;
+    sku?: string;
+  };
+}
+
+export interface VehicleDetail {
+  vehicle: Omit<Vehicle, 'partsCount' | 'totalPrice' | 'createdAt'>;
+  parts: BodyKitPart[];
+  totalPrice: number;
+}

@@ -59,6 +59,7 @@ model Product {
   orderItems        OrderItem[]
   category          Category?   @relation(fields: [categoryId], references: [id])
   reviews           reviews[]
+  bodyKitParts      BodyKitPart[]
 
   @@index([categoryId])
   @@index([slug])
@@ -174,4 +175,40 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+model Vehicle {
+  id          String          @id @default(cuid())
+  name        String
+  slug        String          @unique
+  brand       String
+  model       String
+  year        Int?
+  image       String?
+  description String?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  bodyKitParts BodyKitPart[]
+
+  @@index([slug])
+  @@index([brand])
+  @@index([isActive])
+  @@map("vehicles")
+}
+
+model BodyKitPart {
+  id         String   @id @default(cuid())
+  vehicleId  String
+  productId  String
+  position   String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([vehicleId, productId])
+  @@index([vehicleId])
+  @@index([productId])
+  @@map("body_kit_parts")
 }
