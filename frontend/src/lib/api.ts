@@ -138,6 +138,11 @@ export const dashboardApi = {
         if (!response.ok) throw new Error('Failed to fetch stats');
         return response.json();
     },
+    getStatistics: async (range: 'week' | 'month' | 'year' = 'month') => {
+        const response = await fetch(`${API_BASE_URL}/dashboard/statistics?range=${range}`);
+        if (!response.ok) throw new Error('Failed to fetch statistics');
+        return response.json();
+    },
 };
 
 

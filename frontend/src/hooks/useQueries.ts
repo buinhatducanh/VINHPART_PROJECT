@@ -8,6 +8,7 @@ export const queryKeys = {
     maxPrice: ['maxPrice'] as const,
     orders: ['orders'] as const,
     dashboardStats: ['dashboardStats'] as const,
+    statistics: (range: string) => ['statistics', range] as const,
     productReviews: (productId: string) => ['reviews', productId] as const,
 };
 
@@ -113,7 +114,15 @@ export function useDashboardStats() {
     return useQuery({
         queryKey: queryKeys.dashboardStats,
         queryFn: dashboardApi.getStats,
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 5 * 60 * 1000,
+    });
+}
+
+export function useStatistics(range: 'week' | 'month' | 'year') {
+    return useQuery({
+        queryKey: queryKeys.statistics(range),
+        queryFn: () => dashboardApi.getStatistics(range),
+        staleTime: 3 * 60 * 1000,
     });
 }
 

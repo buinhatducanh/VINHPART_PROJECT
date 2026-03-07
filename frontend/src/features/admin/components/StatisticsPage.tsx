@@ -1,8 +1,9 @@
 import { motion } from 'motion/react';
-import { TrendingUp, DollarSign, ShoppingCart, Users, ArrowLeft, Calendar } from 'lucide-react';
+import { TrendingUp, DollarSign, ShoppingCart, Users, ArrowLeft, Calendar, Loader2 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useState } from 'react';
 import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
+import { useStatistics } from '@/hooks/useQueries';
 
 interface StatisticsPageProps {
   onBack: () => void;
@@ -11,42 +12,33 @@ interface StatisticsPageProps {
 export function StatisticsPage({ onBack }: StatisticsPageProps) {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
   const a = useFirstVisit('statistics');
+  const { data: stats, isLoading } = useStatistics(timeRange);
 
-  // Mock data - Doanh thu theo thời gian
-  const revenueData = [
-    { name: 'T1', revenue: 12500000, orders: 45 },
-    { name: 'T2', revenue: 15200000, orders: 52 },
-    { name: 'T3', revenue: 18700000, orders: 68 },
-    { name: 'T4', revenue: 14300000, orders: 48 },
-    { name: 'T5', revenue: 22100000, orders: 78 },
-    { name: 'T6', revenue: 25800000, orders: 89 },
-    { name: 'T7', revenue: 19500000, orders: 65 },
-  ];
+  const summary = stats?.summary;
+  const revenueData = stats?.revenueChart || [];
+  const topProductsData = stats?.topProducts || [];
+  const categoryData = stats?.categoryDistribution || [];
 
-  // Mock data - Sản phẩm bán chạy
-  const topProductsData = [
-    { name: 'Lọc gió động cơ', sales: 156, revenue: 23400000 },
-    { name: 'Má phanh', sales: 142, revenue: 21300000 },
-    { name: 'Dầu nhớt', sales: 128, revenue: 19200000 },
-    { name: 'Lốp xe', sales: 98, revenue: 29400000 },
-    { name: 'Ắc quy', sales: 87, revenue: 17400000 },
-  ];
+  const formatRevenueShort = (value: number) => {
+    if (value >= 1000000000) return `${(value / 1000000000).toFixed(1)}B`;
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+    return value.toString();
+  };
 
-  // Mock data - Phân bố danh mục
-  const categoryData = [
-    { name: 'Động cơ', value: 35, color: '#3b82f6' },
-    { name: 'Phanh', value: 25, color: '#8b5cf6' },
-    { name: 'Lọc & BĐ', value: 20, color: '#f59e0b' },
-    { name: 'Điện', value: 12, color: '#10b981' },
-    { name: 'Khác', value: 8, color: '#ef4444' },
-  ];
+  const formatFullCurrency = (value: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+  };
 
-  // Summary Stats
+  const avgOrderPercent = summary
+    ? Math.min(100, Math.round(summary.avgOrderValue / 500000 * 100))
+    : 0;
+
   const summaryStats = [
     {
       label: 'Tổng doanh thu',
-      value: '128.1M',
-      change: '+12.5%',
+      value: summary ? formatRevenueShort(summary.totalRevenue) : '—',
+      change: summary ? `${summary.revenueGrowth >= 0 ? '+' : ''}${summary.revenueGrowth}%` : '—',
       icon: DollarSign,
       color: 'from-green-500 to-emerald-500',
       gradient: 'bg-gradient-to-br from-green-500/20 to-emerald-500/20',
@@ -54,8 +46,8 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
     },
     {
       label: 'Đơn hàng',
-      value: '445',
-      change: '+8.2%',
+      value: summary ? summary.totalOrders.toString() : '—',
+      change: summary ? `${summary.ordersGrowth >= 0 ? '+' : ''}${summary.ordersGrowth}%` : '—',
       icon: ShoppingCart,
       color: 'from-blue-500 to-cyan-500',
       gradient: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
@@ -63,17 +55,17 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
     },
     {
       label: 'Khách hàng',
-      value: '289',
-      change: '+15.3%',
+      value: summary ? summary.uniqueCustomers.toString() : '—',
+      change: summary ? `TB: ${formatRevenueShort(summary.avgOrderValue)}/đơn` : '—',
       icon: Users,
       color: 'from-purple-500 to-pink-500',
       gradient: 'bg-gradient-to-br from-purple-500/20 to-pink-500/20',
       border: 'border-purple-500/50',
     },
     {
-      label: 'Tăng trưởng',
-      value: '+18.7%',
-      change: 'So với tháng trước',
+      label: 'Tăng trưởng doanh thu',
+      value: summary ? `${summary.revenueGrowth >= 0 ? '+' : ''}${summary.revenueGrowth}%` : '—',
+      change: timeRange === 'week' ? 'So với tuần trước' : timeRange === 'year' ? 'So với năm trước' : 'So với tháng trước',
       icon: TrendingUp,
       color: 'from-orange-500 to-yellow-500',
       gradient: 'bg-gradient-to-br from-orange-500/20 to-yellow-500/20',
@@ -82,7 +74,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
   ];
 
   const formatCurrency = (value: number) => {
-    return `${(value / 1000000).toFixed(1)}M`;
+    return formatRevenueShort(value);
   };
 
   return (
@@ -161,9 +153,14 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
         </div>
       </motion.div>
 
-      {/* Main Content */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Summary Stats */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+          </div>
+        )}
+
+        {!isLoading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {summaryStats.map((stat, index) => (
             <motion.div
@@ -205,7 +202,9 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-xl font-bold text-foreground mb-1">Doanh thu theo thời gian</h3>
-                <p className="text-sm text-muted-foreground">Biểu đồ doanh thu 7 ngày gần nhất</p>
+                <p className="text-sm text-muted-foreground">
+                  {timeRange === 'week' ? '7 ngày gần nhất' : timeRange === 'year' ? '12 tháng gần nhất' : '30 ngày gần nhất'}
+                </p>
               </div>
               <Calendar className="w-6 h-6 text-green-600" />
             </div>
@@ -222,7 +221,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
                     borderRadius: '8px',
                     color: '#fff'
                   }}
-                  formatter={(value: number) => [`${formatCurrency(value)} VNĐ`, 'Doanh thu']}
+                  formatter={(value: number) => [formatFullCurrency(value), 'Doanh thu']}
                 />
                 <Legend />
                 <Line
@@ -344,16 +343,17 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
             </div>
 
             <div className="space-y-4">
-              {/* Metric Item */}
               <div className="bg-muted rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-muted-foreground text-sm">Giá trị đơn hàng trung bình</span>
-                  <span className="text-foreground font-bold">287.9K</span>
+                  <span className="text-foreground font-bold">
+                    {summary ? formatRevenueShort(summary.avgOrderValue) : '—'}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
                     initial={a && { width: 0 }}
-                    animate={{ width: '72%' }}
+                    animate={{ width: `${avgOrderPercent}%` }}
                     transition={{ duration: 1, delay: 0.8 }}
                     className="bg-gradient-to-r from-green-600 to-green-500 h-2 rounded-full"
                   ></motion.div>
@@ -362,13 +362,15 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
 
               <div className="bg-muted rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-muted-foreground text-sm">Tỷ lệ chuyển đổi</span>
-                  <span className="text-foreground font-bold">4.3%</span>
+                  <span className="text-muted-foreground text-sm">Tăng trưởng đơn hàng</span>
+                  <span className="text-foreground font-bold">
+                    {summary ? `${summary.ordersGrowth >= 0 ? '+' : ''}${summary.ordersGrowth}%` : '—'}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
                     initial={a && { width: 0 }}
-                    animate={{ width: '43%' }}
+                    animate={{ width: `${summary ? Math.min(100, Math.max(5, Math.abs(summary.ordersGrowth))) : 0}%` }}
                     transition={{ duration: 1, delay: 0.9 }}
                     className="bg-gradient-to-r from-blue-600 to-blue-500 h-2 rounded-full"
                   ></motion.div>
@@ -377,13 +379,15 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
 
               <div className="bg-muted rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-muted-foreground text-sm">Khách hàng quay lại</span>
-                  <span className="text-foreground font-bold">68%</span>
+                  <span className="text-muted-foreground text-sm">Tăng trưởng doanh thu</span>
+                  <span className="text-foreground font-bold">
+                    {summary ? `${summary.revenueGrowth >= 0 ? '+' : ''}${summary.revenueGrowth}%` : '—'}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
                     initial={a && { width: 0 }}
-                    animate={{ width: '68%' }}
+                    animate={{ width: `${summary ? Math.min(100, Math.max(5, Math.abs(summary.revenueGrowth))) : 0}%` }}
                     transition={{ duration: 1, delay: 1.0 }}
                     className="bg-gradient-to-r from-purple-600 to-purple-500 h-2 rounded-full"
                   ></motion.div>
@@ -393,12 +397,14 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
               <div className="bg-muted rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-muted-foreground text-sm">Đánh giá tích cực</span>
-                  <span className="text-foreground font-bold">94%</span>
+                  <span className="text-foreground font-bold">
+                    {summary ? `${summary.positiveReviewRate}%` : '—'}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
                     initial={a && { width: 0 }}
-                    animate={{ width: '94%' }}
+                    animate={{ width: `${summary?.positiveReviewRate || 0}%` }}
                     transition={{ duration: 1, delay: 1.1 }}
                     className="bg-gradient-to-r from-orange-600 to-orange-500 h-2 rounded-full"
                   ></motion.div>
@@ -407,6 +413,7 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
             </div>
           </motion.div>
         </div>
+        )}
       </div>
     </div>
   );
