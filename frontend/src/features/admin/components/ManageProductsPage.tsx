@@ -3,7 +3,7 @@ import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { Package, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
-import { Product } from '@/shared/types';
+import { Product, Category } from '@/shared/types';
 import { useI18n } from '@/shared/lib/i18n';
 import { NotificationBell } from '@/features/notification/components/NotificationBell';
 
@@ -17,6 +17,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   const [products, setProducts] = useState<Product[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const { t, language } = useI18n();
   const a = useFirstVisit('manage-products');
@@ -81,7 +82,40 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = () => {
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const mapped = data.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+            parent_id: cat.parentId,
+            slug: cat.slug
+          } as Category));
+          setCategories(mapped);
+        }
+      })
+      .catch(err => console.error('Error fetching categories:', err));
+  };
+
+  const buildCategoryOptions = (cats: Category[], parentId: string | null = null, level: number = 0): { id: string, name: string, label: string }[] => {
+    let result: { id: string, name: string, label: string }[] = [];
+    const children = cats.filter(c => c.parent_id === parentId);
+    for (const child of children) {
+      result.push({
+        id: child.id,
+        name: child.name,
+        label: '\u00A0\u00A0'.repeat(level * 2) + (level > 0 ? '|_ ' : '') + child.name
+      });
+      result = result.concat(buildCategoryOptions(cats, child.id, level + 1));
+    }
+    return result;
+  };
+  const categoryOptions = buildCategoryOptions(categories);
 
   const fetchProducts = () => {
     setLoading(true);
@@ -141,12 +175,15 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
           body: JSON.stringify({
             product_name: editingProduct.product_name,
             brand: editingProduct.compatible_brand,
-            category: editingProduct.sub_category,
+            category: editingProduct.category,
             price: editingProduct.price,
             discount_percentage: editingProduct.discount_percentage,
             stock: editingProduct.stock,
             description: editingProduct.description,
-            image_url: editingProduct.product_image
+            image_url: editingProduct.product_image,
+            sku: editingProduct.sku,
+            discount_start_date: editingProduct.discount_start_date || undefined,
+            discount_end_date: editingProduct.discount_end_date || undefined
           })
         });
 
@@ -270,7 +307,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
                     <td className="px-6 py-4">
                       <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/50 rounded-lg text-blue-400 text-sm">
-                        {product.sub_category || product.category}
+                        {product.category}
                       </span>
                     </td>
 
@@ -368,7 +405,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                     <input type="text" value={editingProduct.product_name} onChange={(e) => setEditingProduct({ ...editingProduct, product_name: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.brandLabel')}</label>
                       <select value={editingProduct.compatible_brand} onChange={(e) => setEditingProduct({ ...editingProduct, compatible_brand: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20">
@@ -380,13 +417,18 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.categoryLabel')}</label>
-                      <select value={editingProduct.sub_category} onChange={(e) => setEditingProduct({ ...editingProduct, sub_category: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20">
+                      <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.categoryLabel')} <span className="text-red-500">*</span></label>
+                      <select value={editingProduct.category} onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 font-mono">
                         <option value="">{t('admin.manageProducts.categorySelect')}</option>
-                        {['Phụ tùng động cơ', 'Phanh & Hệ thống phanh', 'Lọc & Bảo dưỡng', 'Điện & Đèn', 'Phụ kiện ngoại thất'].map(c => (
-                          <option key={c} value={c}>{c}</option>
+                        {categoryOptions.map(c => (
+                          <option key={c.id} value={c.name}>{c.label}</option>
                         ))}
                       </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-muted-foreground mb-2">Mã Phụ tùng (SKU)</label>
+                      <input type="text" value={editingProduct.sku || ''} onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })} placeholder="Nhập mã phụ tùng..." className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20" />
                     </div>
                   </div>
 
@@ -412,6 +454,17 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                       <option value="low_stock">{t('admin.manageProducts.lowStock')}</option>
                       <option value="out_of_stock">{t('admin.manageProducts.outOfStock')}</option>
                     </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-muted-foreground mb-2">Bắt đầu giảm giá</label>
+                      <input type="datetime-local" value={editingProduct.discount_start_date ? new Date(editingProduct.discount_start_date).toISOString().slice(0, 16) : ''} onChange={(e) => setEditingProduct({ ...editingProduct, discount_start_date: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-muted-foreground mb-2">Kết thúc giảm giá</label>
+                      <input type="datetime-local" value={editingProduct.discount_end_date ? new Date(editingProduct.discount_end_date).toISOString().slice(0, 16) : ''} onChange={(e) => setEditingProduct({ ...editingProduct, discount_end_date: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20" />
+                    </div>
                   </div>
 
                   <div>

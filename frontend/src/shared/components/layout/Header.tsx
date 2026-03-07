@@ -316,29 +316,14 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
           </div>
 
           {/* Right Icons */}
-          <div className="flex items-center gap-2 md:gap-4">
-            {/* Search Icon - Mobile */}
-            <button
-              className="md:hidden p-2 hover:bg-card rounded-lg transition-colors text-foreground"
-              onClick={() => {
-                // Here you might want to open a mobile search overlay
-                // For now, let's just focus the search input if visible, or open mobile menu with search active
-                setIsMobileMenuOpen(true);
-                setTimeout(() => {
-                  document.getElementById('mobile-search-input')?.focus();
-                }, 100);
-              }}
-            >
-              <Search className="w-5 h-5 lg:w-6 lg:h-6" />
-            </button>
-
-            {/* Account */}
-            <div className="relative hidden md:block" ref={accountMenuRef}>
+          <div className="flex items-center gap-1 md:gap-4">
+            {/* Account - Visible on all devices so login is easy to find */}
+            <div className="relative" ref={accountMenuRef}>
               <button
                 onClick={() => setShowAccountMenu(!showAccountMenu)}
                 className="p-2 hover:bg-card rounded-lg transition-colors relative"
               >
-                <User className="w-5 h-5 text-muted-foreground" />
+                <User className="w-5 h-5 lg:w-6 lg:h-6 text-foreground md:text-muted-foreground" />
               </button>
 
               <AnimatePresence>
@@ -403,9 +388,9 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
               </AnimatePresence>
             </div>
 
-            {/* Notification Bell (Logged-in User & Admin) */}
+            {/* Notification Bell (Logged-in User & Admin) - Always visible if logged in */}
             {user && (
-              <div className="hidden md:flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <UserNotificationBell email={user.email} isAdmin={user.role === 'admin'} />
               </div>
             )}

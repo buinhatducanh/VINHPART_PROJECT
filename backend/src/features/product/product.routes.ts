@@ -138,6 +138,7 @@ router.get('/', async (req, res) => {
 
         const dataQuery = `
             SELECT p.id, p.name, p."categoryId", p.brand, p.price, p."salePrice", p.stock, p.images, p.description,
+                   p.sku, p."discountStartDate", p."discountEndDate",
                    c.name as category_name, c.slug as category_slug
             ${baseQuery}
             ORDER BY p."createdAt" DESC
@@ -169,6 +170,9 @@ router.get('/', async (req, res) => {
                 price: actualPrice,
                 original_price: originalPrice,
                 discount_percentage: discountPercent,
+                discount_start_date: p.discountStartDate,
+                discount_end_date: p.discountEndDate,
+                sku: p.sku,
                 stock: p.stock,
                 stock_status: status,
                 description: p.description || '',
@@ -206,7 +210,10 @@ router.post('/', async (req, res) => {
             discount_percent,
             stock,
             description,
-            image_url
+            image_url,
+            sku,
+            discount_start_date,
+            discount_end_date
         } = req.body;
 
         let categoryId;
@@ -240,14 +247,14 @@ router.post('/', async (req, res) => {
 
         const insertQuery = `
             INSERT INTO products (
-                id, name, slug, brand, "categoryId", description, price, "salePrice", stock, images, "isActive", "createdAt", "updatedAt"
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                id, name, slug, brand, "categoryId", description, price, "salePrice", stock, images, "isActive", "createdAt", "updatedAt", sku, "discountStartDate", "discountEndDate"
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             RETURNING *
         `;
         const finalDesc = description + (model ? `\nModel: ${model}` : '');
 
         const { rows: newProducts } = await client.query(insertQuery, [
-            newProductId, product_name, slug, brand, categoryId, finalDesc, parseFloat(price), salePrice, parseInt(stock), images, true, now, now
+            newProductId, product_name, slug, brand, categoryId, finalDesc, parseFloat(price), salePrice, parseInt(stock), images, true, now, now, sku || null, discount_start_date ? new Date(discount_start_date) : null, discount_end_date ? new Date(discount_end_date) : null
         ]);
 
         await client.query('COMMIT');
@@ -283,7 +290,10 @@ router.put('/:id', async (req, res) => {
             discount_percentage,
             stock,
             description,
-            image_url
+            image_url,
+            sku,
+            discount_start_date,
+            discount_end_date
         } = req.body;
 
         let categoryId;
@@ -311,6 +321,9 @@ router.put('/:id', async (req, res) => {
         if (salePrice !== null) { query += `, "salePrice" = $${idx++}`; params.push(salePrice); }
         if (categoryId) { query += `, "categoryId" = $${idx++}`; params.push(categoryId); }
         if (image_url) { query += `, images = $${idx++}`; params.push([image_url]); }
+        if (sku !== undefined) { query += `, sku = $${idx++}`; params.push(sku || null); }
+        if (discount_start_date !== undefined) { query += `, "discountStartDate" = $${idx++}`; params.push(discount_start_date ? new Date(discount_start_date) : null); }
+        if (discount_end_date !== undefined) { query += `, "discountEndDate" = $${idx++}`; params.push(discount_end_date ? new Date(discount_end_date) : null); }
 
         query += ` WHERE id = $${idx} RETURNING *`;
         params.push(id);

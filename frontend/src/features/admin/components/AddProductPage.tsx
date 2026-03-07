@@ -4,6 +4,7 @@ import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { useI18n } from '@/shared/lib/i18n';
+import { Category } from '@/shared/types';
 
 interface AddProductPageProps {
   onBack: () => void;
@@ -31,8 +32,46 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
     discount_percent: "",
     stock: "",
     description: "",
-    image_url: ""
+    image_url: "",
+    sku: "",
+    discount_start_date: "",
+    discount_end_date: ""
   });
+
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // Fetch dynamic categories
+  useEffect(() => {
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const mapped = data.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+            parent_id: cat.parentId,
+            slug: cat.slug
+          } as Category));
+          setCategories(mapped);
+        }
+      })
+      .catch(err => console.error("Error fetching categories:", err));
+  }, []);
+
+  const buildCategoryOptions = (cats: Category[], parentId: string | null = null, level: number = 0): { id: string, name: string, label: string }[] => {
+    let result: { id: string, name: string, label: string }[] = [];
+    const children = cats.filter(c => c.parent_id === parentId);
+    for (const child of children) {
+      result.push({
+        id: child.id,
+        name: child.name,
+        label: '\u00A0\u00A0'.repeat(level * 2) + (level > 0 ? '|_ ' : '') + child.name
+      });
+      result = result.concat(buildCategoryOptions(cats, child.id, level + 1));
+    }
+    return result;
+  };
+  const categoryOptions = buildCategoryOptions(categories);
 
   const [imagePreview, setImagePreview] = useState<string>("");
 
@@ -141,7 +180,10 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
       discount_percent: discount_percent?.toString(),
       stock: stock.toString(),
       description: formData.description,
-      image_url: formData.image_url
+      image_url: formData.image_url,
+      sku: formData.sku,
+      discount_start_date: formData.discount_start_date || undefined,
+      discount_end_date: formData.discount_end_date || undefined
     };
 
     try {
@@ -164,15 +206,6 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
       toast.error(t("admin.product.networkError"));
     }
   };
-
-  const categories = [
-    t('settings.categories'), // Use common categories if available, or keep Vietnamese for now but wrap in t() for potential future use
-    "Phụ tùng động cơ",
-    "Phanh & Hệ thống phanh",
-    "Lọc & Bảo dưỡng",
-    "Điện & Đèn",
-    "Phụ kiện ngoại thất"
-  ];
 
   const brands = [
     "Honda",
@@ -273,12 +306,25 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
                       </select>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">{t("admin.product.categoryLabel")} <span className="text-red-600">*</span></label>
-                      <select name="category" value={formData.category} onChange={handleInputChange} required className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all">
-                        <option value="">{t("admin.product.categorySelect")}</option>
-                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                      </select>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-2">{t("admin.product.categoryLabel")} <span className="text-red-600">*</span></label>
+                        <select
+                          name="category"
+                          value={formData.category}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all font-mono"
+                        >
+                          <option value="">{t("admin.product.categorySelect")}</option>
+                          {categoryOptions.map(cat => <option key={cat.id} value={cat.name}>{cat.label}</option>)}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-2">Mã Phụ tùng (SKU)</label>
+                        <input type="text" name="sku" value={formData.sku} onChange={handleInputChange} placeholder="Nhập mã phụ tùng..." className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
+                      </div>
                     </div>
                   </div>
 
@@ -301,6 +347,17 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">{t("admin.product.stockLabel")} <span className="text-red-600">*</span></label>
                       <input type="number" name="stock" value={formData.stock} onChange={handleInputChange} required min="0" placeholder="0" className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">Bắt đầu giảm giá</label>
+                      <input type="datetime-local" name="discount_start_date" value={formData.discount_start_date} onChange={handleInputChange} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">Kết thúc giảm giá</label>
+                      <input type="datetime-local" name="discount_end_date" value={formData.discount_end_date} onChange={handleInputChange} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
                     </div>
                   </div>
 

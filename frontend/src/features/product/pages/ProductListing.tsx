@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Filter, X, ChevronRight, ArrowUpDown, TrendingUp, TrendingDown } from 'lucide-react';
 import { ProductCard } from '@/features/product/components/ProductCard';
 import { PriceRangeSlider } from '@/features/product/components/PriceRangeSlider';
-import { hierarchicalCategories } from '@/shared/data/mockProducts';
-import { Product } from '@/shared/types';
+import { Product, Category } from '@/shared/types';
 import { useProducts, useMaxPrice } from '@/hooks/useQueries';
 import { ProductCardSkeleton } from '@/shared/components/skeletons/ProductCardSkeleton';
 import { useI18n } from '@/shared/lib/i18n';
@@ -35,7 +34,33 @@ export function ProductListing({
   const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc'>('default');
   const [currentPage, setCurrentPage] = useState(1);
   const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([0, 5000000]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const { t } = useI18n();
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const mapped = data.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+            parent_id: cat.parentId,
+            slug: cat.slug
+          } as Category));
+          setCategories(mapped);
+        }
+      })
+      .catch(err => console.error("Error fetching categories:", err));
+  }, []);
+
+  const hierarchicalCategories = useMemo(() => {
+    const parents = categories.filter(c => !c.parent_id);
+    return parents.map(parent => ({
+      ...parent,
+      children: categories.filter(c => c.parent_id === parent.id)
+    }));
+  }, [categories]);
 
   const itemsPerPage = 20;
 
@@ -128,11 +153,11 @@ export function ProductListing({
                   if (category.children.length > 0) {
                     toggleCategory(category.id);
                   }
-                  handleCategoryChange(category.id);
+                  handleCategoryChange(category.slug || category.id);
                 }}
                 whileHover={{ scale: 1.02, x: 2 }}
                 whileTap={{ scale: 0.98 }}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-all flex items-center justify-between font-medium ${selectedCategory === category.id
+                className={`w-full text-left px-4 py-3 rounded-lg transition-all flex items-center justify-between font-medium ${selectedCategory === category.slug || selectedCategory === category.id
                   ? 'bg-gradient-to-r from-red-600 to-red-700 text-foreground shadow-lg shadow-red-600/30'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:border-red-600/30 border border-transparent'
                   }`}
@@ -160,10 +185,10 @@ export function ProductListing({
                       {category.children.map(sub => (
                         <motion.button
                           key={sub.id}
-                          onClick={() => handleCategoryChange(sub.id)}
+                          onClick={() => handleCategoryChange(sub.slug || sub.id)}
                           whileHover={{ scale: 1.02, x: 2 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`w-full text-left px-4 py-2 text-sm rounded-lg transition-all flex items-center gap-2 ${selectedCategory === sub.id
+                          className={`w-full text-left px-4 py-2 text-sm rounded-lg transition-all flex items-center gap-2 ${selectedCategory === sub.slug || selectedCategory === sub.id
                             ? 'bg-red-600/20 text-red-400 border border-red-600/50'
                             : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                             }`}

@@ -39,24 +39,26 @@ model Category {
 }
 
 model Product {
-  id          String      @id @default(cuid())
-  name        String
-  slug        String      @unique
-  description String?
-  price       Decimal     @db.Decimal(10, 2)
-  salePrice   Decimal?    @db.Decimal(10, 2)
-  sku         String?     @unique
-  stock       Int         @default(0)
-  images      String[]
-  categoryId  String?
-  brand       String?
-  isActive    Boolean     @default(true)
-  isFeatured  Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  orderItems  OrderItem[]
-  category    Category?   @relation(fields: [categoryId], references: [id])
-  reviews     reviews[]
+  id                String      @id @default(cuid())
+  name              String
+  slug              String      @unique
+  description       String?
+  price             Decimal     @db.Decimal(10, 2)
+  salePrice         Decimal?    @db.Decimal(10, 2)
+  discountStartDate DateTime?
+  discountEndDate   DateTime?
+  sku               String?     @unique
+  stock             Int         @default(0)
+  images            String[]
+  categoryId        String?
+  brand             String?
+  isActive          Boolean     @default(true)
+  isFeatured        Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  orderItems        OrderItem[]
+  category          Category?   @relation(fields: [categoryId], references: [id])
+  reviews           reviews[]
 
   @@index([categoryId])
   @@index([slug])
