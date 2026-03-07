@@ -142,7 +142,8 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                 setShowDeleteConfirm(null);
                 toast.success("Đã xóa bài viết thành công");
             } else {
-                toast.error("Lỗi khi xóa bài viết");
+                const errorData = await res.json().catch(() => null);
+                toast.error(errorData?.error || "Lỗi khi xóa bài viết");
             }
         } catch (error) {
             console.error("Delete error:", error);
