@@ -32,6 +32,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
     const [editingPost, setEditingPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
     const a = useFirstVisit('manage-posts');
+    const [draftPost, setDraftPost] = useState<Post | null>(null);
 
     // Cloudinary Widget Refs
     const featuredImageWidgetRef = useRef<any>(null);
@@ -176,6 +177,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                 });
 
                 if (res.ok) {
+                    setDraftPost(null);
                     fetchPosts();
                     setEditingPost(null);
                     toast.success(editingPost.id ? "Cập nhật thành công" : "Thêm bài viết thành công");
@@ -190,7 +192,20 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
         }
     };
 
+    const closeAndSaveDraft = () => {
+        if (editingPost && !editingPost.id) {
+            setDraftPost(editingPost);
+            toast.info('Đã lưu bản nháp tạm thời');
+        }
+        setEditingPost(null);
+    };
+
     const createNewPost = () => {
+        if (draftPost) {
+            setEditingPost(draftPost);
+            setDraftPost(null);
+            return;
+        }
         setEditingPost({
             id: '',
             title: '',
@@ -252,7 +267,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-foreground rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-lg shadow-green-600/25 flex items-center gap-2"
                         >
                             <Plus className="w-5 h-5" />
-                            Thêm bài viết mới
+                            {draftPost ? 'Tiếp tục bản nháp' : 'Thêm bài viết mới'}
                         </motion.button>
                     </div>
                 </div>
@@ -414,7 +429,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-                    onClick={() => setEditingPost(null)}
+                    onClick={closeAndSaveDraft}
                 >
                     <motion.div
                         initial={{ scale: 0.9, y: 20 }}
@@ -427,7 +442,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                 {editingPost.id ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'}
                             </h3>
                             <button
-                                onClick={() => setEditingPost(null)}
+                                onClick={closeAndSaveDraft}
                                 className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 <X className="w-6 h-6" />
@@ -578,7 +593,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => setEditingPost(null)}
+                                onClick={closeAndSaveDraft}
                                 className="flex-1 px-6 py-3 bg-muted border border-border text-foreground rounded-lg hover:bg-muted/80 transition-colors font-medium"
                             >
                                 Hủy bỏ
