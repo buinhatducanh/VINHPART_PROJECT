@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { MessageSquare, ArrowLeft, Search, Edit, Trash2, Star, Check, X, ArrowUp, ArrowDown, User, Calendar } from 'lucide-react';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { useState, useEffect } from 'react';
 import { Review } from '@/shared/types';
 import { useI18n } from '@/shared/lib/i18n';
@@ -9,6 +10,7 @@ interface ManageReviewsPageProps {
 }
 
 export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
+  const a = useFirstVisit('manage-reviews');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [filterRating, setFilterRating] = useState<number | 'all'>('all');
@@ -157,7 +159,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
         ))}
       </div>
 
-      <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10">
+      <motion.div initial={a && { y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -183,25 +185,25 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4">
+          <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4">
             <p className="text-muted-foreground text-sm mb-1">{t('admin.manageReviews.stats.total')}</p>
             <p className="text-3xl font-bold text-foreground">{stats.total}</p>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card/50 backdrop-blur-xl border border-yellow-600/30 rounded-xl p-4">
+          <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card/50 backdrop-blur-xl border border-yellow-600/30 rounded-xl p-4">
             <p className="text-muted-foreground text-sm mb-1">{t('admin.manageReviews.stats.pending')}</p>
             <p className="text-3xl font-bold text-yellow-400">{stats.pending}</p>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card/50 backdrop-blur-xl border border-green-600/30 rounded-xl p-4">
+          <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card/50 backdrop-blur-xl border border-green-600/30 rounded-xl p-4">
             <p className="text-muted-foreground text-sm mb-1">{t('admin.manageReviews.stats.approved')}</p>
             <p className="text-3xl font-bold text-green-400">{stats.approved}</p>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-card/50 backdrop-blur-xl border border-red-600/30 rounded-xl p-4">
+          <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-card/50 backdrop-blur-xl border border-red-600/30 rounded-xl p-4">
             <p className="text-muted-foreground text-sm mb-1">{t('admin.manageReviews.stats.rejected')}</p>
             <p className="text-3xl font-bold text-red-400">{stats.rejected}</p>
           </motion.div>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4 mb-6">
+        <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4 mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -230,7 +232,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
           ) : filteredReviews.map((review, index) => {
             const badge = getStatusBadge(review.status);
             return (
-              <motion.div key={review.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="group relative bg-card/50 backdrop-blur-xl border border-border rounded-xl p-6 hover:border-cyan-600/50 transition-all">
+              <motion.div key={review.id} initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="group relative bg-card/50 backdrop-blur-xl border border-border rounded-xl p-6 hover:border-cyan-600/50 transition-all">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -322,7 +324,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
         </div>
 
         {filteredReviews.length === 0 && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-12 text-center">
+          <motion.div initial={a && { opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-12 text-center">
             <MessageSquare className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-foreground mb-2">{t('admin.manageReviews.notFound')}</h3>
             <p className="text-muted-foreground mb-4">{t('admin.manageReviews.notFoundDesc')}</p>

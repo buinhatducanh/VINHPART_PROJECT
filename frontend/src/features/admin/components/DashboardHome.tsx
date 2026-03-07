@@ -4,6 +4,7 @@ import { AdminPage, DashboardStats } from '../types';
 import { getStatsConfig, QUICK_ACTIONS_CONFIG } from '../constants';
 import { useSettings } from '@/shared/hooks/useSettings';
 import { useI18n } from '@/shared/lib/i18n';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 
 interface DashboardHomeProps {
     stats: DashboardStats;
@@ -16,6 +17,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
     const { siteName } = useSettings();
     const statsConfig = getStatsConfig(stats);
     const { t } = useI18n();
+    const a = useFirstVisit('dashboard-home');
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
@@ -32,7 +34,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
             </div>
 
             <motion.header
-                initial={{ y: -20, opacity: 0 }}
+                initial={a && { y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="relative border-b border-border bg-background/40 backdrop-blur-xl"
             >
@@ -83,14 +85,14 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
             </motion.header>
 
             <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
+                <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
                     <h2 className="text-3xl font-bold text-foreground mb-2">{t('admin.dashboard.welcome')} 👋</h2>
                     <p className="text-muted-foreground">{t('admin.dashboard.overview', { name: siteName.toUpperCase() })}</p>
                 </motion.div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     {statsConfig.map((stat, index) => (
-                        <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + index * 0.1 }} whileHover={{ y: -5, scale: 1.02 }} className="group relative">
+                        <motion.div key={stat.label} initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + index * 0.1 }} whileHover={{ y: -5, scale: 1.02 }} className="group relative">
                             <div className={`relative bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6 overflow-hidden hover:border-${stat.border} transition-all duration-300`}>
                                 <div className={`absolute inset-0 ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
                                 <div className="relative mb-4">
@@ -110,7 +112,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                     ))}
                 </div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="relative bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6 overflow-hidden">
+                <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="relative bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-red-600/5 to-transparent"></div>
                     <div className="relative">
                         <div className="flex items-center gap-3 mb-6">
@@ -121,7 +123,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                             {QUICK_ACTIONS_CONFIG.map((action, index) => (
                                 <motion.button
                                     key={action.label}
-                                    initial={{ opacity: 0, x: -20 }}
+                                    initial={a && { opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.7 + index * 0.1 }}
                                     whileHover={{ scale: 1.05, x: 5 }}
@@ -144,7 +146,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                     </div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1 }} className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1 }} className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-card/30 border border-border rounded-xl p-4 backdrop-blur">
                         <p className="text-xs text-muted-foreground mb-1">{t('admin.dashboard.sysVersion')}</p>
                         <p className="text-foreground font-semibold">{siteName.toUpperCase()} v2.0.0</p>
@@ -162,7 +164,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                     </div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 }} className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 }} className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <motion.button onClick={() => onNavigate('statistics')} whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="bg-gradient-to-br from-green-600/20 to-green-800/20 border border-green-600/30 rounded-xl p-6 text-left hover:border-green-600/50 transition-all group">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-800 rounded-xl flex items-center justify-center group-hover:shadow-lg shadow-green-600/25 transition-all">
@@ -200,7 +202,7 @@ export function DashboardHome({ stats, onNavigate, onLogoutRequest, onBackToHome
                     </motion.button>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.3 }} className="mt-8 flex justify-center">
+                <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.3 }} className="mt-8 flex justify-center">
                     <motion.button onClick={onBackToHome} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 bg-card/50 border border-border text-foreground rounded-lg hover:border-gray-600 transition-all flex items-center gap-2 group">
                         <Home className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
                         <span>{t('admin.dashboard.backToHome')}</span>

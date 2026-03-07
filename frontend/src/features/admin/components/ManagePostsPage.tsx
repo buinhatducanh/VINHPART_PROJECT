@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X, Eye, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 
 interface Post {
     id: string;
@@ -30,6 +31,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
     const [editingPost, setEditingPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
+    const a = useFirstVisit('manage-posts');
 
     // Cloudinary Widget Refs
     const featuredImageWidgetRef = useRef<any>(null);
@@ -214,7 +216,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
         <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black pb-20">
             {/* Header */}
             <motion.div
-                initial={{ y: -20, opacity: 0 }}
+                initial={a && { y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
             >
@@ -260,7 +262,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Search Bar */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={a && { opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4 mb-6"
                 >
@@ -278,7 +280,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
 
                 {/* Posts Table */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={a && { opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                     className="bg-card/50 backdrop-blur-xl border border-border rounded-xl overflow-hidden"
@@ -308,7 +310,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                 {filteredPosts.map((post, index) => (
                                     <motion.tr
                                         key={post.id}
-                                        initial={{ opacity: 0, x: -20 }}
+                                        initial={a && { opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: index * 0.05 }}
                                         className="hover:bg-muted/30 transition-colors group"
@@ -387,7 +389,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                 {/* Empty State */}
                 {filteredPosts.length === 0 && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
+                        initial={a && { opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-12 text-center mt-6"
                     >

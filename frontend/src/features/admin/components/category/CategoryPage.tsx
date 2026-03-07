@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { Category } from '@/shared/types';
 import { toast } from 'sonner';
 
@@ -23,6 +24,7 @@ const initialForm: CategoryForm = {
 };
 
 export function CategoryPage({ onBack }: CategoryPageProps) {
+    const a = useFirstVisit('manage-categories');
     const [searchQuery, setSearchQuery] = useState('');
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(false);

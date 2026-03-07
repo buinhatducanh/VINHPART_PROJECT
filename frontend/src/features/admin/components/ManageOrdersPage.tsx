@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { ClipboardList, ArrowLeft, Eye, Truck, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/shared/lib/i18n';
+import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 
 interface ManageOrdersPageProps {
   onBack: () => void;
@@ -21,6 +22,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [orders, setOrders] = useState<Order[]>([]);
   const { t, language } = useI18n();
+  const a = useFirstVisit('manage-orders');
 
   useEffect(() => {
     fetch('/api/orders')
@@ -95,7 +97,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
       </div>
 
       <motion.div
-        initial={{ y: -20, opacity: 0 }}
+        initial={a && { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
       >
@@ -123,7 +125,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
       </motion.div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-2 mb-6 flex flex-wrap gap-2">
+        <motion.div initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-2 mb-6 flex flex-wrap gap-2">
           <button onClick={() => setSelectedStatus('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedStatus === 'all' ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-foreground shadow-lg shadow-purple-600/25' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
             {t('admin.manageOrders.all', { count: orders.length })}
           </button>
@@ -144,7 +146,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
             const StatusIcon = statusInfo.icon;
 
             return (
-              <motion.div key={order.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} whileHover={{ y: -2 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-6 hover:border-purple-600/30 transition-all group">
+              <motion.div key={order.id} initial={a && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} whileHover={{ y: -2 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-6 hover:border-purple-600/30 transition-all group">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
@@ -191,7 +193,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
         </div>
 
         {filteredOrders.length === 0 && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-12 text-center">
+          <motion.div initial={a && { opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-12 text-center">
             <ClipboardList className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-foreground mb-2">{t('admin.manageOrders.notFoundTitle')}</h3>
             <p className="text-muted-foreground">{t('admin.manageOrders.notFoundDesc')}</p>
