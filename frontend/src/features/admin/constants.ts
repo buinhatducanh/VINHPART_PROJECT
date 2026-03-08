@@ -1,4 +1,4 @@
-import { Package, ShoppingCart, Folder, Plus, ClipboardList, TrendingUp, Edit, FileText, MessageSquare, Layers } from 'lucide-react';
+import { Package, ShoppingCart, Folder, Plus, ClipboardList, Edit, FileText, MessageSquare, Layers } from 'lucide-react';
 import { DashboardStats, StatItem, QuickActionConfig } from './types';
 
 export const getStatsConfig = (stats: DashboardStats): StatItem[] => [
@@ -47,10 +47,8 @@ export const getStatsConfig = (stats: DashboardStats): StatItem[] => [
 export const QUICK_ACTIONS_CONFIG: QuickActionConfig[] = [
     { key: 'addProduct', label: 'Thêm sản phẩm mới', icon: Plus, color: 'text-blue-400', hoverColor: 'hover:bg-blue-500/10', targetPage: 'addProduct' },
     { key: 'manageOrders', label: 'Xem đơn hàng mới', icon: ClipboardList, color: 'text-purple-400', hoverColor: 'hover:bg-purple-500/10', targetPage: 'manageOrders' },
-    { key: 'statistics', label: 'Thống kê doanh thu', icon: TrendingUp, color: 'text-green-400', hoverColor: 'hover:bg-green-500/10', targetPage: 'statistics' },
     { key: 'manageProducts', label: 'Quản lý sản phẩm', icon: Edit, color: 'text-orange-400', hoverColor: 'hover:bg-orange-500/10', targetPage: 'manageProducts' },
     { key: 'managePosts', label: 'Quản lý bài viết', icon: FileText, color: 'text-green-400', hoverColor: 'hover:bg-green-500/10', targetPage: 'managePosts' },
-    { key: 'manageSEO', label: 'Quản lý bài viết SEO', icon: FileText, color: 'text-purple-400', hoverColor: 'hover:bg-purple-500/10', targetPage: 'manageSEO' },
     { key: 'manageCategories', label: 'Quản lý danh mục', icon: Folder, color: 'text-yellow-400', hoverColor: 'hover:bg-yellow-500/10', targetPage: 'manageCategories' },
     { key: 'manageReviews', label: 'Quản lý đánh giá', icon: MessageSquare, color: 'text-cyan-400', hoverColor: 'hover:bg-cyan-500/10', targetPage: 'manageReviews' },
     { key: 'manageBodyKit', label: 'Quản lý dàn áo', icon: Layers, color: 'text-red-400', hoverColor: 'hover:bg-red-500/10', targetPage: 'manageBodyKit' },

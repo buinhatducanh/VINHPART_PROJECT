@@ -7,6 +7,7 @@ import { Product, Category } from '@/shared/types';
 import { useI18n } from '@/shared/lib/i18n';
 import { NotificationBell } from '@/features/notification/components/NotificationBell';
 import { API_BASE_URL } from '@/lib/api';
+import { CategorySelector } from './CategorySelector';
 
 interface ManageProductsPageProps {
   onBack: () => void;
@@ -103,21 +104,6 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
       .catch(err => console.error('Error fetching categories:', err));
   };
 
-  const buildCategoryOptions = (cats: Category[], parentId: string | null = null, level: number = 0): { id: string, name: string, label: string }[] => {
-    let result: { id: string, name: string, label: string }[] = [];
-    const children = cats.filter(c => c.parent_id === parentId);
-    for (const child of children) {
-      result.push({
-        id: child.id,
-        name: child.name,
-        label: '\u00A0\u00A0'.repeat(level * 2) + (level > 0 ? '|_ ' : '') + child.name
-      });
-      result = result.concat(buildCategoryOptions(cats, child.id, level + 1));
-    }
-    return result;
-  };
-  const categoryOptions = buildCategoryOptions(categories);
-
   const fetchProducts = () => {
     setLoading(true);
     fetch(`${API_BASE_URL}/products?limit=1000`)
@@ -169,6 +155,10 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
   const handleSaveEdit = async () => {
     if (editingProduct) {
+      if (!editingProduct.sku || editingProduct.sku.trim() === '') {
+        toast.error('Mã sản phẩm (SKU) là bắt buộc.');
+        return;
+      }
       try {
         const res = await fetch(`${API_BASE_URL}/products/${editingProduct.product_id}`, {
           method: 'PUT',
@@ -419,17 +409,16 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
                     <div>
                       <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.categoryLabel')} <span className="text-red-500">*</span></label>
-                      <select value={editingProduct.category} onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 font-mono">
-                        <option value="">{t('admin.manageProducts.categorySelect')}</option>
-                        {categoryOptions.map(c => (
-                          <option key={c.id} value={c.name}>{c.label}</option>
-                        ))}
-                      </select>
+                      <CategorySelector
+                        categories={categories}
+                        value={editingProduct.category}
+                        onChange={(catName: string) => setEditingProduct({ ...editingProduct, category: catName })}
+                      />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-muted-foreground mb-2">Mã Phụ tùng (SKU)</label>
-                      <input type="text" value={editingProduct.sku || ''} onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })} placeholder="Nhập mã phụ tùng..." className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20" />
+                      <label className="block text-sm font-semibold text-muted-foreground mb-2">Mã sản phẩm (SKU) <span className="text-red-500">*</span></label>
+                      <input type="text" value={editingProduct.sku || ''} onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })} required placeholder="Nhập mã sản phẩm bắt buộc..." className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20" />
                     </div>
                   </div>
 
