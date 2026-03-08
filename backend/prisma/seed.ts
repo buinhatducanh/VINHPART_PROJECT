@@ -487,6 +487,62 @@ const products = [
     },
 ];
 
+// Vehicles data (dàn áo xe)
+const vehicles = [
+    {
+        id: 'vehicle-honda-winner-x',
+        name: 'Honda Winner X 150cc',
+        slug: 'honda-winner-x-150cc',
+        brand: 'Honda',
+        model: 'Winner X',
+        year: 2023,
+        image: 'https://placehold.co/800x500?text=Honda+Winner+X+150cc',
+        description: 'Bộ dàn áo đầy đủ cho Honda Winner X 150cc - xe côn thể thao bán chạy nhất Việt Nam. Tập hợp các phụ tùng chính hãng và aftermarket cao cấp nhằm nâng cấp toàn diện hiệu suất và thẩm mỹ.',
+        isActive: true,
+        // product slugs to assign as body kit parts (with positions)
+        parts: [
+            { slug: 'den-pha-led-m5-sieu-sang-6000k',       position: 'Đèn pha' },
+            { slug: 'bo-day-dien-zin-theo-xe-winner-x',     position: 'Hệ thống điện' },
+            { slug: 'ma-phanh-honda-winner-x-chinh-hang',   position: 'Phanh trước' },
+            { slug: 'xi-lanh-piston-std-racing-winner-x',   position: 'Động cơ' },
+            { slug: 'loc-gio-dna-racing-cao-cap',            position: 'Lọc gió' },
+            { slug: 'dau-nhot-motul-7100-10w40',             position: 'Dầu nhớt' },
+            { slug: 'sen-rk-racing-428-winner-x',            position: 'Sên' },
+            { slug: 'ly-hop-chinh-hang-winner-x',            position: 'Ly hợp' },
+            { slug: 'lop-michelin-pilot-street-2-80-90-17',  position: 'Lốp xe' },
+            { slug: 'mam-duc-racing-boy-winner-x',           position: 'Mâm xe' },
+            { slug: 'phuoc-yss-racing-dtg',                  position: 'Phuộc' },
+            { slug: 'po-akrapovic-carbon-winner-x',          position: 'Pô xe' },
+            { slug: 'guong-chieu-hau-rizoma-spy-r',          position: 'Gương chiếu hậu' },
+        ],
+    },
+    {
+        id: 'vehicle-yamaha-exciter-155',
+        name: 'Yamaha Exciter 155 VVA',
+        slug: 'yamaha-exciter-155-vva',
+        brand: 'Yamaha',
+        model: 'Exciter 155',
+        year: 2023,
+        image: 'https://placehold.co/800x500?text=Yamaha+Exciter+155+VVA',
+        description: 'Bộ dàn áo đầy đủ cho Yamaha Exciter 155 VVA - xe côn thể thao đình đám với công nghệ VVA tiên tiến. Các phụ tùng được chọn lọc kỹ để tối ưu vận hành và nâng tầm phong cách.',
+        isActive: true,
+        parts: [
+            { slug: 'den-xi-nhan-led-anh-sang-vang',         position: 'Đèn xi nhan' },
+            { slug: 'binh-acquy-lithium-ion-12v-7ah',        position: 'Acquy' },
+            { slug: 'ma-phanh-racing-boy-ceramic',           position: 'Phanh trước' },
+            { slug: 'dia-phanh-brembo-racing-260mm',         position: 'Đĩa phanh' },
+            { slug: 'bo-piston-takasago-62mm-exciter',       position: 'Động cơ' },
+            { slug: 'dau-nhot-shell-advance-ax7-10w40',      position: 'Dầu nhớt' },
+            { slug: 'bo-nhong-sen-dia-did-gold',             position: 'Nhông sên dĩa' },
+            { slug: 'lop-dunlop-tt93-gp-90-80-17',           position: 'Lốp xe' },
+            { slug: 'mam-duc-brembo-17-inch-exciter',        position: 'Mâm xe' },
+            { slug: 'phuoc-ohlins-ttx-gp-exciter',           position: 'Phuộc' },
+            { slug: 'po-yoshimura-r77-exciter',              position: 'Pô xe' },
+            { slug: 'guong-chieu-hau-cnc-nhom-nguyen-khoi',  position: 'Gương chiếu hậu' },
+        ],
+    },
+];
+
 async function main() {
     console.log('🌱 Starting database seeding...\n');
 
@@ -494,6 +550,8 @@ async function main() {
     console.log('🗑️  Clearing existing data...');
     await prisma.orderItem.deleteMany();
     await prisma.order.deleteMany();
+    await prisma.bodyKitPart.deleteMany();
+    await prisma.vehicle.deleteMany();
     await prisma.product.deleteMany();
     await prisma.category.deleteMany();
     await prisma.user.deleteMany();
@@ -551,6 +609,32 @@ async function main() {
     }
     console.log(`  ✅ Created ${products.length} products`);
 
+    // Seed vehicles and body kit parts
+    console.log('\n🏍️  Seeding vehicle outfits (dàn áo xe)...');
+    for (const vehicle of vehicles) {
+        const { parts, ...vehicleData } = vehicle;
+
+        await prisma.vehicle.create({ data: vehicleData });
+
+        let sortOrder = 0;
+        for (const part of parts) {
+            const product = await prisma.product.findUnique({ where: { slug: part.slug } });
+            if (!product) {
+                console.warn(`  ⚠️  Product not found: ${part.slug}`);
+                continue;
+            }
+            await prisma.bodyKitPart.create({
+                data: {
+                    vehicleId: vehicleData.id,
+                    productId: product.id,
+                    position: part.position,
+                    sortOrder: sortOrder++,
+                },
+            });
+        }
+        console.log(`  ✅ Created vehicle: ${vehicleData.name} (${parts.length} parts)`);
+    }
+
     // Create admin user
     console.log('\n👤 Creating admin user...');
     await prisma.user.create({
@@ -567,6 +651,7 @@ async function main() {
     console.log('\n🎉 Database seeding completed successfully!');
     console.log(`   - ${categories.length} categories`);
     console.log(`   - ${products.length} products`);
+    console.log(`   - ${vehicles.length} vehicle outfits (dàn áo xe)`);
     console.log(`   - 1 admin user`);
 }
 
