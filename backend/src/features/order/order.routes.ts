@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../../shared/database';
+import { broadcast } from '../notification/sse';
 
 const router = Router();
 
@@ -86,6 +87,18 @@ router.post('/', async (req, res) => {
 
         await client.query('COMMIT');
 
+        // Push real-time notification via SSE
+        broadcast('new_order', {
+            id: orderId,
+            type: 'order',
+            title: 'Đơn hàng mới',
+            message: `${customerName} đã đặt đơn hàng ${orderNumber}`,
+            orderId,
+            orderNumber,
+            createdAt: new Date().toISOString(),
+            amount: totalAmount
+        }, customerEmail);
+
         res.status(201).json({
             id: orderId,
             orderNumber,
@@ -151,6 +164,25 @@ router.patch('/:id/status', async (req, res) => {
 
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Order not found' });
+        }
+
+        // Get customer email to push notification to the right user
+        const orderDetail = await pool.query(
+            'SELECT "customerEmail", "customerName", "orderNumber", "totalAmount" FROM orders WHERE id = $1',
+            [id]
+        );
+        if (orderDetail.rows.length > 0) {
+            const order = orderDetail.rows[0];
+            broadcast('order_status', {
+                id: id + '_' + status,
+                type: 'order_status',
+                title: `Cập nhật đơn hàng`,
+                message: `Đơn hàng ${order.orderNumber} đã chuyển sang ${status}`,
+                status,
+                orderId: id,
+                createdAt: new Date().toISOString(),
+                amount: order.totalAmount
+            }, order.customerEmail);
         }
 
         res.json({ message: 'Order status updated successfully', order: rows[0] });

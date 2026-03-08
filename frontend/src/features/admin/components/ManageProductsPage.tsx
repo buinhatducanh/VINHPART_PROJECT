@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Product, Category } from '@/shared/types';
 import { useI18n } from '@/shared/lib/i18n';
 import { NotificationBell } from '@/features/notification/components/NotificationBell';
+import { API_BASE_URL } from '@/lib/api';
 
 interface ManageProductsPageProps {
   onBack: () => void;
@@ -86,7 +87,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   }, []);
 
   const fetchCategories = () => {
-    fetch('/api/categories')
+    fetch(`${API_BASE_URL}/categories`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -119,7 +120,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
   const fetchProducts = () => {
     setLoading(true);
-    fetch('/api/products?limit=1000')
+    fetch(`${API_BASE_URL}/products?limit=1000`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -151,7 +152,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/products/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -169,7 +170,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   const handleSaveEdit = async () => {
     if (editingProduct) {
       try {
-        const res = await fetch(`/api/products/${editingProduct.product_id}`, {
+        const res = await fetch(`${API_BASE_URL}/products/${editingProduct.product_id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

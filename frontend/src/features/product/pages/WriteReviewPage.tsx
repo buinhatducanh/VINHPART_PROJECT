@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Star, ChevronLeft, Package, Send, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { API_BASE_URL } from '@/lib/api';
 
 interface WriteReviewPageProps {
     orderId: string;
@@ -31,7 +32,7 @@ export function WriteReviewPage({ orderId, onBack }: WriteReviewPageProps) {
     useEffect(() => {
         const fetchOrderDetails = async () => {
             try {
-                const response = await fetch(`/api/orders/${orderId}`);
+                const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
                 const data = await response.json();
                 setOrder(data);
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { Category } from '@/shared/types';
 import { toast } from 'sonner';
+import { API_BASE_URL } from '@/lib/api';
 
 // Import sub-components from the same directory
 import { CategoryHeader } from './CategoryHeader';
@@ -45,10 +46,11 @@ export function CategoryPage({ onBack }: CategoryPageProps) {
     const fetchCategories = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/categories');
+            const res = await fetch(`${API_BASE_URL}/categories`);
             if (res.ok) {
                 const data = await res.json();
-                const mapped = data.map((cat: any) => ({
+                const safeData = Array.isArray(data) ? data : [];
+                const mapped = safeData.map((cat: any) => ({
                     id: cat.id,
                     name: cat.name,
                     parent_id: cat.parentId,
@@ -121,8 +123,8 @@ export function CategoryPage({ onBack }: CategoryPageProps) {
         setSubmitting(true);
         try {
             const url = editingCategory
-                ? `/api/categories/${editingCategory.id}`
-                : '/api/categories';
+                ? `${API_BASE_URL}/categories/${editingCategory.id}`
+                : `${API_BASE_URL}/categories`;
 
             const method = editingCategory ? 'PATCH' : 'POST';
 
@@ -180,7 +182,7 @@ export function CategoryPage({ onBack }: CategoryPageProps) {
         }, 100);
 
         try {
-            const res = await fetch(`/api/categories/${id}`, {
+            const res = await fetch(`${API_BASE_URL}/categories/${id}`, {
                 method: 'DELETE'
             });
 

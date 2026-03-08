@@ -1,7 +1,35 @@
 import { Router } from 'express';
 import { pool } from '../../shared/database';
+import { addClient } from './sse';
 
 const router = Router();
+
+// SSE stream endpoint - real-time push notifications
+// GET /api/notifications/stream (admin) or /api/notifications/stream?email=xxx (user)
+router.get('/stream', (req, res) => {
+    const email = req.query.email as string | undefined;
+
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+    });
+
+    // Initial heartbeat
+    res.write('event: connected\ndata: {"status":"ok"}\n\n');
+
+    addClient(res, email);
+
+    // Keep-alive every 30s to prevent proxy timeouts
+    const heartbeat = setInterval(() => {
+        res.write(': heartbeat\n\n');
+    }, 30000);
+
+    req.on('close', () => {
+        clearInterval(heartbeat);
+    });
+});
 
 // GET /api/notifications
 // In this implementation, we treat PENDING orders as unread notifications

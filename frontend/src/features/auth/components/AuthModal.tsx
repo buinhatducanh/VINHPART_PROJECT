@@ -7,6 +7,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { toast } from 'sonner';
 
 import { User } from '@/shared/types';
+import { API_BASE_URL } from '@/lib/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -40,7 +41,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
         const userInfo = await userInfoRes.json();
 
         // Send to our backend
-        const response = await fetch('/api/auth/google', {
+        const response = await fetch(`${API_BASE_URL}/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -84,7 +85,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
     }
 
     try {
-      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      const endpoint = mode === 'login' ? `${API_BASE_URL}/auth/login` : `${API_BASE_URL}/auth/register`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -343,7 +344,13 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => googleLogin()}
+                      onClick={() => {
+                        if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+                          toast.error('Google login is not configured');
+                          return;
+                        }
+                        googleLogin();
+                      }}
                       disabled={googleLoading}
                       className="flex items-center justify-center gap-2 bg-muted hover:bg-muted/80 text-foreground py-2.5 rounded-lg transition-all border border-border disabled:opacity-50 disabled:cursor-not-allowed"
                     >

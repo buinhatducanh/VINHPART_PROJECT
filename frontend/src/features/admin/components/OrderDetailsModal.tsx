@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/shared/lib/i18n';
+import { API_BASE_URL } from '@/lib/api';
 
 interface OrderDetailsModalProps {
     orderId: string;
@@ -24,7 +25,7 @@ export function OrderDetailsModal({ orderId, isOpen, onClose, onStatusUpdate, re
 
     const fetchOrderDetails = async () => {
         try {
-            const res = await fetch(`/api/orders/${orderId}`);
+            const res = await fetch(`${API_BASE_URL}/orders/${orderId}`);
             if (res.ok) {
                 const data = await res.json();
                 setSelectedOrder(data);
@@ -37,7 +38,7 @@ export function OrderDetailsModal({ orderId, isOpen, onClose, onStatusUpdate, re
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         setIsUpdating(true);
         try {
-            const res = await fetch(`/api/orders/${id}/status`, {
+            const res = await fetch(`${API_BASE_URL}/orders/${id}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus.toUpperCase() })

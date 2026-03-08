@@ -4,6 +4,7 @@ import { Filter, X, ChevronRight, ArrowUpDown, TrendingUp, TrendingDown } from '
 import { ProductCard } from '@/features/product/components/ProductCard';
 import { PriceRangeSlider } from '@/features/product/components/PriceRangeSlider';
 import { Product, Category } from '@/shared/types';
+import { API_BASE_URL } from '@/lib/api';
 import { useProducts, useMaxPrice } from '@/hooks/useQueries';
 import { ProductCardSkeleton } from '@/shared/components/skeletons/ProductCardSkeleton';
 import { useI18n } from '@/shared/lib/i18n';
@@ -38,7 +39,7 @@ export function ProductListing({
   const { t } = useI18n();
 
   useEffect(() => {
-    fetch('/api/categories')
+    fetch(`${API_BASE_URL}/categories`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useI18n } from '@/shared/lib/i18n';
 import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { NotificationBell } from '@/features/notification/components/NotificationBell';
+import { API_BASE_URL } from '@/lib/api';
 
 interface ManageOrdersPageProps {
   onBack: () => void;
@@ -29,10 +30,10 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
   const a = useFirstVisit('manage-orders');
 
   const fetchOrders = () => {
-    fetch('/api/orders')
+    fetch(`${API_BASE_URL}/orders`)
       .then(res => res.json())
       .then(data => {
-        setOrders(data);
+        setOrders(Array.isArray(data) ? data : []);
       })
       .catch(err => console.error('Error fetching orders:', err));
   };
@@ -50,7 +51,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
 
   const handleViewOrder = async (id: string) => {
     try {
-      const res = await fetch(`/api/orders/${id}`);
+      const res = await fetch(`${API_BASE_URL}/orders/${id}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedOrder(data);
@@ -64,7 +65,7 @@ export function ManageOrdersPage({ onBack }: ManageOrdersPageProps) {
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     setIsUpdating(true);
     try {
-      const res = await fetch(`/api/orders/${id}/status`, {
+      const res = await fetch(`${API_BASE_URL}/orders/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus.toUpperCase() })

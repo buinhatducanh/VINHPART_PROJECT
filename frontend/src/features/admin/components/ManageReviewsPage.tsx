@@ -4,6 +4,7 @@ import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { useState, useEffect } from 'react';
 import { Review } from '@/shared/types';
 import { useI18n } from '@/shared/lib/i18n';
+import { API_BASE_URL } from '@/lib/api';
 
 interface ManageReviewsPageProps {
   onBack: () => void;
@@ -27,10 +28,10 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
       if (filterStatus !== 'all') params.append('status', filterStatus);
       if (filterRating !== 'all') params.append('rating', filterRating.toString());
 
-      const res = await fetch(`/api/reviews?${params.toString()}`);
+      const res = await fetch(`${API_BASE_URL}/reviews?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        setReviews(data);
+        setReviews(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Failed to fetch reviews:', error);
@@ -52,7 +53,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/reviews/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setReviews(reviews.filter(review => review.id !== id));
         setShowDeleteConfirm(null);
@@ -64,7 +65,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
 
   const updateReviewStatus = async (id: string, status: 'approved' | 'rejected') => {
     try {
-      const res = await fetch(`/api/reviews/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/reviews/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -89,7 +90,7 @@ export function ManageReviewsPage({ onBack }: ManageReviewsPageProps) {
     const newPriority = Math.max(0, review.priority + delta);
 
     try {
-      const res = await fetch(`/api/reviews/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/reviews/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priority: newPriority })
