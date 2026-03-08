@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Eye, Search } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
 import { SEO } from '@/shared/components/SEO';
 import { BlogPostSkeleton } from '@/shared/components/skeletons/BlogPostSkeleton';
+import { API_BASE_URL } from '@/lib/api';
 
 interface BlogListPageProps {
   onBack: () => void;
@@ -20,7 +21,7 @@ export function BlogListPage({ onBack, onPostClick }: BlogListPageProps) {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await fetch('/api/posts?status=PUBLISHED');
+        const res = await fetch(`${API_BASE_URL}/posts?status=PUBLISHED`);
         if (res.ok) {
           const data = await res.json();
           setPosts(Array.isArray(data) ? data : []);

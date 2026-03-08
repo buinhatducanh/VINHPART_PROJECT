@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { useI18n } from '@/shared/lib/i18n';
 import { Category } from '@/shared/types';
+import { API_BASE_URL } from '@/lib/api';
 
 interface AddProductPageProps {
   onBack: () => void;
@@ -42,7 +43,7 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
 
   // Fetch dynamic categories
   useEffect(() => {
-    fetch('/api/categories')
+    fetch(`${API_BASE_URL}/categories`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -187,7 +188,7 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
     };
 
     try {
-      const response = await fetch("/api/products", {
+      const response = await fetch(`${API_BASE_URL}/products`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

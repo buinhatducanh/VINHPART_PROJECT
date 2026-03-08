@@ -3,6 +3,7 @@ import { Product } from '@/shared/types';
 import { Modal } from '@/shared/components/ui/Modal';
 import { modalContents, ModalContentType } from '@/shared/data/modalContent';
 import { useI18n } from '@/shared/lib/i18n';
+import { API_BASE_URL } from '@/lib/api';
 import {
   HeroSection,
   BenefitsSection,
@@ -48,7 +49,7 @@ export function LandingPage({
     const fetchData = async () => {
       try {
         // Fetch products (limit 10, can add filters later)
-        const productsRes = await fetch('/api/products?limit=10');
+        const productsRes = await fetch(`${API_BASE_URL}/products?limit=10`);
         if (productsRes.ok) {
           const productsData = await productsRes.json();
           // Handle API response structure: {data: [], metadata: {...}}
@@ -57,7 +58,7 @@ export function LandingPage({
         }
 
         // Fetch published blog posts (limit 3)
-        const postsRes = await fetch('/api/posts?status=PUBLISHED&limit=3');
+        const postsRes = await fetch(`${API_BASE_URL}/posts?status=PUBLISHED&limit=3`);
         if (postsRes.ok) {
           const postsData = await postsRes.json();
           // Safely check if postsData is an array to prevent "e.map is not a function"

@@ -5,6 +5,7 @@ import { ProductSpecifications } from '../molecules/ProductSpecifications';
 import { Star, Send, CheckCircle, User as UserIcon, ThumbsUp, MessageSquare, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useI18n } from '@/shared/lib/i18n';
+import { API_BASE_URL } from '@/lib/api';
 
 interface ProductDescriptionSectionProps {
     product: Product;
@@ -32,11 +33,12 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
     const fetchReviews = async () => {
         try {
             setLoadingReviews(true);
-            const res = await fetch(`/api/reviews?productId=${product.product_id}&status=approved`);
+            const res = await fetch(`${API_BASE_URL}/reviews?productId=${product.product_id}&status=approved`);
             if (res.ok) {
                 const data = await res.json();
-                setReviews(data);
-                setReviewCount(data.length);
+                const safeData = Array.isArray(data) ? data : [];
+                setReviews(safeData);
+                setReviewCount(safeData.length);
             }
         } catch (error) {
             console.error('Failed to fetch reviews:', error);
@@ -82,7 +84,7 @@ export function ProductDescriptionSection({ product, user }: ProductDescriptionS
         setSubmitError('');
 
         try {
-            const res = await fetch('/api/reviews', {
+            const res = await fetch(`${API_BASE_URL}/reviews`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import type { Notification } from '../types';
+import { API_BASE_URL } from '@/lib/api';
 
 const playNotificationSound = () => {
     try {
@@ -78,16 +79,17 @@ export function useNotifications(userEmail?: string) {
 
         try {
             const url = userEmail
-                ? `/api/notifications/user?email=${encodeURIComponent(userEmail)}`
-                : '/api/notifications';
+                ? `${API_BASE_URL}/notifications/user?email=${encodeURIComponent(userEmail)}`
+                : `${API_BASE_URL}/notifications`;
             const response = await fetch(url);
             const data = await response.json();
-            setNotifications(data);
+            const safeData = Array.isArray(data) ? data : [];
+            setNotifications(safeData);
 
             let hasNew = false;
 
             // Trigger browser notifications & toasts for new items
-            data.forEach((notif: Notification) => {
+            safeData.forEach((notif: Notification) => {
                 if (!notifiedIdsRef.current.has(notif.id)) {
                     hasNew = true;
                     notifiedIdsRef.current.add(notif.id);

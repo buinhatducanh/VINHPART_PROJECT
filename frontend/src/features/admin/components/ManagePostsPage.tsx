@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { NotificationBell } from '@/features/notification/components/NotificationBell';
+import { API_BASE_URL } from '@/lib/api';
 
 interface Post {
     id: string;
@@ -119,7 +120,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
 
     const fetchPosts = () => {
         setLoading(true);
-        fetch('/api/posts?limit=1000')
+        fetch(`${API_BASE_URL}/posts?limit=1000`)
             .then(res => res.json())
             .then(data => {
                 setPosts(Array.isArray(data) ? data : []);
@@ -138,7 +139,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
 
     const handleDelete = async (id: string) => {
         try {
-            const res = await fetch(`/api/posts/${id}`, {
+            const res = await fetch(`${API_BASE_URL}/posts/${id}`, {
                 method: 'DELETE'
             });
             if (res.ok) {
@@ -158,7 +159,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
     const handleSaveEdit = async () => {
         if (editingPost) {
             try {
-                const url = editingPost.id ? `/api/posts/${editingPost.id}` : '/api/posts';
+                const url = editingPost.id ? `${API_BASE_URL}/posts/${editingPost.id}` : `${API_BASE_URL}/posts`;
                 const method = editingPost.id ? 'PUT' : 'POST';
 
                 const res = await fetch(url, {

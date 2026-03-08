@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Eye, User } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { SEO } from '@/shared/components/SEO';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { API_BASE_URL } from '@/lib/api';
 
 interface BlogDetailPageProps {
   postId: string;
@@ -21,17 +22,18 @@ export function BlogDetailPage({ postId, onBack, onPostClick }: BlogDetailPagePr
       try {
         setLoading(true); // Ensure loading is true on id change
         // Fetch post by slug (postId is actually slug in this case)
-        const res = await fetch(`/api/posts/${postId}`);
+        const res = await fetch(`${API_BASE_URL}/posts/${postId}`);
         if (res.ok) {
           const data = await res.json();
           setPost(data);
 
           // Fetch related posts
-          const relatedRes = await fetch('/api/posts?status=PUBLISHED&limit=4');
+          const relatedRes = await fetch(`${API_BASE_URL}/posts?status=PUBLISHED&limit=4`);
           if (relatedRes.ok) {
             const relatedData = await relatedRes.json();
             // Filter out current post and limit to 3
-            const filtered = relatedData.filter((p: any) => p.slug !== postId).slice(0, 3);
+            const safeData = Array.isArray(relatedData) ? relatedData : [];
+            const filtered = safeData.filter((p: any) => p.slug !== postId).slice(0, 3);
             setRelatedPosts(filtered);
           }
         } else {

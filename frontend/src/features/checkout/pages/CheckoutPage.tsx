@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle2, CreditCard, Truck, Shield } from 'lucide-react
 import { CartItem } from '@/shared/types';
 import { productImages } from '@/shared/data/productImages';
 import { useI18n } from '@/shared/lib/i18n';
+import { API_BASE_URL } from '@/lib/api';
 
 interface CheckoutPageProps {
   cartItems: CartItem[];
@@ -65,7 +66,7 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
         }))
       };
 
-      const response = await fetch('/api/orders', {
+      const response = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
