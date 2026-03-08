@@ -6,12 +6,21 @@ import { useState, useEffect, useRef } from 'react';
 import { useI18n } from '@/shared/lib/i18n';
 import { Category } from '@/shared/types';
 import { API_BASE_URL } from '@/lib/api';
+import { CategorySelector } from './CategorySelector';
 
 interface AddProductPageProps {
   onBack: () => void;
+  isModal?: boolean;
+  onSuccess?: (product: any) => void;
+  initialData?: {
+    brand?: string;
+    model?: string;
+    category?: string;
+  };
+  lockedFields?: string[];
 }
 
-export function AddProductPage({ onBack }: AddProductPageProps) {
+export function AddProductPage({ onBack, isModal, onSuccess, initialData, lockedFields = [] }: AddProductPageProps) {
   const a = useFirstVisit('add-product');
   const { t, language } = useI18n();
   // Format helpers
@@ -19,16 +28,11 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
     return new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US').format(num);
   };
 
-  const parseNumber = (str: string): number => {
-    const cleaned = str.replace(/\./g, "").replace(/[^\d]/g, "");
-    return cleaned ? parseInt(cleaned, 10) : 0;
-  };
-
   const [formData, setFormData] = useState({
     product_name: "",
-    brand: "",
-    category: "",
-    model: "",
+    brand: initialData?.brand || "",
+    category: initialData?.category || "",
+    model: initialData?.model || "",
     price: "",
     discount_percent: "",
     stock: "",
@@ -58,21 +62,6 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
       })
       .catch(err => console.error("Error fetching categories:", err));
   }, []);
-
-  const buildCategoryOptions = (cats: Category[], parentId: string | null = null, level: number = 0): { id: string, name: string, label: string }[] => {
-    let result: { id: string, name: string, label: string }[] = [];
-    const children = cats.filter(c => c.parent_id === parentId);
-    for (const child of children) {
-      result.push({
-        id: child.id,
-        name: child.name,
-        label: '\u00A0\u00A0'.repeat(level * 2) + (level > 0 ? '|_ ' : '') + child.name
-      });
-      result = result.concat(buildCategoryOptions(cats, child.id, level + 1));
-    }
-    return result;
-  };
-  const categoryOptions = buildCategoryOptions(categories);
 
   const [imagePreview, setImagePreview] = useState<string>("");
 
@@ -167,6 +156,10 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
       toast.error(t("admin.product.invalidStock"));
       return;
     }
+    if (!formData.sku || formData.sku.trim() === "") {
+      toast.error("Mã sản phẩm (SKU) là bắt buộc.");
+      return;
+    }
     if (discount_percent !== undefined && (isNaN(discount_percent) || discount_percent < 0 || discount_percent > 100)) {
       toast.error(t("admin.product.invalidDiscount"));
       return;
@@ -198,6 +191,10 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
 
       if (response.ok) {
         toast.success(t("admin.product.successAdd"));
+        const newProduct = await response.json();
+        if (onSuccess) {
+          onSuccess(newProduct);
+        }
         onBack();
       } else {
         const error = await response.json();
@@ -218,49 +215,55 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black pb-20">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-red-600/30 rounded-full"
-            initial={{ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight }}
-            animate={{ y: [null, Math.random() * window.innerHeight], opacity: [0.3, 0.8, 0.3] }}
-            transition={{ duration: Math.random() * 5 + 3, repeat: Infinity, delay: Math.random() * 2 }}
-          />
-        ))}
-      </div>
 
-      <motion.div
-        initial={a && { y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
-      >
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-4">
-            <motion.button onClick={onBack} whileHover={{ scale: 1.05, x: -5 }} whileTap={{ scale: 0.95 }} className="p-3 bg-card border border-border rounded-lg hover:border-red-600/50 transition-all group">
-              <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-red-600 transition-colors" />
-            </motion.button>
 
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center">
-                <Package className="w-6 h-6 text-foreground" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-blue-600 bg-clip-text">
-                  {t("admin.product.addTitle")}
-                </h1>
-                <p className="text-sm text-muted-foreground">{t("admin.product.addSubtitle")}</p>
+    <div className={isModal ? "" : "min-h-screen bg-gradient-to-br from-black via-gray-900 to-black pb-20"}>
+      {!isModal && (
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-red-600/30 rounded-full"
+              initial={{ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight }}
+              animate={{ y: [null, Math.random() * window.innerHeight], opacity: [0.3, 0.8, 0.3] }}
+              transition={{ duration: Math.random() * 5 + 3, repeat: Infinity, delay: Math.random() * 2 }}
+            />
+          ))}
+        </div>
+      )}
+
+      {!isModal && (
+        <motion.div
+          initial={a && { y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="relative border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-10"
+        >
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex items-center gap-4">
+              <motion.button onClick={onBack} whileHover={{ scale: 1.05, x: -5 }} whileTap={{ scale: 0.95 }} className="p-3 bg-card border border-border rounded-lg hover:border-red-600/50 transition-all group">
+                <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-red-600 transition-colors" />
+              </motion.button>
+
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center">
+                  <Package className="w-6 h-6 text-foreground" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-black text-transparent bg-gradient-to-r from-white via-gray-200 to-blue-600 bg-clip-text">
+                    {t("admin.product.addTitle")}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">{t("admin.product.addSubtitle")}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className={`relative max-w-5xl mx-auto ${isModal ? '' : 'px-4 sm:px-6 lg:px-8 py-8'}`}>
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <motion.div initial={a && { opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-1">
+          <div className={`grid grid-cols-1 ${isModal ? 'gap-6' : 'lg:grid-cols-3 gap-6'}`}>
+            <motion.div initial={a && { opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className={isModal ? "" : "lg:col-span-1"}>
               <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6 sticky top-24">
                 <h3 className="text-lg font-bold text-foreground mb-4">{t("admin.product.image")}</h3>
 
@@ -288,7 +291,7 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
               </div>
             </motion.div>
 
-            <motion.div initial={a && { opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-2">
+            <motion.div initial={a && { opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className={isModal ? "" : "lg:col-span-2"}>
               <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-foreground mb-6">{t("admin.product.infoTitle")}</h3>
 
@@ -301,7 +304,7 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">{t("admin.product.brandLabel")} <span className="text-red-600">*</span></label>
-                      <select name="brand" value={formData.brand} onChange={handleInputChange} required className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                      <select name="brand" value={formData.brand} onChange={handleInputChange} required disabled={lockedFields.includes('brand')} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                         <option value="">{t("admin.product.brandSelect")}</option>
                         {brands.map(brand => <option key={brand} value={brand}>{brand}</option>)}
                       </select>
@@ -310,28 +313,24 @@ export function AddProductPage({ onBack }: AddProductPageProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-2">{t("admin.product.categoryLabel")} <span className="text-red-600">*</span></label>
-                        <select
-                          name="category"
+                        <CategorySelector
+                          categories={categories}
                           value={formData.category}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all font-mono"
-                        >
-                          <option value="">{t("admin.product.categorySelect")}</option>
-                          {categoryOptions.map(cat => <option key={cat.id} value={cat.name}>{cat.label}</option>)}
-                        </select>
+                          onChange={(catName: string) => setFormData(prev => ({ ...prev, category: catName }))}
+                          disabled={lockedFields.includes('category')}
+                        />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-2">Mã Phụ tùng (SKU)</label>
-                        <input type="text" name="sku" value={formData.sku} onChange={handleInputChange} placeholder="Nhập mã phụ tùng..." className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
+                        <label className="block text-sm font-medium text-muted-foreground mb-2">Mã sản phẩm (SKU) <span className="text-red-600">*</span></label>
+                        <input type="text" name="sku" required value={formData.sku} onChange={handleInputChange} placeholder="Nhập mã sản phẩm bắt buộc..." className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
                       </div>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-2">{t("admin.product.modelLabel")}</label>
-                    <input type="text" name="model" value={formData.model} onChange={handleInputChange} placeholder={t("admin.product.modelPlaceholder")} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
+                    <input type="text" name="model" value={formData.model} onChange={handleInputChange} disabled={lockedFields.includes('model')} placeholder={t("admin.product.modelPlaceholder")} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed" />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

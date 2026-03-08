@@ -1,10 +1,9 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useSettings } from '../../hooks/useSettings';
 import { vi } from './locales/vi';
-import { en } from './locales/en';
 
 type Translations = typeof vi;
-type Language = 'vi' | 'en';
+type Language = 'vi';
 
 interface I18nContextType {
   t: (path: string, params?: Record<string, string | number>) => string;
@@ -12,7 +11,7 @@ interface I18nContextType {
   setLanguage: (lang: Language) => void;
 }
 
-const translations: Record<Language, Translations> = { vi, en };
+const translations: Record<Language, Translations> = { vi };
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 

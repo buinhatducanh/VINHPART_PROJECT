@@ -14,7 +14,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
   const a = useFirstVisit('settings');
   const { t, setLanguage } = useI18n();
   const { siteName: persistedSiteName, setSiteName: savePersistedSiteName, language: persistedLanguage, theme: persistedTheme, setTheme: savePersistedTheme } = useSettings();
-  
+
   const [settings, setSettings] = useState({
     siteName: persistedSiteName,
     email: 'admin@vinpart.vn',
@@ -29,8 +29,8 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
   // Keep local state in sync if persisted changes elsewhere
   useEffect(() => {
-    setSettings(prev => ({ 
-      ...prev, 
+    setSettings(prev => ({
+      ...prev,
       siteName: persistedSiteName,
       language: persistedLanguage,
       theme: persistedTheme
@@ -141,7 +141,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="hidden">
                   <label className="block text-sm font-medium text-muted-foreground mb-2">
                     {t('settings.language')}
                   </label>
@@ -152,7 +152,6 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                     className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-orange-600/50 focus:ring-2 focus:ring-orange-600/20 transition-all"
                   >
                     <option value="vi">Tiếng Việt</option>
-                    <option value="en">English</option>
                   </select>
                 </div>
 

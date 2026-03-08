@@ -13,12 +13,15 @@ export const pool = new pg.Pool({
         ? { rejectUnauthorized: false }
         : false,
     max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
 });
 
 pool.on('error', (err: Error) => {
     // Neon DB pooler actively terminates idle connections.
     // This is expected and harmless, the pool will automatically reconnect.
-    if (err && err.message && err.message.includes('Connection terminated unexpectedly')) {
+    const message = err.message || '';
+    if (message.includes('Connection terminated unexpectedly') || message.includes('ECONNRESET')) {
         console.warn('Neon DB: Idle connection terminated by server (Expected behavior, pool will seamlessly reconnect).');
         return;
     }
