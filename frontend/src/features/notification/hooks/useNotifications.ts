@@ -3,8 +3,9 @@ import { toast } from 'sonner';
 import type { Notification } from '../types';
 import { API_BASE_URL } from '@/lib/api';
 
-// SSE backend URL - connect directly to backend for streaming (bypasses Vercel proxy)
-const SSE_BASE_URL = import.meta.env.VITE_API_URL || API_BASE_URL;
+// SSE must connect directly to backend (Vercel proxy doesn't support long-lived connections)
+// VITE_SSE_URL or VITE_API_URL should point to the actual backend, e.g. https://vinhpart-api.onrender.com/api
+const SSE_BASE_URL = import.meta.env.VITE_SSE_URL || import.meta.env.VITE_API_URL || API_BASE_URL;
 
 // Fallback polling only if SSE fails
 const FALLBACK_POLL_INTERVAL = 60_000; // 1min fallback (only used when SSE is down)
