@@ -3,9 +3,11 @@ import { toast } from 'sonner';
 import type { Notification } from '../types';
 import { API_BASE_URL } from '@/lib/api';
 
-const POLL_INTERVAL = 30_000;       // 30s normal polling
-const POLL_INTERVAL_HIDDEN = 120_000; // 2min when tab hidden
-const ERROR_BACKOFF_MAX = 300_000;   // 5min max backoff on errors
+// SSE backend URL - connect directly to backend for streaming (bypasses Vercel proxy)
+const SSE_BASE_URL = import.meta.env.VITE_API_URL || API_BASE_URL;
+
+// Fallback polling only if SSE fails
+const FALLBACK_POLL_INTERVAL = 60_000; // 1min fallback (only used when SSE is down)
 
 const playNotificationSound = () => {
     try {
@@ -45,13 +47,12 @@ export function useNotifications(userEmail?: string) {
         return new Set(JSON.parse(localStorage.getItem('read_notification_ids') || '[]'));
     });
 
-    const consecutiveErrorsRef = useRef(0);
-    const timerRef = useRef<ReturnType<typeof setTimeout>>();
+    const eventSourceRef = useRef<EventSource | null>(null);
+    const fallbackTimerRef = useRef<ReturnType<typeof setTimeout>>();
+    const useSSERef = useRef(true);
 
     const markAsRead = (id: string, event?: React.MouseEvent) => {
-        if (event) {
-            event.stopPropagation();
-        }
+        if (event) event.stopPropagation();
         setReadIds(prev => {
             const next = new Set(prev).add(id);
             localStorage.setItem('read_notification_ids', JSON.stringify(Array.from(next)));
@@ -60,9 +61,7 @@ export function useNotifications(userEmail?: string) {
     };
 
     const markAllAsRead = (event?: React.MouseEvent) => {
-        if (event) {
-            event.stopPropagation();
-        }
+        if (event) event.stopPropagation();
         setReadIds(prev => {
             const next = new Set(prev);
             notifications.forEach(n => next.add(n.id));
@@ -77,16 +76,32 @@ export function useNotifications(userEmail?: string) {
         }
     };
 
-    const getNextInterval = useCallback(() => {
-        if (consecutiveErrorsRef.current > 0) {
-            return Math.min(
-                POLL_INTERVAL * Math.pow(2, consecutiveErrorsRef.current),
-                ERROR_BACKOFF_MAX
-            );
+    // Show notification to user (toast + browser notification + sound)
+    const showNotification = useCallback((notif: Notification) => {
+        if (notifiedIdsRef.current.has(notif.id)) return;
+
+        notifiedIdsRef.current.add(notif.id);
+
+        toast.success(notif.title, {
+            description: notif.message,
+            duration: 5000,
+        });
+
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new window.Notification(notif.title, {
+                body: notif.message,
+                icon: '/logo192.png'
+            });
         }
-        return document.hidden ? POLL_INTERVAL_HIDDEN : POLL_INTERVAL;
+
+        playNotificationSound();
+
+        const currentSaved = new Set(JSON.parse(localStorage.getItem('notified_ids') || '[]') as string[]);
+        notifiedIdsRef.current.forEach(id => currentSaved.add(id));
+        localStorage.setItem('notified_ids', JSON.stringify(Array.from(currentSaved)));
     }, []);
 
+    // Fetch initial notifications via REST (one-time on mount)
     const fetchNotifications = useCallback(async () => {
         if (userEmail === 'DO_NOT_FETCH') {
             setLoading(false);
@@ -101,76 +116,105 @@ export function useNotifications(userEmail?: string) {
             const data = await response.json();
             const safeData = Array.isArray(data) ? data : [];
             setNotifications(safeData);
-
-            consecutiveErrorsRef.current = 0; // Reset on success
-
-            let hasNew = false;
-
-            safeData.forEach((notif: Notification) => {
-                if (!notifiedIdsRef.current.has(notif.id)) {
-                    hasNew = true;
-                    notifiedIdsRef.current.add(notif.id);
-
-                    toast.success(notif.title, {
-                        description: notif.message,
-                        duration: 5000,
-                    });
-
-                    if ('Notification' in window && Notification.permission === 'granted') {
-                        new window.Notification(notif.title, {
-                            body: notif.message,
-                            icon: '/logo192.png'
-                        });
-                    }
-                }
-            });
-
-            if (hasNew) {
-                playNotificationSound();
-                const currentSaved = new Set(JSON.parse(localStorage.getItem('notified_ids') || '[]') as string[]);
-                notifiedIdsRef.current.forEach(id => currentSaved.add(id));
-                localStorage.setItem('notified_ids', JSON.stringify(Array.from(currentSaved)));
-            }
         } catch (error) {
-            consecutiveErrorsRef.current++;
             console.error('Error fetching notifications:', error);
         } finally {
             setLoading(false);
         }
     }, [userEmail]);
 
-    // Schedule next poll with dynamic interval
-    const scheduleNext = useCallback(() => {
-        clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(async () => {
+    // Connect to SSE stream for real-time updates
+    const connectSSE = useCallback(() => {
+        if (userEmail === 'DO_NOT_FETCH') return;
+
+        // Close existing connection
+        if (eventSourceRef.current) {
+            eventSourceRef.current.close();
+        }
+
+        const streamUrl = userEmail
+            ? `${SSE_BASE_URL}/notifications/stream?email=${encodeURIComponent(userEmail)}`
+            : `${SSE_BASE_URL}/notifications/stream`;
+
+        const es = new EventSource(streamUrl);
+        eventSourceRef.current = es;
+
+        es.addEventListener('new_order', (e) => {
+            const notif = JSON.parse(e.data) as Notification;
+            setNotifications(prev => [notif, ...prev]);
+            showNotification(notif);
+        });
+
+        es.addEventListener('order_status', (e) => {
+            const notif = JSON.parse(e.data) as Notification;
+            setNotifications(prev => {
+                // Replace existing notification for this order+status or prepend
+                const exists = prev.some(n => n.id === notif.id);
+                if (exists) return prev.map(n => n.id === notif.id ? notif : n);
+                return [notif, ...prev];
+            });
+            showNotification(notif);
+        });
+
+        es.addEventListener('connected', () => {
+            useSSERef.current = true;
+            // Clear fallback polling since SSE is working
+            clearTimeout(fallbackTimerRef.current);
+        });
+
+        es.onerror = () => {
+            es.close();
+            eventSourceRef.current = null;
+            useSSERef.current = false;
+
+            // Fall back to polling if SSE fails
+            startFallbackPolling();
+        };
+    }, [userEmail, showNotification]);
+
+    // Fallback polling (only used when SSE is unavailable)
+    const startFallbackPolling = useCallback(() => {
+        clearTimeout(fallbackTimerRef.current);
+
+        const poll = async () => {
             await fetchNotifications();
-            scheduleNext();
-        }, getNextInterval());
-    }, [fetchNotifications, getNextInterval]);
 
-    useEffect(() => {
-        requestPermission();
-        fetchNotifications().then(() => scheduleNext());
+            // Try to reconnect SSE every poll cycle
+            if (!useSSERef.current) {
+                connectSSE();
+            }
 
-        // Adjust polling when tab visibility changes
-        const handleVisibility = () => {
-            if (!document.hidden) {
-                // Tab became visible: fetch immediately and reschedule
-                fetchNotifications();
-                scheduleNext();
-            } else {
-                // Tab hidden: reschedule with longer interval
-                scheduleNext();
+            // Continue polling if SSE is still down
+            if (!useSSERef.current) {
+                fallbackTimerRef.current = setTimeout(poll, FALLBACK_POLL_INTERVAL);
             }
         };
 
-        document.addEventListener('visibilitychange', handleVisibility);
+        fallbackTimerRef.current = setTimeout(poll, FALLBACK_POLL_INTERVAL);
+    }, [fetchNotifications, connectSSE]);
+
+    useEffect(() => {
+        if (userEmail === 'DO_NOT_FETCH') {
+            setLoading(false);
+            return;
+        }
+
+        requestPermission();
+
+        // 1. Fetch initial data via REST
+        fetchNotifications();
+
+        // 2. Connect SSE for real-time updates
+        connectSSE();
 
         return () => {
-            clearTimeout(timerRef.current);
-            document.removeEventListener('visibilitychange', handleVisibility);
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+                eventSourceRef.current = null;
+            }
+            clearTimeout(fallbackTimerRef.current);
         };
-    }, [userEmail, fetchNotifications, scheduleNext]);
+    }, [userEmail, fetchNotifications, connectSSE]);
 
     const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;
 
