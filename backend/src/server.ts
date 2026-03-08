@@ -15,6 +15,7 @@ import dashboardRoutes from './features/dashboard/dashboard.routes';
 import uploadRoutes from './features/upload/upload.routes';
 import notificationRoutes from './features/notification/notification.routes';
 import bodykitRoutes from './features/bodykit/bodykit.routes';
+import { notificationQueue } from './features/notification/notification-queue';
 
 // Use process.cwd() instead of import.meta.url for better Vercel compatibility
 const rootDir = process.cwd();
@@ -95,6 +96,31 @@ async function migrate() {
         `);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_bkp_vehicle ON body_kit_parts("vehicleId")`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_bkp_product ON body_kit_parts("productId")`);
+
+        // Notifications queue table (persistent message queue)
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS notifications (
+                id TEXT PRIMARY KEY,
+                type TEXT NOT NULL,
+                title TEXT NOT NULL,
+                message TEXT NOT NULL,
+                "targetEmail" TEXT,
+                "orderId" TEXT,
+                amount DECIMAL(10,2),
+                status TEXT DEFAULT 'QUEUED',
+                priority INTEGER DEFAULT 0,
+                data JSONB,
+                "retryCount" INTEGER DEFAULT 0,
+                "maxRetries" INTEGER DEFAULT 3,
+                "createdAt" TIMESTAMP DEFAULT NOW(),
+                "deliveredAt" TIMESTAMP,
+                "readAt" TIMESTAMP
+            )
+        `);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_email ON notifications("targetEmail")`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_status ON notifications(status)`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_created ON notifications("createdAt")`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_email_status ON notifications("targetEmail", status)`);
     } catch (e) {
         console.error('Startup migration error:', e);
     } finally {
@@ -103,7 +129,11 @@ async function migrate() {
 }
 
 migrate()
-    .then(() => console.log('Migrations completed'))
+    .then(() => {
+        console.log('Migrations completed');
+        // Start notification queue processor after migrations
+        notificationQueue.start();
+    })
     .catch((err) => console.error('Migration failed (non-fatal):', err));
 
 app.listen(port, () => {

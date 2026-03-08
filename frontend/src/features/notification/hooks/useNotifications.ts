@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { toast } from 'sonner';
 import type { Notification } from '../types';
 import { API_BASE_URL } from '@/lib/api';
+import { useMessageQueue } from '@/shared/hooks/useMessageQueue';
 
 // SSE must connect directly to backend (Vercel proxy doesn't support long-lived connections)
 // VITE_SSE_URL or VITE_API_URL should point to the actual backend, e.g. https://vinhpart-api.onrender.com/api
@@ -39,6 +39,7 @@ const playNotificationSound = () => {
 export function useNotifications(userEmail?: string) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
+    const { enqueue } = useMessageQueue();
 
     const notifiedIdsRef = useRef<Set<string>>(new Set(
         JSON.parse(localStorage.getItem('notified_ids') || '[]')
@@ -77,17 +78,25 @@ export function useNotifications(userEmail?: string) {
         }
     };
 
-    // Show notification to user (toast + browser notification + sound)
+    // Show notification to user via message queue (sequential, non-overlapping)
     const showNotification = useCallback((notif: Notification) => {
         if (notifiedIdsRef.current.has(notif.id)) return;
 
         notifiedIdsRef.current.add(notif.id);
 
-        toast.success(notif.title, {
+        // Determine toast type based on notification content
+        const toastType = notif.type === 'order' ? 'success' as const
+            : (notif.status === 'CANCELLED' ? 'error' as const : 'info' as const);
+
+        enqueue({
+            id: `notif_${notif.id}`,
+            type: toastType,
+            title: notif.title,
             description: notif.message,
             duration: 5000,
         });
 
+        // Browser notification
         if ('Notification' in window && Notification.permission === 'granted') {
             new window.Notification(notif.title, {
                 body: notif.message,
@@ -100,7 +109,7 @@ export function useNotifications(userEmail?: string) {
         const currentSaved = new Set(JSON.parse(localStorage.getItem('notified_ids') || '[]') as string[]);
         notifiedIdsRef.current.forEach(id => currentSaved.add(id));
         localStorage.setItem('notified_ids', JSON.stringify(Array.from(currentSaved)));
-    }, []);
+    }, [enqueue]);
 
     // Fetch initial notifications via REST (one-time on mount)
     const fetchNotifications = useCallback(async () => {
