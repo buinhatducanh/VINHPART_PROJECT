@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../../shared/database';
-import { broadcast } from '../notification/sse';
+import { notificationQueue } from '../notification/notification-queue';
 
 const router = Router();
 
@@ -87,17 +87,30 @@ router.post('/', async (req, res) => {
 
         await client.query('COMMIT');
 
-        // Push real-time notification via SSE
-        broadcast('new_order', {
-            id: orderId,
+        // Queue notification for admin (persistent + SSE broadcast)
+        await notificationQueue.enqueue({
             type: 'order',
             title: 'Đơn hàng mới',
             message: `${customerName} đã đặt đơn hàng ${orderNumber}`,
             orderId,
-            orderNumber,
-            createdAt: new Date().toISOString(),
-            amount: totalAmount
-        }, customerEmail);
+            amount: totalAmount,
+            priority: 2,
+            data: { orderNumber, customerName },
+        });
+
+        // Queue notification for user (persistent + SSE broadcast)
+        if (customerEmail) {
+            await notificationQueue.enqueue({
+                type: 'order',
+                title: 'Đặt hàng thành công',
+                message: `Đơn hàng ${orderNumber} đã được đặt thành công và đang chờ xử lý.`,
+                targetEmail: customerEmail,
+                orderId,
+                amount: totalAmount,
+                priority: 1,
+                data: { orderNumber, orderStatus: 'PENDING' },
+            });
+        }
 
         res.status(201).json({
             id: orderId,
@@ -171,18 +184,43 @@ router.patch('/:id/status', async (req, res) => {
             'SELECT "customerEmail", "customerName", "orderNumber", "totalAmount" FROM orders WHERE id = $1',
             [id]
         );
+
+        const statusLabels: Record<string, string> = {
+            PENDING: 'Chờ xử lý',
+            CONFIRMED: 'Đã xác nhận',
+            PROCESSING: 'Đang đóng gói',
+            SHIPPED: 'Đang vận chuyển',
+            DELIVERED: 'Giao hàng thành công',
+            CANCELLED: 'Đã hủy',
+        };
+
         if (orderDetail.rows.length > 0) {
             const order = orderDetail.rows[0];
-            broadcast('order_status', {
-                id: id + '_' + status,
+
+            // Queue admin notification
+            await notificationQueue.enqueue({
                 type: 'order_status',
-                title: `Cập nhật đơn hàng`,
-                message: `Đơn hàng ${order.orderNumber} đã chuyển sang ${status}`,
-                status,
+                title: 'Cập nhật đơn hàng',
+                message: `Đơn hàng ${order.orderNumber} → ${statusLabels[status] || status}`,
                 orderId: id,
-                createdAt: new Date().toISOString(),
-                amount: order.totalAmount
-            }, order.customerEmail);
+                amount: Number(order.totalAmount),
+                priority: status === 'CANCELLED' ? 3 : 1,
+                data: { orderNumber: order.orderNumber, orderStatus: status },
+            });
+
+            // Queue user notification
+            if (order.customerEmail) {
+                await notificationQueue.enqueue({
+                    type: 'order_status',
+                    title: statusLabels[status] || 'Cập nhật đơn hàng',
+                    message: `Đơn hàng ${order.orderNumber} → ${statusLabels[status] || status}`,
+                    targetEmail: order.customerEmail,
+                    orderId: id,
+                    amount: Number(order.totalAmount),
+                    priority: status === 'DELIVERED' ? 2 : 1,
+                    data: { orderNumber: order.orderNumber, orderStatus: status },
+                });
+            }
         }
 
         res.json({ message: 'Order status updated successfully', order: rows[0] });

@@ -5,6 +5,7 @@ import { CartItem } from '@/shared/types';
 import { productImages } from '@/shared/data/productImages';
 import { useI18n } from '@/shared/lib/i18n';
 import { API_BASE_URL } from '@/lib/api';
+import { useMessageQueue } from '@/shared/hooks/useMessageQueue';
 
 interface CheckoutPageProps {
   cartItems: CartItem[];
@@ -14,6 +15,7 @@ interface CheckoutPageProps {
 
 export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: CheckoutPageProps) {
   const [orderComplete, setOrderComplete] = useState(false);
+  const [orderNumber, setOrderNumber] = useState('');
   const [formData, setFormData] = useState({
     customerName: '',
     customerPhone: '',
@@ -24,6 +26,7 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { t, language } = useI18n();
+  const { enqueue } = useMessageQueue();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -44,11 +47,25 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
   const handlePlaceOrder = async () => {
     // Basic validation
     if (!formData.customerName || !formData.customerPhone || !formData.address) {
-      alert('Vui lòng điền đầy đủ các trường bắt buộc (*)');
+      enqueue({
+        type: 'warning',
+        title: 'Thiếu thông tin',
+        description: 'Vui lòng điền đầy đủ các trường bắt buộc (*)',
+      });
       return;
     }
 
     setIsSubmitting(true);
+
+    // Step 1: Preparing order
+    enqueue({
+      id: 'order-step-1',
+      type: 'info',
+      title: 'Đang xử lý đơn hàng...',
+      description: `Đang chuẩn bị ${cartItems.length} sản phẩm`,
+      duration: 3000,
+    });
+
     try {
       const orderData = {
         customerName: formData.customerName,
@@ -75,13 +92,35 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
       });
 
       if (response.ok) {
+        const result = await response.json();
+        setOrderNumber(result.orderNumber || '');
+
+        // Step 2: Order confirmed
+        enqueue({
+          id: 'order-step-2',
+          type: 'success',
+          title: 'Đặt hàng thành công!',
+          description: `Mã đơn hàng: ${result.orderNumber}. Bạn sẽ nhận thông báo khi đơn hàng được xử lý.`,
+          duration: 6000,
+        });
+
         setOrderComplete(true);
       } else {
-        alert('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!');
+        enqueue({
+          type: 'error',
+          title: 'Đặt hàng thất bại',
+          description: 'Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!',
+          duration: 6000,
+        });
       }
     } catch (error) {
       console.error('Error placing order:', error);
-      alert('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!');
+      enqueue({
+        type: 'error',
+        title: 'Lỗi kết nối',
+        description: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng và thử lại.',
+        duration: 8000,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -111,6 +150,16 @@ export function CheckoutPage({ cartItems, onBackToCart, onBackToShopping }: Chec
           >
             {t('checkout.success')}
           </motion.h2>
+          {orderNumber && (
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="text-sm font-mono bg-muted px-4 py-2 rounded-lg text-foreground mb-4 inline-block"
+            >
+              {orderNumber}
+            </motion.p>
+          )}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

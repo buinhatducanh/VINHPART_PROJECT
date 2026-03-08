@@ -212,3 +212,27 @@ model BodyKitPart {
   @@index([productId])
   @@map("body_kit_parts")
 }
+
+model Notification {
+  id          String    @id @default(cuid())
+  type        String    // 'order' | 'order_status' | 'system'
+  title       String
+  message     String
+  targetEmail String?   // null = admin broadcast, email = user-specific
+  orderId     String?
+  amount      Decimal?  @db.Decimal(10, 2)
+  status      String    @default("QUEUED") // QUEUED, DELIVERED, FAILED, READ
+  priority    Int       @default(0) // 0=info, 1=success, 2=warning, 3=error
+  data        Json?     // additional payload
+  retryCount  Int       @default(0)
+  maxRetries  Int       @default(3)
+  createdAt   DateTime  @default(now())
+  deliveredAt DateTime?
+  readAt      DateTime?
+
+  @@index([targetEmail])
+  @@index([status])
+  @@index([createdAt])
+  @@index([targetEmail, status])
+  @@map("notifications")
+}
