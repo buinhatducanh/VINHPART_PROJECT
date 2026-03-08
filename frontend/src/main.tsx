@@ -7,20 +7,14 @@ import "./styles/index.css";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-const AppWithProviders = () => (
-  <HelmetProvider>
-    <I18nProvider>
-      <App />
-    </I18nProvider>
-  </HelmetProvider>
-);
-
+// GoogleOAuthProvider must always wrap the app — useGoogleLogin() in AuthModal
+// requires the context regardless of whether clientId is configured.
 createRoot(document.getElementById("root")!).render(
-  GOOGLE_CLIENT_ID ? (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <AppWithProviders />
-    </GoogleOAuthProvider>
-  ) : (
-    <AppWithProviders />
-  )
+  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <HelmetProvider>
+      <I18nProvider>
+        <App />
+      </I18nProvider>
+    </HelmetProvider>
+  </GoogleOAuthProvider>
 );
