@@ -50,6 +50,15 @@ const categories = [
     { id: 'suspension', name: 'Phuộc', slug: 'phuoc', description: 'Phuộc xe máy', parentId: 'accessories' },
     { id: 'exhaust', name: 'Pô xe', slug: 'po-xe', description: 'Pô xe các loại', parentId: 'accessories' },
     { id: 'mirrors', name: 'Gương chiếu hậu', slug: 'guong-chieu-hau', description: 'Gương xe máy', parentId: 'accessories' },
+
+    // Parent category - Dàn áo xe
+    { id: 'body-panels', name: 'Dàn áo xe', slug: 'dan-ao-xe', description: 'Ốp nhựa, fairing, tấm ốp trang trí xe máy', parentId: null },
+
+    // Sub-categories - Dàn áo xe
+    { id: 'front-cowl', name: 'Ốp đầu xe', slug: 'op-dau-xe', description: 'Ốp đầu, đầu đèn, chắn bùn trước', parentId: 'body-panels' },
+    { id: 'side-panels', name: 'Ốp thân xe', slug: 'op-than-xe', description: 'Ốp sườn trái/phải, ốp giữa', parentId: 'body-panels' },
+    { id: 'rear-cowl', name: 'Ốp đuôi xe', slug: 'op-duoi-xe', description: 'Đuôi xe, ốp hậu, chắn bùn sau', parentId: 'body-panels' },
+    { id: 'tank-cover', name: 'Nắp bình xăng', slug: 'nap-binh-xang', description: 'Nắp và ốp bình xăng', parentId: 'body-panels' },
 ];
 
 // Products data matching Prisma schema
@@ -487,7 +496,238 @@ const products = [
     },
 ];
 
-// Vehicles data (dàn áo xe)
+// ========== SẢN PHẨM DÀN ÁO XE ==========
+const bodyPanelProducts = [
+    // ---- Honda Winner X 150cc ----
+    {
+        name: 'Ốp đầu xe Honda Winner X chính hãng',
+        slug: 'op-dau-xe-honda-winner-x-chinh-hang',
+        description: 'Ốp đầu xe Honda Winner X chính hãng, nhựa ABS cao cấp, thiết kế thể thao sắc nét. Màu: Đỏ/Đen/Trắng. Tương thích: Honda Winner X 150cc (2017-2023).',
+        price: 480000,
+        salePrice: 390000,
+        sku: 'DA-WX-001',
+        stock: 30,
+        images: ['https://placehold.co/600x400?text=Op+Dau+Winner+X'],
+        categoryId: 'front-cowl',
+        brand: 'Honda',
+        isActive: true,
+        isFeatured: true,
+    },
+    {
+        name: 'Chắn bùn trước Winner X',
+        slug: 'chan-bun-truoc-winner-x',
+        description: 'Chắn bùn trước nhựa ABS, ôm vòng bánh trước, chống bắn bùn hiệu quả. Màu: Đen. Tương thích: Honda Winner X 150cc.',
+        price: 185000,
+        salePrice: null,
+        sku: 'DA-WX-002',
+        stock: 45,
+        images: ['https://placehold.co/600x400?text=Chan+Bun+Truoc+Winner+X'],
+        categoryId: 'front-cowl',
+        brand: 'Honda',
+        isActive: true,
+        isFeatured: false,
+    },
+    {
+        name: 'Ốp sườn trái Honda Winner X',
+        slug: 'op-suon-trai-honda-winner-x',
+        description: 'Ốp sườn trái chính hãng Honda, nhựa ABS chịu nhiệt, đường gân thể thao. Tương thích: Honda Winner X 150cc (2017-2023).',
+        price: 320000,
+        salePrice: null,
+        sku: 'DA-WX-003',
+        stock: 25,
+        images: ['https://placehold.co/600x400?text=Op+Suon+Trai+Winner+X'],
+        categoryId: 'side-panels',
+        brand: 'Honda',
+        isActive: true,
+        isFeatured: false,
+    },
+    {
+        name: 'Ốp sườn phải Honda Winner X',
+        slug: 'op-suon-phai-honda-winner-x',
+        description: 'Ốp sườn phải chính hãng Honda, nhựa ABS chịu nhiệt, đường gân thể thao. Tương thích: Honda Winner X 150cc (2017-2023).',
+        price: 320000,
+        salePrice: null,
+        sku: 'DA-WX-004',
+        stock: 25,
+        images: ['https://placehold.co/600x400?text=Op+Suon+Phai+Winner+X'],
+        categoryId: 'side-panels',
+        brand: 'Honda',
+        isActive: true,
+        isFeatured: false,
+    },
+    {
+        name: 'Ốp giữa thân xe Winner X',
+        slug: 'op-giua-than-xe-winner-x',
+        description: 'Ốp giữa thân xe che kín khu vực động cơ, chống bụi bẩn, thiết kế gọn đẹp. Tương thích: Honda Winner X 150cc.',
+        price: 210000,
+        salePrice: 175000,
+        sku: 'DA-WX-005',
+        stock: 35,
+        images: ['https://placehold.co/600x400?text=Op+Giua+Winner+X'],
+        categoryId: 'side-panels',
+        brand: 'Honda',
+        isActive: true,
+        isFeatured: false,
+    },
+    {
+        name: 'Nắp bình xăng Winner X chính hãng',
+        slug: 'nap-binh-xang-winner-x-chinh-hang',
+        description: 'Nắp bình xăng chính hãng kèm ron cao su chống thấm, khóa an toàn. Tương thích: Honda Winner X 150cc.',
+        price: 145000,
+        salePrice: null,
+        sku: 'DA-WX-006',
+        stock: 50,
+        images: ['https://placehold.co/600x400?text=Nap+Binh+Xang+Winner+X'],
+        categoryId: 'tank-cover',
+        brand: 'Honda',
+        isActive: true,
+        isFeatured: false,
+    },
+    {
+        name: 'Đuôi xe Honda Winner X',
+        slug: 'duoi-xe-honda-winner-x',
+        description: 'Bộ đuôi xe gồm ốp đuôi + chắn bùn sau, nhựa ABS nguyên khối, thiết kế vát thể thao. Tương thích: Honda Winner X 150cc (2017-2023).',
+        price: 420000,
+        salePrice: 350000,
+        sku: 'DA-WX-007',
+        stock: 20,
+        images: ['https://placehold.co/600x400?text=Duoi+Xe+Winner+X'],
+        categoryId: 'rear-cowl',
+        brand: 'Honda',
+        isActive: true,
+        isFeatured: true,
+    },
+    {
+        name: 'Chắn bùn sau Winner X',
+        slug: 'chan-bun-sau-winner-x',
+        description: 'Chắn bùn sau nhựa ABS, thiết kế ôm bánh sau, chống bắn bùn lên đuôi xe. Tương thích: Honda Winner X 150cc.',
+        price: 155000,
+        salePrice: null,
+        sku: 'DA-WX-008',
+        stock: 40,
+        images: ['https://placehold.co/600x400?text=Chan+Bun+Sau+Winner+X'],
+        categoryId: 'rear-cowl',
+        brand: 'Honda',
+        isActive: true,
+        isFeatured: false,
+    },
+
+    // ---- Yamaha Exciter 155 VVA ----
+    {
+        name: 'Ốp đầu xe Yamaha Exciter 155 chính hãng',
+        slug: 'op-dau-xe-yamaha-exciter-155-chinh-hang',
+        description: 'Ốp đầu xe Yamaha Exciter 155 VVA chính hãng, nhựa ABS cao cấp, thiết kế mũi nhọn thể thao. Màu: Xanh/Đen/Đỏ. Tương thích: Yamaha Exciter 155 VVA (2021-2023).',
+        price: 550000,
+        salePrice: 459000,
+        sku: 'DA-EX-001',
+        stock: 25,
+        images: ['https://placehold.co/600x400?text=Op+Dau+Exciter+155'],
+        categoryId: 'front-cowl',
+        brand: 'Yamaha',
+        isActive: true,
+        isFeatured: true,
+    },
+    {
+        name: 'Chắn bùn trước Exciter 155',
+        slug: 'chan-bun-truoc-exciter-155',
+        description: 'Chắn bùn trước ngắn thể thao, nhựa ABS cứng, thiết kế dạng mỏ vịt phong cách racing. Tương thích: Yamaha Exciter 155 VVA.',
+        price: 195000,
+        salePrice: null,
+        sku: 'DA-EX-002',
+        stock: 40,
+        images: ['https://placehold.co/600x400?text=Chan+Bun+Truoc+Exciter+155'],
+        categoryId: 'front-cowl',
+        brand: 'Yamaha',
+        isActive: true,
+        isFeatured: false,
+    },
+    {
+        name: 'Ốp sườn trái Yamaha Exciter 155',
+        slug: 'op-suon-trai-yamaha-exciter-155',
+        description: 'Ốp sườn trái chính hãng Yamaha, nhựa ABS chịu nhiệt cao, đường gân sắc nét. Tương thích: Yamaha Exciter 155 VVA (2021-2023).',
+        price: 370000,
+        salePrice: null,
+        sku: 'DA-EX-003',
+        stock: 20,
+        images: ['https://placehold.co/600x400?text=Op+Suon+Trai+Exciter+155'],
+        categoryId: 'side-panels',
+        brand: 'Yamaha',
+        isActive: true,
+        isFeatured: false,
+    },
+    {
+        name: 'Ốp sườn phải Yamaha Exciter 155',
+        slug: 'op-suon-phai-yamaha-exciter-155',
+        description: 'Ốp sườn phải chính hãng Yamaha, nhựa ABS chịu nhiệt cao, đường gân sắc nét. Tương thích: Yamaha Exciter 155 VVA (2021-2023).',
+        price: 370000,
+        salePrice: null,
+        sku: 'DA-EX-004',
+        stock: 20,
+        images: ['https://placehold.co/600x400?text=Op+Suon+Phai+Exciter+155'],
+        categoryId: 'side-panels',
+        brand: 'Yamaha',
+        isActive: true,
+        isFeatured: false,
+    },
+    {
+        name: 'Ốp bụng dưới Exciter 155',
+        slug: 'op-bung-duoi-exciter-155',
+        description: 'Ốp bụng dưới (belly pan) nhựa ABS bảo vệ gầm máy, tạo khí động học cho xe. Tương thích: Yamaha Exciter 155 VVA.',
+        price: 280000,
+        salePrice: 235000,
+        sku: 'DA-EX-005',
+        stock: 30,
+        images: ['https://placehold.co/600x400?text=Op+Bung+Duoi+Exciter+155'],
+        categoryId: 'side-panels',
+        brand: 'Yamaha',
+        isActive: true,
+        isFeatured: true,
+    },
+    {
+        name: 'Nắp bình xăng Exciter 155 chính hãng',
+        slug: 'nap-binh-xang-exciter-155-chinh-hang',
+        description: 'Nắp bình xăng chính hãng Yamaha, kèm ron cao su nguyên bản, khóa an toàn chống rò rỉ. Tương thích: Yamaha Exciter 155 VVA.',
+        price: 165000,
+        salePrice: null,
+        sku: 'DA-EX-006',
+        stock: 45,
+        images: ['https://placehold.co/600x400?text=Nap+Binh+Xang+Exciter+155'],
+        categoryId: 'tank-cover',
+        brand: 'Yamaha',
+        isActive: true,
+        isFeatured: false,
+    },
+    {
+        name: 'Đuôi xe Yamaha Exciter 155 VVA',
+        slug: 'duoi-xe-yamaha-exciter-155-vva',
+        description: 'Bộ đuôi xe gồm ốp đuôi + chắn bùn sau nguyên bộ, nhựa ABS dày dặn, thiết kế đuôi nhọn racing. Tương thích: Yamaha Exciter 155 VVA (2021-2023).',
+        price: 480000,
+        salePrice: 399000,
+        sku: 'DA-EX-007',
+        stock: 18,
+        images: ['https://placehold.co/600x400?text=Duoi+Xe+Exciter+155'],
+        categoryId: 'rear-cowl',
+        brand: 'Yamaha',
+        isActive: true,
+        isFeatured: true,
+    },
+    {
+        name: 'Chắn bùn sau Exciter 155',
+        slug: 'chan-bun-sau-exciter-155',
+        description: 'Chắn bùn sau ngắn thể thao, nhựa ABS mỏng nhẹ, thiết kế ôm bánh sau kiểu racing. Tương thích: Yamaha Exciter 155 VVA.',
+        price: 160000,
+        salePrice: null,
+        sku: 'DA-EX-008',
+        stock: 35,
+        images: ['https://placehold.co/600x400?text=Chan+Bun+Sau+Exciter+155'],
+        categoryId: 'rear-cowl',
+        brand: 'Yamaha',
+        isActive: true,
+        isFeatured: false,
+    },
+];
+
+// Vehicles data (dàn áo xe) — mỗi vehicle là một bộ dàn áo theo dòng xe
 const vehicles = [
     {
         id: 'vehicle-honda-winner-x',
@@ -497,23 +737,17 @@ const vehicles = [
         model: 'Winner X',
         year: 2023,
         image: 'https://placehold.co/800x500?text=Honda+Winner+X+150cc',
-        description: 'Bộ dàn áo đầy đủ cho Honda Winner X 150cc - xe côn thể thao bán chạy nhất Việt Nam. Tập hợp các phụ tùng chính hãng và aftermarket cao cấp nhằm nâng cấp toàn diện hiệu suất và thẩm mỹ.',
+        description: 'Bộ dàn áo đầy đủ cho Honda Winner X 150cc — ốp đầu, ốp sườn, ốp đuôi, chắn bùn, nắp bình xăng. Tất cả phụ tùng nhựa chính hãng Honda, nhựa ABS cao cấp, sẵn sàng thay thế hoặc nâng cấp màu sắc.',
         isActive: true,
-        // product slugs to assign as body kit parts (with positions)
         parts: [
-            { slug: 'den-pha-led-m5-sieu-sang-6000k',       position: 'Đèn pha' },
-            { slug: 'bo-day-dien-zin-theo-xe-winner-x',     position: 'Hệ thống điện' },
-            { slug: 'ma-phanh-honda-winner-x-chinh-hang',   position: 'Phanh trước' },
-            { slug: 'xi-lanh-piston-std-racing-winner-x',   position: 'Động cơ' },
-            { slug: 'loc-gio-dna-racing-cao-cap',            position: 'Lọc gió' },
-            { slug: 'dau-nhot-motul-7100-10w40',             position: 'Dầu nhớt' },
-            { slug: 'sen-rk-racing-428-winner-x',            position: 'Sên' },
-            { slug: 'ly-hop-chinh-hang-winner-x',            position: 'Ly hợp' },
-            { slug: 'lop-michelin-pilot-street-2-80-90-17',  position: 'Lốp xe' },
-            { slug: 'mam-duc-racing-boy-winner-x',           position: 'Mâm xe' },
-            { slug: 'phuoc-yss-racing-dtg',                  position: 'Phuộc' },
-            { slug: 'po-akrapovic-carbon-winner-x',          position: 'Pô xe' },
-            { slug: 'guong-chieu-hau-rizoma-spy-r',          position: 'Gương chiếu hậu' },
+            { slug: 'op-dau-xe-honda-winner-x-chinh-hang',  position: 'Ốp đầu xe' },
+            { slug: 'chan-bun-truoc-winner-x',               position: 'Chắn bùn trước' },
+            { slug: 'op-suon-trai-honda-winner-x',          position: 'Ốp sườn trái' },
+            { slug: 'op-suon-phai-honda-winner-x',          position: 'Ốp sườn phải' },
+            { slug: 'op-giua-than-xe-winner-x',             position: 'Ốp giữa thân xe' },
+            { slug: 'nap-binh-xang-winner-x-chinh-hang',   position: 'Nắp bình xăng' },
+            { slug: 'duoi-xe-honda-winner-x',               position: 'Đuôi xe' },
+            { slug: 'chan-bun-sau-winner-x',                position: 'Chắn bùn sau' },
         ],
     },
     {
@@ -524,21 +758,17 @@ const vehicles = [
         model: 'Exciter 155',
         year: 2023,
         image: 'https://placehold.co/800x500?text=Yamaha+Exciter+155+VVA',
-        description: 'Bộ dàn áo đầy đủ cho Yamaha Exciter 155 VVA - xe côn thể thao đình đám với công nghệ VVA tiên tiến. Các phụ tùng được chọn lọc kỹ để tối ưu vận hành và nâng tầm phong cách.',
+        description: 'Bộ dàn áo đầy đủ cho Yamaha Exciter 155 VVA — ốp đầu mũi nhọn, ốp sườn, ốp bụng dưới, đuôi racing, chắn bùn, nắp bình xăng. Nhựa ABS chính hãng Yamaha, bền màu, lắp vừa khít nguyên bản.',
         isActive: true,
         parts: [
-            { slug: 'den-xi-nhan-led-anh-sang-vang',         position: 'Đèn xi nhan' },
-            { slug: 'binh-acquy-lithium-ion-12v-7ah',        position: 'Acquy' },
-            { slug: 'ma-phanh-racing-boy-ceramic',           position: 'Phanh trước' },
-            { slug: 'dia-phanh-brembo-racing-260mm',         position: 'Đĩa phanh' },
-            { slug: 'bo-piston-takasago-62mm-exciter',       position: 'Động cơ' },
-            { slug: 'dau-nhot-shell-advance-ax7-10w40',      position: 'Dầu nhớt' },
-            { slug: 'bo-nhong-sen-dia-did-gold',             position: 'Nhông sên dĩa' },
-            { slug: 'lop-dunlop-tt93-gp-90-80-17',           position: 'Lốp xe' },
-            { slug: 'mam-duc-brembo-17-inch-exciter',        position: 'Mâm xe' },
-            { slug: 'phuoc-ohlins-ttx-gp-exciter',           position: 'Phuộc' },
-            { slug: 'po-yoshimura-r77-exciter',              position: 'Pô xe' },
-            { slug: 'guong-chieu-hau-cnc-nhom-nguyen-khoi',  position: 'Gương chiếu hậu' },
+            { slug: 'op-dau-xe-yamaha-exciter-155-chinh-hang', position: 'Ốp đầu xe' },
+            { slug: 'chan-bun-truoc-exciter-155',               position: 'Chắn bùn trước' },
+            { slug: 'op-suon-trai-yamaha-exciter-155',          position: 'Ốp sườn trái' },
+            { slug: 'op-suon-phai-yamaha-exciter-155',          position: 'Ốp sườn phải' },
+            { slug: 'op-bung-duoi-exciter-155',                 position: 'Ốp bụng dưới' },
+            { slug: 'nap-binh-xang-exciter-155-chinh-hang',     position: 'Nắp bình xăng' },
+            { slug: 'duoi-xe-yamaha-exciter-155-vva',           position: 'Đuôi xe' },
+            { slug: 'chan-bun-sau-exciter-155',                  position: 'Chắn bùn sau' },
         ],
     },
 ];
@@ -609,6 +839,28 @@ async function main() {
     }
     console.log(`  ✅ Created ${products.length} products`);
 
+    // Seed body panel products (dàn áo xe)
+    console.log('\n🎨 Seeding body panel products (dàn áo xe)...');
+    for (const product of bodyPanelProducts) {
+        await prisma.product.create({
+            data: {
+                name: product.name,
+                slug: product.slug,
+                description: product.description,
+                price: product.price,
+                salePrice: product.salePrice,
+                sku: product.sku,
+                stock: product.stock,
+                images: product.images,
+                categoryId: product.categoryId,
+                brand: product.brand,
+                isActive: product.isActive,
+                isFeatured: product.isFeatured,
+            },
+        });
+    }
+    console.log(`  ✅ Created ${bodyPanelProducts.length} body panel products`);
+
     // Seed vehicles and body kit parts
     console.log('\n🏍️  Seeding vehicle outfits (dàn áo xe)...');
     for (const vehicle of vehicles) {
@@ -649,9 +901,9 @@ async function main() {
     console.log('  ✅ Admin user created (email: admin@vinhpart.vn, password: admin123)');
 
     console.log('\n🎉 Database seeding completed successfully!');
-    console.log(`   - ${categories.length} categories`);
-    console.log(`   - ${products.length} products`);
-    console.log(`   - ${vehicles.length} vehicle outfits (dàn áo xe)`);
+    console.log(`   - ${categories.length} categories (gồm danh mục Dàn áo xe)`);
+    console.log(`   - ${products.length + bodyPanelProducts.length} products (${products.length} phụ tùng + ${bodyPanelProducts.length} tấm ốp dàn áo)`);
+    console.log(`   - ${vehicles.length} vehicle outfits (Honda Winner X, Yamaha Exciter 155)`);
     console.log(`   - 1 admin user`);
 }
 
