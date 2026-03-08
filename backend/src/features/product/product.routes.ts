@@ -216,6 +216,11 @@ router.post('/', async (req, res) => {
             discount_end_date
         } = req.body;
 
+        if (!sku || sku.trim() === '') {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: 'Mã sản phẩm (SKU) là bắt buộc' });
+        }
+
         let categoryId;
         if (category) {
             const { rows: existingCats } = await client.query('SELECT id FROM categories WHERE name = $1', [category]);
@@ -295,6 +300,11 @@ router.put('/:id', async (req, res) => {
             discount_start_date,
             discount_end_date
         } = req.body;
+
+        if (!sku || sku.trim() === '') {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: 'Mã sản phẩm (SKU) là bắt buộc' });
+        }
 
         let categoryId;
         if (category) {
