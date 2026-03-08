@@ -17,8 +17,7 @@ export const saveSiteName = (name: string): void => {
 };
 
 export const getLanguage = (): string => {
-    if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
-    return localStorage.getItem(LANGUAGE_KEY) || DEFAULT_LANGUAGE;
+    return 'vi';
 };
 
 export const saveLanguage = (lang: string): void => {

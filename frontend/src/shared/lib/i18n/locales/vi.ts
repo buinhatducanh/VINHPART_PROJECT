@@ -262,6 +262,7 @@ export const vi = {
                 manageSEO: 'Quản lý bài viết SEO',
                 manageCategories: 'Quản lý danh mục',
                 manageReviews: 'Quản lý đánh giá',
+                manageBodyKit: 'Quản lý dàn áo',
                 settings: 'Cài đặt hệ thống'
             },
             sysVersion: 'Phiên bản hệ thống',
@@ -379,6 +380,7 @@ export const vi = {
             orders: 'Đơn hàng',
             categories: 'Danh mục',
             banners: 'Banner / Bài viết',
+            vehicles: 'Phương tiện',
         },
         product: {
             addTitle: 'THÊM SẢN PHẨM MỚI',
