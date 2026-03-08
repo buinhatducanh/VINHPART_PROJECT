@@ -7,12 +7,20 @@ import "./styles/index.css";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-createRoot(document.getElementById("root")!).render(
+const AppWithProviders = () => (
   <HelmetProvider>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <I18nProvider>
-        <App />
-      </I18nProvider>
-    </GoogleOAuthProvider>
+    <I18nProvider>
+      <App />
+    </I18nProvider>
   </HelmetProvider>
+);
+
+createRoot(document.getElementById("root")!).render(
+  GOOGLE_CLIENT_ID ? (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <AppWithProviders />
+    </GoogleOAuthProvider>
+  ) : (
+    <AppWithProviders />
+  )
 );

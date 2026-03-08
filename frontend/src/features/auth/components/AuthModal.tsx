@@ -344,7 +344,13 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', onLogin }: A
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => googleLogin()}
+                      onClick={() => {
+                        if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+                          toast.error('Google login is not configured');
+                          return;
+                        }
+                        googleLogin();
+                      }}
                       disabled={googleLoading}
                       className="flex items-center justify-center gap-2 bg-muted hover:bg-muted/80 text-foreground py-2.5 rounded-lg transition-all border border-border disabled:opacity-50 disabled:cursor-not-allowed"
                     >
