@@ -5,10 +5,9 @@ import { useI18n } from '@/shared/lib/i18n';
 interface HeroSectionProps {
     onShopNow: () => void;
     onViewCatalog: () => void;
-    onBodyKitClick?: () => void;
 }
 
-export function HeroSection({ onShopNow, onViewCatalog, onBodyKitClick }: HeroSectionProps) {
+export function HeroSection({ onShopNow, onViewCatalog }: HeroSectionProps) {
     const { t } = useI18n();
 
     return (
@@ -87,16 +86,19 @@ export function HeroSection({ onShopNow, onViewCatalog, onBodyKitClick }: HeroSe
                         >
                             {t('hero.viewCatalog')}
                         </motion.button>
-                        {onBodyKitClick && (
-                            <motion.button
-                                onClick={onBodyKitClick}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="w-full sm:w-auto px-8 py-3 md:py-4 bg-transparent border-2 border-red-600 hover:bg-red-600 text-foreground font-bold rounded-lg transition-all"
-                            >
-                                {t('hero.bodyKit') || 'Dàn Áo Xe'}
-                            </motion.button>
-                        )}
+                        <motion.button
+                            onClick={() => {
+                                const element = document.getElementById('body-kit-section');
+                                if (element) {
+                                    element.scrollIntoView({ behavior: 'smooth' });
+                                }
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="w-full sm:w-auto px-8 py-3 md:py-4 bg-transparent border-2 border-red-600 hover:bg-red-600 text-foreground font-bold rounded-lg transition-all"
+                        >
+                            {t('hero.bodyKit') || 'Dàn Áo Xe'}
+                        </motion.button>
                     </div>
                 </motion.div>
 

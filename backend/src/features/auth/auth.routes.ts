@@ -22,7 +22,11 @@ router.post('/register', async (req, res) => {
         }
 
         const hashedPassword = hashPassword(password);
-        const role = email === 'admin@vinpart.vn' ? 'ADMIN' : 'USER';
+
+        // Dynamic admin check from admin_emails table
+        const adminCheck = await client.query('SELECT 1 FROM admin_emails WHERE LOWER(email) = LOWER($1)', [email]);
+        const role = adminCheck.rows.length > 0 ? 'ADMIN' : 'USER';
+
         const id = uuidv4();
         const now = new Date();
 
@@ -153,7 +157,10 @@ router.post('/google', async (req, res) => {
             // Create new user with Google info (no password needed)
             const id = uuidv4();
             const now = new Date();
-            const role = email === 'admin@vinpart.vn' ? 'ADMIN' : 'USER';
+
+            // Dynamic admin check from admin_emails table
+            const adminCheck = await client.query('SELECT 1 FROM admin_emails WHERE LOWER(email) = LOWER($1)', [email]);
+            const role = adminCheck.rows.length > 0 ? 'ADMIN' : 'USER';
 
             const insertQuery = `
                 INSERT INTO users (id, email, name, "googleId", avatar, role, "createdAt", "updatedAt")
@@ -165,6 +172,14 @@ router.post('/google', async (req, res) => {
                 id, email, name, googleId, picture, role, now, now
             ]);
             user = rows[0];
+        }
+
+        // Re-evaluate admin status for existing users on every Google login
+        const adminRecheck = await client.query('SELECT 1 FROM admin_emails WHERE LOWER(email) = LOWER($1)', [user.email]);
+        const expectedRole = adminRecheck.rows.length > 0 ? 'ADMIN' : 'USER';
+        if (user.role !== expectedRole) {
+            await client.query('UPDATE users SET role = $1, "updatedAt" = NOW() WHERE id = $2', [expectedRole, user.id]);
+            user.role = expectedRole;
         }
 
         await client.query('COMMIT');

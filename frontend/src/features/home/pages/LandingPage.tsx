@@ -12,6 +12,7 @@ import {
   CustomerReviewsSection,
   CTASection,
   FooterSection,
+  BodyKitSection,
 } from '../sections';
 
 interface LandingPageProps {
@@ -23,7 +24,7 @@ interface LandingPageProps {
   onBlogPostClick?: (postId: string) => void;
   onViewAllPosts?: () => void;
   onProductClick?: (productId: string) => void;
-  onBodyKitClick?: () => void;
+  onVehicleClick?: (vehicleId: string) => void;
 }
 
 export function LandingPage({
@@ -35,7 +36,7 @@ export function LandingPage({
   onBlogPostClick,
   onViewAllPosts,
   onProductClick,
-  onBodyKitClick,
+  onVehicleClick,
 }: LandingPageProps) {
   const { t } = useI18n();
   // State for data from API
@@ -102,8 +103,9 @@ export function LandingPage({
       )}
 
       {/* Section Components */}
-      <HeroSection onShopNow={onShopNow} onViewCatalog={onViewCatalog} onBodyKitClick={onBodyKitClick} />
+      <HeroSection onShopNow={onShopNow} onViewCatalog={onViewCatalog} />
       <BenefitsSection />
+      <BodyKitSection onVehicleClick={onVehicleClick} />
       <FeaturedProductsSection
         products={featuredProducts}
         onAddToCart={onAddToCart}

@@ -15,6 +15,7 @@ import dashboardRoutes from './features/dashboard/dashboard.routes';
 import uploadRoutes from './features/upload/upload.routes';
 import notificationRoutes from './features/notification/notification.routes';
 import bodykitRoutes from './features/bodykit/bodykit.routes';
+import adminEmailsRoutes from './features/admin/admin-emails.routes';
 import { notificationQueue } from './features/notification/notification-queue';
 
 // Use process.cwd() instead of import.meta.url for better Vercel compatibility
@@ -57,6 +58,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/bodykit', bodykitRoutes);
+app.use('/api/admin/emails', adminEmailsRoutes);
 
 // Startup migration (non-fatal)
 async function migrate() {
@@ -123,6 +125,22 @@ async function migrate() {
         await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_status ON notifications(status)`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_created ON notifications("createdAt")`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_email_status ON notifications("targetEmail", status)`);
+
+        // Admin emails table for dynamic admin role management
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS admin_emails (
+                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                email TEXT NOT NULL UNIQUE,
+                "addedBy" TEXT,
+                "createdAt" TIMESTAMP DEFAULT NOW()
+            )
+        `);
+        // Seed default admin email if not exists
+        await client.query(`
+            INSERT INTO admin_emails (email, "addedBy")
+            VALUES ('admin@vinpart.vn', 'system')
+            ON CONFLICT (email) DO NOTHING
+        `);
     } catch (e) {
         console.error('Startup migration error:', e);
     } finally {

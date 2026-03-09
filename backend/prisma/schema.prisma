@@ -39,25 +39,25 @@ model Category {
 }
 
 model Product {
-  id                String      @id @default(cuid())
+  id                String        @id @default(cuid())
   name              String
-  slug              String      @unique
+  slug              String        @unique
   description       String?
-  price             Decimal     @db.Decimal(10, 2)
-  salePrice         Decimal?    @db.Decimal(10, 2)
+  price             Decimal       @db.Decimal(10, 2)
+  salePrice         Decimal?      @db.Decimal(10, 2)
   discountStartDate DateTime?
   discountEndDate   DateTime?
-  sku               String?     @unique
-  stock             Int         @default(0)
+  sku               String?       @unique
+  stock             Int           @default(0)
   images            String[]
   categoryId        String?
   brand             String?
-  isActive          Boolean     @default(true)
-  isFeatured        Boolean     @default(false)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  isActive          Boolean       @default(true)
+  isFeatured        Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
   orderItems        OrderItem[]
-  category          Category?   @relation(fields: [categoryId], references: [id])
+  category          Category?     @relation(fields: [categoryId], references: [id])
   reviews           reviews[]
   bodyKitParts      BodyKitPart[]
 
@@ -178,17 +178,17 @@ enum OrderStatus {
 }
 
 model Vehicle {
-  id          String          @id @default(cuid())
-  name        String
-  slug        String          @unique
-  brand       String
-  model       String
-  year        Int?
-  image       String?
-  description String?
-  isActive    Boolean         @default(true)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  brand        String
+  model        String
+  year         Int?
+  image        String?
+  description  String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   bodyKitParts BodyKitPart[]
 
   @@index([slug])
@@ -198,14 +198,14 @@ model Vehicle {
 }
 
 model BodyKitPart {
-  id         String   @id @default(cuid())
-  vehicleId  String
-  productId  String
-  position   String?
-  sortOrder  Int      @default(0)
-  createdAt  DateTime @default(now())
-  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  vehicleId String
+  productId String
+  position  String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([vehicleId, productId])
   @@index([vehicleId])
@@ -215,15 +215,15 @@ model BodyKitPart {
 
 model Notification {
   id          String    @id @default(cuid())
-  type        String    // 'order' | 'order_status' | 'system'
+  type        String // 'order' | 'order_status' | 'system'
   title       String
   message     String
-  targetEmail String?   // null = admin broadcast, email = user-specific
+  targetEmail String? // null = admin broadcast, email = user-specific
   orderId     String?
   amount      Decimal?  @db.Decimal(10, 2)
   status      String    @default("QUEUED") // QUEUED, DELIVERED, FAILED, READ
   priority    Int       @default(0) // 0=info, 1=success, 2=warning, 3=error
-  data        Json?     // additional payload
+  data        Json? // additional payload
   retryCount  Int       @default(0)
   maxRetries  Int       @default(3)
   createdAt   DateTime  @default(now())
@@ -235,4 +235,13 @@ model Notification {
   @@index([createdAt])
   @@index([targetEmail, status])
   @@map("notifications")
+}
+
+model AdminEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  addedBy   String?
+  createdAt DateTime @default(now())
+
+  @@map("admin_emails")
 }

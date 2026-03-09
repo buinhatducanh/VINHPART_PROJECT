@@ -101,14 +101,11 @@ export default function App() {
   };
 
   const handleAdminClick = () => {
-    // TEMPORARY: Allow all users for verification
+    if (!user || user.role !== 'admin') {
+      toast.error(t('auth.adminForbidden') || 'Bạn không có quyền truy cập trang quản trị');
+      return;
+    }
     setCurrentPage('admin');
-    // TODO: Re-enable admin role check when ready:
-    // if (!user || user.role !== 'admin') {
-    //   toast.error(t('auth.adminForbidden'));
-    //   return;
-    // }
-    // setCurrentPage('admin');
   };
 
   const handleSearch = async (query: string) => {
@@ -206,6 +203,7 @@ export default function App() {
             onLogin={handleLogin}
             onLogout={handleLogout}
             onSearch={handleSearch}
+            onAdminClick={handleAdminClick}
           />
         )}
 
@@ -225,7 +223,11 @@ export default function App() {
             onBlogPostClick={handleBlogPostClick}
             onViewAllPosts={handleViewAllPosts}
             onProductClick={handleProductClick}
-            onBodyKitClick={() => setCurrentPage('bodykit')}
+            onVehicleClick={(vehicleId) => {
+              setSelectedVehicleId(vehicleId);
+              setCurrentPage('bodykit-detail');
+              window.scrollTo(0, 0);
+            }}
           />
         )}
 
@@ -289,7 +291,7 @@ export default function App() {
         {currentPage === 'bodykit-detail' && selectedVehicleId && (
           <BodyKitDetailPage
             vehicleId={selectedVehicleId}
-            onBack={() => setCurrentPage('bodykit')}
+            onBack={() => setCurrentPage('landing')}
             onAddToCart={handleAddToCart}
           />
         )}

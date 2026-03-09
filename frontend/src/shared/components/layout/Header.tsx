@@ -17,9 +17,10 @@ interface HeaderProps {
   onLogin: (user: UserType) => void;
   onLogout: () => void;
   onSearch?: (query: string) => void;
+  onAdminClick?: () => void;
 }
 
-export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onLogout, onSearch }: HeaderProps) {
+export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onLogout, onSearch, onAdminClick }: HeaderProps) {
   const { siteName } = useSettings();
   const { t, language } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
@@ -347,6 +348,21 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                         <button className="w-full px-4 py-3 text-left hover:bg-muted transition-colors text-foreground" onClick={handleFeatureClick}>
                           {t('header.myOrders')}
                         </button>
+                        {user.role === 'admin' && (
+                          <>
+                            <div className="border-t border-border"></div>
+                            <button
+                              onClick={() => {
+                                if (onAdminClick) onAdminClick();
+                                setShowAccountMenu(false);
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-muted transition-colors text-red-500 font-medium flex items-center gap-2"
+                            >
+                              <Settings className="w-4 h-4" />
+                              {t('common.adminPage')}
+                            </button>
+                          </>
+                        )}
                         <div className="border-t border-border"></div>
                         <button
                           onClick={() => {
@@ -544,9 +560,7 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                       {user.role === 'admin' && (
                         <button
                           onClick={() => {
-                            // Can't access handleAdminClick here directly from App.tsx without passing it as prop
-                            // So we trigger onLogoClick which goes to landing, then user needs to click admin button there
-                            // For a real fix, pass onAdminClick to Header
+                            if (onAdminClick) onAdminClick();
                             setIsMobileMenuOpen(false);
                           }}
                           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-900/30 transition-colors"

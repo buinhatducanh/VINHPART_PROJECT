@@ -305,3 +305,54 @@ export const bodykitApi = {
         if (!response.ok) throw new Error('Failed to remove part');
     },
 };
+
+// Admin Emails API
+export interface AdminEmail {
+    id: string;
+    email: string;
+    addedBy: string | null;
+    createdAt: string;
+}
+
+function getAdminHeaders(): Record<string, string> {
+    const savedUser = localStorage.getItem('vinhpart_user');
+    const email = savedUser ? JSON.parse(savedUser)?.email : '';
+    return {
+        'Content-Type': 'application/json',
+        'x-user-email': email || '',
+    };
+}
+
+export const adminEmailsApi = {
+    getAll: async (): Promise<AdminEmail[]> => {
+        const response = await fetch(`${API_BASE_URL}/admin/emails`, {
+            headers: getAdminHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to fetch admin emails');
+        return response.json();
+    },
+
+    add: async (email: string): Promise<AdminEmail> => {
+        const response = await fetch(`${API_BASE_URL}/admin/emails`, {
+            method: 'POST',
+            headers: getAdminHeaders(),
+            body: JSON.stringify({ email }),
+        });
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to add admin email');
+        }
+        return response.json();
+    },
+
+    remove: async (id: string): Promise<void> => {
+        const response = await fetch(`${API_BASE_URL}/admin/emails/${id}`, {
+            method: 'DELETE',
+            headers: getAdminHeaders(),
+        });
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to remove admin email');
+        }
+    },
+};
