@@ -17,9 +17,10 @@ import { useDashboardStats } from '@/hooks/useQueries';
 
 interface AdminDashboardProps {
   onBackToHome: () => void;
+  onLogout?: () => void;
 }
 
-export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
+export function AdminDashboard({ onBackToHome, onLogout }: AdminDashboardProps) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState<AdminPage>('dashboard');
 
@@ -28,7 +29,11 @@ export function AdminDashboard({ onBackToHome }: AdminDashboardProps) {
 
   const handleLogout = () => {
     setShowLogoutConfirm(false);
-    onBackToHome();
+    if (onLogout) {
+      onLogout();
+    } else {
+      onBackToHome();
+    }
   };
 
   // Render the current page

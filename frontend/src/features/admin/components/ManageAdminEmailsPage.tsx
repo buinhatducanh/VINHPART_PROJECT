@@ -16,6 +16,14 @@ export function ManageAdminEmailsPage({ onBack }: ManageAdminEmailsPageProps) {
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
+    // Get current logged-in user email to prevent self-deletion
+    const currentUserEmail = (() => {
+        try {
+            const saved = localStorage.getItem('vinhpart_user');
+            return saved ? JSON.parse(saved)?.email?.toLowerCase() : '';
+        } catch { return ''; }
+    })();
+
     const fetchAdminEmails = async () => {
         try {
             setLoading(true);
@@ -185,14 +193,21 @@ export function ManageAdminEmailsPage({ onBack }: ManageAdminEmailsPageProps) {
                                                 <Mail className="w-5 h-5 text-amber-400" />
                                             </div>
                                             <div>
-                                                <p className="font-medium text-foreground">{admin.email}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-medium text-foreground">{admin.email}</p>
+                                                    {admin.email.toLowerCase() === currentUserEmail && (
+                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Bạn</span>
+                                                    )}
+                                                </div>
                                                 <p className="text-xs text-muted-foreground">
                                                     {admin.addedBy === 'system' ? 'Mặc định' : `Thêm bởi ${admin.addedBy}`} · {new Date(admin.createdAt).toLocaleDateString('vi-VN')}
                                                 </p>
                                             </div>
                                         </div>
 
-                                        {showDeleteConfirm === admin.id ? (
+                                        {admin.email.toLowerCase() === currentUserEmail ? (
+                                            <div className="p-2 text-xs text-amber-500/50 italic">Tài khoản của bạn</div>
+                                        ) : showDeleteConfirm === admin.id ? (
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs text-amber-400 mr-2">Xác nhận xóa?</span>
                                                 <button

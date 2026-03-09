@@ -273,7 +273,8 @@ export default function App() {
 
         {currentPage === 'admin' && (
           <AdminDashboard
-            onBackToHome={handleLogout}
+            onBackToHome={() => setCurrentPage('landing')}
+            onLogout={handleLogout}
           />
         )}
 

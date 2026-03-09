@@ -97,6 +97,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
     const client = await pool.connect();
     try {
         const { id } = req.params;
+        const requestingEmail = req.headers['x-user-email'] as string;
 
         await client.query('BEGIN');
 
@@ -112,6 +113,12 @@ router.delete('/:id', requireAdmin, async (req, res) => {
         }
 
         const email = emailResult.rows[0].email;
+
+        // Prevent self-deletion
+        if (email.toLowerCase() === requestingEmail.toLowerCase()) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: 'Cannot remove your own admin email' });
+        }
 
         // Prevent deleting the last admin
         const countResult = await client.query('SELECT COUNT(*) as count FROM admin_emails');

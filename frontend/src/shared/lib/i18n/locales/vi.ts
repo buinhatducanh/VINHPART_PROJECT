@@ -263,6 +263,7 @@ export const vi = {
                 manageCategories: 'Quản lý danh mục',
                 manageReviews: 'Quản lý đánh giá',
                 manageBodyKit: 'Quản lý dàn áo',
+                manageAdminEmails: 'Quản lý Admin',
                 settings: 'Cài đặt hệ thống'
             },
             sysVersion: 'Phiên bản hệ thống',
