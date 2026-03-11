@@ -36,6 +36,7 @@ export function ProductListing({
   const [currentPage, setCurrentPage] = useState(1);
   const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([0, 5000000]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
   const { t } = useI18n();
 
   useEffect(() => {
@@ -53,6 +54,15 @@ export function ProductListing({
         }
       })
       .catch(err => console.error("Error fetching categories:", err));
+
+    fetch(`${API_BASE_URL}/products/brands`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setBrands(data);
+        }
+      })
+      .catch(err => console.error("Error fetching brands:", err));
   }, []);
 
   const hierarchicalCategories = useMemo(() => {
@@ -124,8 +134,6 @@ export function ProductListing({
     }
     setExpandedCategories(newExpanded);
   };
-
-  const brands = ['Honda', 'Yamaha', 'Suzuki', 'SYM', 'Piaggio', 'Kawasaki', 'Ducati', 'BMW', 'Triumph', 'Harley-Davidson'];
 
   const FilterSidebar = () => (
     <div className="space-y-6">

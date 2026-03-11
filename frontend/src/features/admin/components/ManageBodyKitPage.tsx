@@ -166,7 +166,7 @@ export function ManageBodyKitPage({ onBack }: ManageBodyKitPageProps) {
                                 <div className="lg:col-span-1 space-y-4">
                                     <div className="aspect-square bg-muted rounded-xl overflow-hidden border-2 border-dashed border-border flex items-center justify-center relative group">
                                         {formData.image ? (
-                                            <img src={formData.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300?text=No+Image'; }} />
+                                            <img src={formData.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo192.png'; }} />
                                         ) : (
                                             <div className="text-center text-muted-foreground p-4">
                                                 <Upload className="w-12 h-12 mx-auto mb-3 opacity-50" />

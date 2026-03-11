@@ -20,6 +20,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const { t, language } = useI18n();
   const a = useFirstVisit('manage-products');
@@ -85,7 +86,19 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchBrands();
   }, []);
+
+  const fetchBrands = () => {
+    fetch(`${API_BASE_URL}/products/brands`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setBrands(data);
+        }
+      })
+      .catch(err => console.error('Error fetching brands:', err));
+  };
 
   const fetchCategories = () => {
     fetch(`${API_BASE_URL}/categories`)
@@ -279,7 +292,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                       <div className="flex items-center gap-3">
                         <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                           {product.product_image ? (
-                            <img src={product.product_image} alt={product.product_name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64?text=No+Image'; }} />
+                            <img src={product.product_image} alt={product.product_name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo192.png'; }} />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <Package className="w-8 h-8 text-gray-600" />
@@ -370,7 +383,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                 <div className="lg:col-span-1 space-y-4">
                   <div className="aspect-square bg-muted rounded-xl overflow-hidden border-2 border-dashed border-border flex items-center justify-center relative group">
                     {editingProduct.product_image ? (
-                      <img key={editingProduct.product_image} src={editingProduct.product_image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300?text=No+Image'; }} />
+                      <img key={editingProduct.product_image} src={editingProduct.product_image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo192.png'; }} />
                     ) : (
                       <div className="text-center text-muted-foreground">
                         <Upload className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -401,7 +414,7 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                       <label className="block text-sm font-semibold text-muted-foreground mb-2">{t('admin.manageProducts.brandLabel')}</label>
                       <select value={editingProduct.compatible_brand} onChange={(e) => setEditingProduct({ ...editingProduct, compatible_brand: e.target.value })} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20">
                         <option value="">{t('admin.manageProducts.brandSelect')}</option>
-                        {['Honda', 'Yamaha', 'Suzuki', 'Toyota', 'Ford', 'Mazda'].map(b => (
+                        {brands.map(b => (
                           <option key={b} value={b}>{b}</option>
                         ))}
                       </select>

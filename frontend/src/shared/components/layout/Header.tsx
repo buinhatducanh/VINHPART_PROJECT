@@ -287,7 +287,8 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                                 alt={product.product_name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/40';
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = '/logo192.png';
                                 }}
                               />
                             </div>
@@ -507,7 +508,8 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                             alt={product.product_name}
                             className="w-10 h-10 rounded-md object-cover bg-muted"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/40';
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = '/logo192.png';
                             }}
                           />
                           <div className="flex-1 min-w-0">

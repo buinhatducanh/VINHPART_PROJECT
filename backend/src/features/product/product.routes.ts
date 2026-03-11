@@ -4,6 +4,18 @@ import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
 
+// GET /api/products/brands - MUST BE BEFORE /:id
+router.get('/brands', async (_req, res) => {
+    try {
+        const result = await pool.query('SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand != \'\' AND "isActive" = true ORDER BY brand');
+        const brands = result.rows.map(row => row.brand);
+        res.json(brands);
+    } catch (error) {
+        console.error('Error fetching brands:', error);
+        res.status(500).json({ error: 'Internal Server Error', brands: [] });
+    }
+});
+
 // GET /api/products/max-price - MUST BE BEFORE /:id
 router.get('/max-price', async (_req, res) => {
     try {

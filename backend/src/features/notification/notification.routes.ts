@@ -9,12 +9,18 @@ const router = Router();
 router.get('/stream', (req, res) => {
     const email = req.query.email as string | undefined;
 
+    // Optimizations for SSE over proxies to prevent ERR_CONNECTION_RESET
+    req.socket.setTimeout(0);
+    req.socket.setNoDelay(true);
+    req.socket.setKeepAlive(true);
+
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
-        'X-Accel-Buffering': 'no',
+        'X-Accel-Buffering': 'no', // Support for Nginx
     });
+    res.flushHeaders();
 
     // Initial heartbeat
     res.write('event: connected\ndata: {"status":"ok"}\n\n');
