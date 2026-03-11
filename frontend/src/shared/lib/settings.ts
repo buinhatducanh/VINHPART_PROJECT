@@ -4,7 +4,13 @@ const LANGUAGE_KEY = 'vinhpart_language';
 
 export const getSiteName = (): string => {
     if (typeof window === 'undefined') return DEFAULT_SITE_NAME;
-    return localStorage.getItem(SITE_NAME_KEY) || DEFAULT_SITE_NAME;
+    const stored = localStorage.getItem(SITE_NAME_KEY);
+    // Auto-fix old cached value "VINPART" → "VINHPART"
+    if (stored && stored.toUpperCase() === 'VINPART') {
+        localStorage.setItem(SITE_NAME_KEY, 'VINHPART');
+        return 'VINHPART';
+    }
+    return stored || DEFAULT_SITE_NAME;
 };
 
 export const saveSiteName = (name: string): void => {
