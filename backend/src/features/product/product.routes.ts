@@ -95,8 +95,9 @@ router.get('/', async (req, res) => {
         `;
 
         if (search) {
-            baseQuery += ` AND p.name ILIKE $${paramIndex++}`;
+            baseQuery += ` AND (p.name ILIKE $${paramIndex} OR p.sku ILIKE $${paramIndex})`;
             params.push(`%${search}%`);
+            paramIndex++;
         }
 
         if (category && category !== 'all') {

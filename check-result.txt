@@ -1,0 +1,31 @@
+﻿
+≡ƒôè Import Status Check:
+   Categories in DB: 17 / 17
+   Products in DB:   605 / 6725
+   Remaining:        6120 products
+
+   Last 5 products added:
+     - 17910GFM971: D├óy ga (2026-03-11T01:45:31.746Z)
+     - 17640KTM880: Tß║ñM Kß║╕P ─É╞»ß╗£NG X─éNG THß╗¬A (2026-03-11T01:45:31.490Z)
+     - 17635KZVV30: ß╗Éng cao su dß║½n x─âng 5,3x260 (2026-03-11T01:45:31.210Z)
+     - 17631KEV900: Gio─âng cao su nß║»p b├¼nh x─âng (2026-03-11T01:45:30.955Z)
+     - 17630KFL850: ß╗æng cao su dß║½n x─âng 5,3x350 (2026-03-11T01:45:30.700Z)
+
+   Categories:
+     - BUZI: 0 products
+     - B├ít phß╗æt: 0 products
+     - DD vß╗ç sinh: 4 products
+     - D├óy c├┤ng t╞í m├⌐t: 0 products
+     - D├óy ─æai: 0 products
+     - Dß║ºu nhß╗¢t: 7 products
+     - Lß╗ìc gi├│: 23 products
+     - Lß╗æp: 0 products
+     - M├í phanh: 23 products
+     - M┼⌐ Bß║úo hiß╗âm: 15 products
+     - Nh├┤ng tß║úi: 0 products
+     - N╞░ß╗¢c l├ám m├ít: 1 products
+     - Phß╗Ñ T├╣ng Bß╗Ö: 0 products
+     - Phß╗Ñ kiß╗çn h├úng: 0 products
+     - Phß╗Ñ t├╣ng Honda ti├¬u chuß║⌐n: 532 products
+     - ß║«c quy: 0 products
+     - ß╗Éc xß║ú nhß╗¢t: 0 products
