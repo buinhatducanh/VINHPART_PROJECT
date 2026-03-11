@@ -462,7 +462,7 @@ export function Header({ cartCount, onCartClick, onLogoClick, user, onLogin, onL
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center font-black text-foreground text-xl">
                     V
                   </div>
-                  <span className="font-black text-lg bg-gradient-to-r from-white via-red-50 to-white bg-clip-text text-transparent">VINPART</span>
+                  <span className="font-black text-lg bg-gradient-to-r from-white via-red-50 to-white bg-clip-text text-transparent">{siteName.toUpperCase()}</span>
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}

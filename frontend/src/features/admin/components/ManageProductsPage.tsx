@@ -139,7 +139,8 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
   const filteredProducts = products.filter(product =>
     product.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.compatible_brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchQuery.toLowerCase())
+    product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const formatCurrency = (value: number) => {
@@ -301,6 +302,9 @@ export function ManageProductsPage({ onBack, onAddProduct }: ManageProductsPageP
                         </div>
                         <div>
                           <p className="text-foreground font-semibold line-clamp-1">{product.product_name}</p>
+                          {product.sku && (
+                            <p className="text-xs text-muted-foreground font-mono mt-0.5">SKU: {product.sku}</p>
+                          )}
                         </div>
                       </div>
                     </td>

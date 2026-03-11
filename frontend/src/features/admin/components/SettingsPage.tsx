@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Settings, ArrowLeft, Bell, Lock, Palette, Globe, Mail, Save } from 'lucide-react';
+import { Settings, ArrowLeft, Bell, Lock, Globe, Mail, Save } from 'lucide-react';
 import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
@@ -13,18 +13,17 @@ interface SettingsPageProps {
 export function SettingsPage({ onBack }: SettingsPageProps) {
   const a = useFirstVisit('settings');
   const { t, setLanguage } = useI18n();
-  const { siteName: persistedSiteName, setSiteName: savePersistedSiteName, language: persistedLanguage, theme: persistedTheme, setTheme: savePersistedTheme } = useSettings();
+  const { siteName: persistedSiteName, setSiteName: savePersistedSiteName, language: persistedLanguage } = useSettings();
 
   const [settings, setSettings] = useState({
     siteName: persistedSiteName,
-    email: 'admin@vinpart.vn',
+    email: 'admin@vinhpart.vn',
     enableNotifications: true,
     emailOnNewOrder: true,
     emailOnLowStock: true,
     lowStockThreshold: 5,
     currency: 'VND',
     language: persistedLanguage,
-    theme: persistedTheme,
   });
 
   // Keep local state in sync if persisted changes elsewhere
@@ -33,9 +32,8 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
       ...prev,
       siteName: persistedSiteName,
       language: persistedLanguage,
-      theme: persistedTheme
     }));
-  }, [persistedSiteName, persistedLanguage, persistedTheme]);
+  }, [persistedSiteName, persistedLanguage]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -51,7 +49,6 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
     // console.log('Save settings:', settings);
     savePersistedSiteName(settings.siteName);
     setLanguage(settings.language as any);
-    savePersistedTheme(settings.theme);
     toast.success(t('settings.success'));
   };
 
@@ -273,37 +270,6 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                 <p className="text-sm text-muted-foreground mt-2">
                   {t('settings.lowStockThresholdDesc')}
                 </p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Theme Settings */}
-          <motion.div
-            initial={a && { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <Palette className="w-6 h-6 text-orange-600" />
-              <h3 className="text-xl font-bold text-foreground">{t('settings.appearance')}</h3>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  {t('settings.theme')}
-                </label>
-                <select
-                  name="theme"
-                  value={settings.theme}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-orange-600/50 focus:ring-2 focus:ring-orange-600/20 transition-all"
-                >
-                  <option value="dark">{t('settings.themeDark')}</option>
-                  <option value="light">{t('settings.themeLight')}</option>
-                  <option value="auto">{t('settings.themeAuto')}</option>
-                </select>
               </div>
             </div>
           </motion.div>

@@ -201,4 +201,47 @@ router.post('/google', async (req, res) => {
     }
 });
 
+// GET /api/auth/me?userId=xxx
+// Re-validate user data from database (updates role based on admin_emails)
+router.get('/me', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { userId } = req.query;
+        if (!userId || typeof userId !== 'string') {
+            res.status(400).json({ error: 'userId is required' });
+            return;
+        }
+
+        const result = await client.query('SELECT id, email, name, role, avatar FROM users WHERE id = $1', [userId]);
+        if (result.rows.length === 0) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+
+        const user = result.rows[0];
+
+        // Re-evaluate admin status from admin_emails table
+        const adminCheck = await client.query('SELECT 1 FROM admin_emails WHERE LOWER(email) = LOWER($1)', [user.email]);
+        const expectedRole = adminCheck.rows.length > 0 ? 'ADMIN' : 'USER';
+
+        if (user.role !== expectedRole) {
+            await client.query('UPDATE users SET role = $1, "updatedAt" = NOW() WHERE id = $2', [expectedRole, user.id]);
+            user.role = expectedRole;
+        }
+
+        res.json({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role.toLowerCase(),
+            avatar: user.avatar || null
+        });
+    } catch (error) {
+        console.error('Auth me error:', error);
+        res.status(500).json({ error: 'Failed to get user info' });
+    } finally {
+        client.release();
+    }
+});
+
 export default router;

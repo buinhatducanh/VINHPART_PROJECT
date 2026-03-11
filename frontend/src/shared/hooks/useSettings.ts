@@ -4,20 +4,16 @@ import {
     saveSiteName as saveSiteNameLib,
     getLanguage,
     saveLanguage as saveLanguageLib,
-    getTheme,
-    saveTheme as saveThemeLib
 } from '../lib/settings';
 
 export function useSettings() {
     const [siteName, setSiteNameState] = useState(getSiteName());
     const [language, setLanguageState] = useState(getLanguage());
-    const [theme, setThemeState] = useState(getTheme());
 
     useEffect(() => {
         const handleStorageChange = () => {
             setSiteNameState(getSiteName());
             setLanguageState(getLanguage());
-            setThemeState(getTheme());
         };
 
         window.addEventListener('storage', handleStorageChange);
@@ -34,17 +30,10 @@ export function useSettings() {
         setLanguageState(newLang);
     };
 
-    const setTheme = (newTheme: string) => {
-        saveThemeLib(newTheme);
-        setThemeState(newTheme);
-    };
-
     return {
         siteName,
         setSiteName,
         language,
         setLanguage,
-        theme,
-        setTheme,
     };
 }

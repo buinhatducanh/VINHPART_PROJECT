@@ -76,7 +76,7 @@ export function ProductDetailPage({
     return (
         <div className="bg-background text-foreground min-h-screen pb-20">
             <SEO
-                title={`${product.product_name} - VINPART`}
+                title={`${product.product_name} - VINHPART`}
                 description={product.description?.slice(0, 160)}
                 image={product.product_image}
             />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { productApi } from '@/lib/api';
+import { productApi, API_BASE_URL } from '@/lib/api';
 import { Header } from '@/shared/components/layout/Header';
 import { LandingPage } from '@/features/home/pages/LandingPage';
 import { ProductListing } from '@/features/product/pages/ProductListing';
@@ -17,7 +17,6 @@ import { ProductDetailPage } from '@/features/product/pages/ProductDetailPage';
 import { BodyKitLandingPage } from '@/features/bodykit/pages/BodyKitLandingPage';
 import { BodyKitDetailPage } from '@/features/bodykit/pages/BodyKitDetailPage';
 import { useI18n } from '@/shared/lib/i18n';
-import { useSettings } from '@/shared/hooks/useSettings';
 
 // Create QueryClient with default options
 const queryClient = new QueryClient({
@@ -33,7 +32,6 @@ const queryClient = new QueryClient({
 
 export default function App() {
   const { t } = useI18n();
-  const { theme } = useSettings();
   const [currentPage, setCurrentPage] = useState<'landing' | 'products' | 'cart' | 'checkout' | 'admin' | 'blog-list' | 'blog-detail' | 'product-detail' | 'bodykit' | 'bodykit-detail'>('landing');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
@@ -46,31 +44,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Apply theme class
-  useEffect(() => {
-    const root = window.document.documentElement;
-
-    const applyTheme = (currentTheme: string) => {
-      if (currentTheme === 'auto') {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        root.classList.toggle('dark', systemTheme === 'dark');
-      } else {
-        root.classList.toggle('dark', currentTheme === 'dark');
-      }
-    };
-
-    applyTheme(theme);
-
-    // Listen for system theme changes if set to auto
-    if (theme === 'auto') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => applyTheme('auto');
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, [theme]);
-
-  // ✅ FIX: Restore user from localStorage on mount
+  // ✅ FIX: Restore user from localStorage on mount + re-validate role from server
   useEffect(() => {
     const savedUser = localStorage.getItem('vinhpart_user');
     if (savedUser) {
@@ -78,6 +52,22 @@ export default function App() {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
         console.log('Restored user from localStorage:', parsedUser.email);
+
+        // Re-validate user role from server (in case admin_emails changed)
+        fetch(`${API_BASE_URL}/auth/me?userId=${parsedUser.id}`)
+          .then(res => res.ok ? res.json() : null)
+          .then(freshUser => {
+            if (freshUser) {
+              // Update with fresh data from server (especially role)
+              const updatedUser = { ...parsedUser, ...freshUser };
+              setUser(updatedUser);
+              localStorage.setItem('vinhpart_user', JSON.stringify(updatedUser));
+              if (parsedUser.role !== freshUser.role) {
+                console.log(`User role updated: ${parsedUser.role} → ${freshUser.role}`);
+              }
+            }
+          })
+          .catch(err => console.error('Failed to re-validate user:', err));
       } catch (error) {
         console.error('Failed to parse saved user:', error);
         localStorage.removeItem('vinhpart_user');
