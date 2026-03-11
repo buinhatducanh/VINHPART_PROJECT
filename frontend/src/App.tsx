@@ -44,6 +44,11 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // Always force dark mode
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
+
   // ✅ FIX: Restore user from localStorage on mount + re-validate role from server
   useEffect(() => {
     const savedUser = localStorage.getItem('vinhpart_user');
