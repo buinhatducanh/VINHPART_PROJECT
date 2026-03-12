@@ -16,6 +16,28 @@ router.get('/brands', async (_req, res) => {
     }
 });
 
+// POST /api/products/bulk-delete - MUST BE BEFORE /:id
+router.post('/bulk-delete', async (req, res) => {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: 'Danh sách ID sản phẩm không hợp lệ' });
+    }
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ');
+        const result = await client.query(`DELETE FROM products WHERE id IN (${placeholders})`, ids);
+        await client.query('COMMIT');
+        res.json({ success: true, deletedCount: result.rowCount });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error bulk deleting products:', error);
+        res.status(500).json({ error: 'Failed to bulk delete products' });
+    } finally {
+        client.release();
+    }
+});
+
 // GET /api/products/max-price - MUST BE BEFORE /:id
 router.get('/max-price', async (_req, res) => {
     try {
