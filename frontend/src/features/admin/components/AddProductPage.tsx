@@ -23,6 +23,15 @@ interface AddProductPageProps {
 export function AddProductPage({ onBack, isModal, onSuccess, initialData, lockedFields = [] }: AddProductPageProps) {
   const a = useFirstVisit('add-product');
   const { t, language } = useI18n();
+  
+  // Get current local date-time string for 'min' attribute in YYYY-MM-DDTHH:mm format
+  const getMinDateTime = () => {
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset() * 60000; // offset in milliseconds
+    return new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+  };
+  
+  const minDateTime = getMinDateTime();
   // Format helpers
   const formatNumber = (num: number): string => {
     return new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US').format(num);
@@ -198,9 +207,21 @@ export function AddProductPage({ onBack, isModal, onSuccess, initialData, locked
         onBack();
       } else {
         const error = await response.json();
-        toast.error(t("admin.product.errorAdd") + (error.details || error.error));
+        console.error("Server returned an error when adding product:", error);
+        
+        let errorMessage = error.details || error.error || "Unknown error";
+        
+        // Friendly translation for common technical errors
+        if (errorMessage.includes('products_sku_key')) {
+          errorMessage = "Mã sản phẩm (SKU) này đã tồn tại trong hệ thống. Vui lòng kiểm tra và nhập mã khác.";
+        } else if (errorMessage.includes('is mandatory') || errorMessage.includes('required')) {
+          errorMessage = "Vui lòng điền đầy đủ các thông tin bắt buộc có dấu (*).";
+        }
+        
+        toast.error(t("admin.product.errorAdd") + ": " + errorMessage);
       }
     } catch (error) {
+      console.error("Network error or exception during product submission:", error);
       toast.error(t("admin.product.networkError"));
     }
   };
@@ -353,11 +374,11 @@ export function AddProductPage({ onBack, isModal, onSuccess, initialData, locked
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">Bắt đầu giảm giá</label>
-                      <input type="datetime-local" name="discount_start_date" value={formData.discount_start_date} onChange={handleInputChange} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
+                      <input type="datetime-local" name="discount_start_date" value={formData.discount_start_date} onChange={handleInputChange} min={minDateTime} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">Kết thúc giảm giá</label>
-                      <input type="datetime-local" name="discount_end_date" value={formData.discount_end_date} onChange={handleInputChange} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
+                      <input type="datetime-local" name="discount_end_date" value={formData.discount_end_date} onChange={handleInputChange} min={formData.discount_start_date || minDateTime} className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 transition-all" />
                     </div>
                   </div>
 
