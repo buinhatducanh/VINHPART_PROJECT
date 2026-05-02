@@ -10,11 +10,11 @@ async function clearDatabase() {
 
   try {
     // Delete in order to avoid foreign key constraints (or just use Prisma's cascading deletes if set up, but safer to do it manually from bottom up)
-    
+
     // Order Items -> Orders
     await prisma.orderItem.deleteMany();
     console.log('Cleared OrderItems');
-    
+
     await prisma.order.deleteMany();
     console.log('Cleared Orders');
 
@@ -48,7 +48,7 @@ async function clearDatabase() {
     // AdminEmails (if we should clear them, maybe keep them so the admin can still log in if there's any logic dependending on it?)
     // Actually the user just said "except super admin to log in". AdminEmails might be used for authorization. Let's keep AdminEmails just in case, or delete all except admin@vinpart.vn
     const superAdminEmail = 'admin@vinpart.vn'; // assuming this is the one from previous conversation context
-    
+
     await prisma.adminEmail.deleteMany({
       where: {
         NOT: {
@@ -66,7 +66,7 @@ async function clearDatabase() {
         }
       }
     });
-    
+
     // In case there are multiple admins, let's make sure we only keep the super admin if specified, but keeping all ADMINs is generally safe.
     // If the user meant a specific one, keeping all ADMINs is the safest bet to not lock them out.
     console.log('Cleared Users except ADMINs');
