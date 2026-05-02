@@ -1,10 +1,13 @@
 import { motion } from 'motion/react';
-import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X, Eye, Calendar } from 'lucide-react';
+import { FileText, ArrowLeft, Search, Edit, Trash2, Plus, Upload, Save, X, Eye, Calendar, Info, AlertCircle, Check, RefreshCw, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { NotificationBell } from '@/features/notification/components/NotificationBell';
 import { API_BASE_URL } from '@/lib/api';
+
+const DRAFT_STORAGE_KEY = 'vinhpart_post_draft';
+const AUTO_SAVE_INTERVAL = 30000; // 30s
 
 interface Post {
     id: string;
@@ -35,6 +38,13 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
     const [loading, setLoading] = useState(true);
     const a = useFirstVisit('manage-posts');
     const [draftPost, setDraftPost] = useState<Post | null>(null);
+    const [showPreview, setShowPreview] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [showDraftRecovery, setShowDraftRecovery] = useState(false);
+    const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const formChangedRef = useRef(false);
 
     // Cloudinary Widget Refs
     const featuredImageWidgetRef = useRef<any>(null);
@@ -132,6 +142,124 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
             });
     };
 
+    // Check for saved draft on mount
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved) as Post;
+                if (parsed.title || parsed.content) {
+                    setShowDraftRecovery(true);
+                }
+            }
+        } catch {}
+    }, []);
+
+    const saveDraftToStorage = useCallback(() => {
+        if (editingPost && !editingPost.id && (editingPost.title || editingPost.content)) {
+            try {
+                localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(editingPost));
+                setLastSaved(new Date());
+            } catch {}
+        }
+    }, [editingPost]);
+
+    const clearDraftFromStorage = () => {
+        try {
+            localStorage.removeItem(DRAFT_STORAGE_KEY);
+        } catch {}
+    };
+
+    // Auto-save every 30s
+    useEffect(() => {
+        if (!editingPost) return;
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = setTimeout(() => {
+            if (formChangedRef.current) {
+                saveDraftToStorage();
+                formChangedRef.current = false;
+            }
+        }, AUTO_SAVE_INTERVAL);
+        return () => {
+            if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        };
+    }, [editingPost, saveDraftToStorage]);
+
+    // Mark form as changed for auto-save trigger
+    const markFormChanged = () => {
+        formChangedRef.current = true;
+    };
+
+    // Auto-generate slug from title
+    const generateSlug = (text: string) => {
+        return text
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\w\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .trim()
+            .replace(/^-+|-+$/g, '');
+    };
+
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+        if (!editingPost) return false;
+        if (!editingPost.title.trim()) newErrors.title = 'Vui lòng nhập tiêu đề bài viết';
+        if (!editingPost.slug.trim()) newErrors.slug = 'Vui lòng nhập đường dẫn (slug)';
+        else if (!/^[a-z0-9-]+$/.test(editingPost.slug)) newErrors.slug = 'Slug chỉ được chứa chữ thường, số và dấu gạch ngang';
+        if (!editingPost.content.trim()) newErrors.content = 'Vui lòng nhập nội dung bài viết';
+        if (editingPost.metaDescription && editingPost.metaDescription.length > 160)
+            newErrors.metaDescription = 'Meta description không nên quá 160 ký tự';
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleTitleChange = (value: string) => {
+        setEditingPost({ ...editingPost!, title: value });
+        markFormChanged();
+        if (!slugManuallyEdited && value) {
+            setEditingPost({ ...editingPost!, title: value, slug: generateSlug(value) });
+        }
+    };
+
+    const handleSlugChange = (value: string) => {
+        setSlugManuallyEdited(true);
+        setEditingPost({ ...editingPost!, slug: value.toLowerCase().replace(/[^a-z0-9-]/g, '') });
+        markFormChanged();
+    };
+
+    const handleInputChange = (field: keyof Post, value: string) => {
+        setEditingPost({ ...editingPost!, [field]: value });
+        markFormChanged();
+        // Clear error when user types
+        if (errors[field]) {
+            setErrors(prev => { const next = { ...prev }; delete next[field]; return next; });
+        }
+    };
+
+    const recoverSavedDraft = () => {
+        try {
+            const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved) as Post;
+                setDraftPost(parsed);
+                setEditingPost(parsed);
+                setDraftPost(null);
+                toast.success('Đã khôi phục bản nháp');
+            }
+        } catch {
+            toast.error('Không thể khôi phục bản nháp');
+        }
+        setShowDraftRecovery(false);
+    };
+
+    const dismissSavedDraft = () => {
+        clearDraftFromStorage();
+        setShowDraftRecovery(false);
+    };
+
     const filteredPosts = posts.filter(post =>
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         post.slug.toLowerCase().includes(searchQuery.toLowerCase())
@@ -157,47 +285,52 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
     };
 
     const handleSaveEdit = async () => {
-        if (editingPost) {
-            try {
-                const url = editingPost.id ? `${API_BASE_URL}/posts/${editingPost.id}` : `${API_BASE_URL}/posts`;
-                const method = editingPost.id ? 'PUT' : 'POST';
+        if (!editingPost) return;
+        if (!validateForm()) {
+            toast.error('Vui lòng kiểm tra lại các trường bắt buộc');
+            return;
+        }
+        try {
+            const url = editingPost.id ? `${API_BASE_URL}/posts/${editingPost.id}` : `${API_BASE_URL}/posts`;
+            const method = editingPost.id ? 'PUT' : 'POST';
 
-                const res = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title: editingPost.title,
-                        slug: editingPost.slug,
-                        excerpt: editingPost.excerpt,
-                        content: editingPost.content,
-                        featuredImage: editingPost.featuredImage,
-                        metaTitle: editingPost.metaTitle,
-                        metaDescription: editingPost.metaDescription,
-                        ogImage: editingPost.ogImage,
-                        status: editingPost.status
-                    })
-                });
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: editingPost.title,
+                    slug: editingPost.slug,
+                    excerpt: editingPost.excerpt,
+                    content: editingPost.content,
+                    featuredImage: editingPost.featuredImage,
+                    metaTitle: editingPost.metaTitle,
+                    metaDescription: editingPost.metaDescription,
+                    ogImage: editingPost.ogImage,
+                    status: editingPost.status
+                })
+            });
 
-                if (res.ok) {
-                    setDraftPost(null);
-                    fetchPosts();
-                    setEditingPost(null);
-                    toast.success(editingPost.id ? "Cập nhật thành công" : "Thêm bài viết thành công");
-                } else {
-                    const errorData = await res.json();
-                    toast.error(errorData.error || "Lỗi khi lưu");
-                }
-            } catch (error) {
-                console.error("Save error:", error);
-                toast.error("Lỗi kết nối");
+            if (res.ok) {
+                setDraftPost(null);
+                clearDraftFromStorage();
+                fetchPosts();
+                setEditingPost(null);
+                setLastSaved(null);
+                toast.success(editingPost.id ? "Cập nhật thành công" : "Thêm bài viết thành công");
+            } else {
+                const errorData = await res.json();
+                toast.error(errorData.error || "Lỗi khi lưu");
             }
+        } catch (error) {
+            console.error("Save error:", error);
+            toast.error("Lỗi kết nối");
         }
     };
 
     const closeAndSaveDraft = () => {
-        if (editingPost && !editingPost.id) {
-            setDraftPost(editingPost);
-            toast.info('Đã lưu bản nháp tạm thời');
+        if (editingPost && !editingPost.id && (editingPost.title || editingPost.content)) {
+            saveDraftToStorage();
+            toast.info('Đã lưu bản nháp');
         }
         setEditingPost(null);
     };
@@ -208,6 +341,8 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
             setDraftPost(null);
             return;
         }
+        setSlugManuallyEdited(false);
+        setErrors({});
         setEditingPost({
             id: '',
             title: '',
@@ -277,6 +412,37 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                     </div>
                 </div>
             </motion.div>
+
+            {/* Draft Recovery Banner */}
+            {showDraftRecovery && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-blue-900/50 border border-blue-500/50 rounded-xl p-4 mb-6 flex items-center justify-between"
+                >
+                    <div className="flex items-center gap-3">
+                        <FileText className="w-5 h-5 text-blue-400" />
+                        <div>
+                            <p className="text-foreground font-medium">Bạn có bản nháp chưa lưu</p>
+                            <p className="text-muted-foreground text-sm">Một bài viết đã được lưu tự động trước đó. Bạn có muốn khôi phục không?</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={dismissSavedDraft}
+                            className="px-4 py-2 bg-muted border border-border text-foreground rounded-lg hover:bg-muted/80 transition-colors text-sm"
+                        >
+                            Bỏ qua
+                        </button>
+                        <button
+                            onClick={recoverSavedDraft}
+                            className="px-4 py-2 bg-blue-600 text-foreground rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        >
+                            Khôi phục bản nháp
+                        </button>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Main Content */}
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -446,12 +612,28 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             <h3 className="text-2xl font-bold text-transparent bg-gradient-to-r from-white to-green-500 bg-clip-text">
                                 {editingPost.id ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'}
                             </h3>
-                            <button
-                                onClick={closeAndSaveDraft}
-                                className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
+                            <div className="flex items-center gap-3">
+                                {lastSaved && (
+                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <Check className="w-3 h-3 text-green-500" />
+                                        Đã lưu lúc {lastSaved.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPreview(true)}
+                                    className="px-4 py-2 bg-muted border border-border text-foreground rounded-lg hover:bg-muted/80 transition-colors text-sm font-medium flex items-center gap-2"
+                                >
+                                    <Eye className="w-4 h-4" />
+                                    Xem trước
+                                </button>
+                                <button
+                                    onClick={closeAndSaveDraft}
+                                    className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -487,7 +669,15 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
 
                                 {/* OG Image */}
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">Ảnh OG (Social)</label>
+                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                        Ảnh chia sẻ mạng xã hội
+                                        <span className="group relative ml-1">
+                                            <Info className="w-3 h-3 inline-block text-blue-400 cursor-help align-middle" />
+                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg p-2 z-10">
+                                                Ảnh hiển thị khi chia sẻ bài viết lên Facebook, Zalo, Messenger. Kích thước khuyến nghị: 1200x630px.
+                                            </span>
+                                        </span>
+                                    </label>
                                     <div className="aspect-[1.91/1] bg-muted rounded-xl overflow-hidden border-2 border-dashed border-border flex items-center justify-center">
                                         {editingPost.ogImage ? (
                                             <img
@@ -509,7 +699,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                         className="w-full mt-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-foreground font-medium rounded-lg transition-all flex items-center justify-center gap-2"
                                     >
                                         <Upload className="w-4 h-4" />
-                                        Tải ảnh OG
+                                        Tải ảnh chia sẻ
                                     </button>
                                 </div>
                             </div>
@@ -518,23 +708,50 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             <div className="lg:col-span-2 space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Tiêu đề</label>
+                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
+                                            Tiêu đề <span className="text-red-500">*</span>
+                                        </label>
                                         <input
                                             type="text"
                                             value={editingPost.title}
-                                            onChange={(e) => setEditingPost({ ...editingPost, title: e.target.value })}
-                                            className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 transition-all"
+                                            onChange={(e) => handleTitleChange(e.target.value)}
+                                            className={`w-full px-4 py-3 bg-muted border rounded-lg text-foreground focus:outline-none focus:ring-2 transition-all ${
+                                                errors.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-border focus:border-green-600/50 focus:ring-green-600/20'
+                                            }`}
+                                            placeholder="Nhập tiêu đề bài viết..."
                                         />
+                                        {errors.title && <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.title}</p>}
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Slug</label>
-                                        <input
-                                            type="text"
-                                            value={editingPost.slug}
-                                            onChange={(e) => setEditingPost({ ...editingPost, slug: e.target.value })}
-                                            className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 transition-all"
-                                        />
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <label className="block text-sm font-semibold text-muted-foreground">Đường dẫn</label>
+                                            <span className="group relative">
+                                                <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg p-2 z-10">
+                                                    Phần đuôi URL của bài viết. Ví dụ: <b>/tin-khuyen-mai</b>. Nên dùng tiếng Việt không dấu, các từ cách nhau bằng dấu gạch ngang.
+                                                </span>
+                                            </span>
+                                            <span className="text-red-500">*</span>
+                                            {!slugManuallyEdited && editingPost.title && (
+                                                <span className="text-xs text-blue-400 flex items-center gap-1">
+                                                    <RefreshCw className="w-3 h-3" /> Tự tạo
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/</span>
+                                            <input
+                                                type="text"
+                                                value={editingPost.slug}
+                                                onChange={(e) => handleSlugChange(e.target.value)}
+                                                className={`w-full pl-8 pr-4 py-3 bg-muted border rounded-lg text-foreground focus:outline-none focus:ring-2 transition-all ${
+                                                    errors.slug ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-border focus:border-green-600/50 focus:ring-green-600/20'
+                                                }`}
+                                                placeholder="duong-dan-bai-viet"
+                                            />
+                                        </div>
+                                        {errors.slug && <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.slug}</p>}
                                     </div>
                                 </div>
 
@@ -551,44 +768,91 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-muted-foreground mb-2">Excerpt (Tóm tắt)</label>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-semibold text-muted-foreground">Tóm tắt</label>
+                                        <span className="text-xs text-muted-foreground">{editingPost.excerpt?.length || 0} / 200</span>
+                                    </div>
                                     <textarea
                                         value={editingPost.excerpt || ''}
-                                        onChange={(e) => setEditingPost({ ...editingPost, excerpt: e.target.value })}
+                                        onChange={(e) => handleInputChange('excerpt', e.target.value)}
                                         rows={2}
+                                        maxLength={200}
                                         className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 resize-none"
+                                        placeholder="Mô tả ngắn về bài viết, hiển thị trên danh sách bài viết..."
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-muted-foreground mb-2">Nội dung</label>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-semibold text-muted-foreground">
+                                            Nội dung <span className="text-red-500">*</span>
+                                        </label>
+                                        <span className="text-xs text-muted-foreground">{editingPost.content.length} ký tự</span>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1 bg-muted/50 rounded-lg px-3 py-2 border border-border">
+                                        <Info className="w-3 h-3 flex-shrink-0" />
+                                        <span>Mỗi dòng trống sẽ được ngắt dòng trong bài viết. Dùng <b>dấu gạch ngang (-)</b> ở đầu dòng để tạo danh sách.</span>
+                                    </div>
                                     <textarea
                                         value={editingPost.content}
-                                        onChange={(e) => setEditingPost({ ...editingPost, content: e.target.value })}
-                                        rows={8}
-                                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 resize-none"
+                                        onChange={(e) => handleInputChange('content', e.target.value)}
+                                        rows={10}
+                                        className={`w-full px-4 py-3 bg-muted border rounded-lg text-foreground focus:outline-none focus:ring-2 resize-none transition-all ${
+                                            errors.content ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-border focus:border-green-600/50 focus:ring-green-600/20'
+                                        }`}
+                                        placeholder="Nhập nội dung bài viết. Mỗi dòng trống sẽ được xuống dòng..."
                                     />
+                                    {errors.content && <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.content}</p>}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Meta Title</label>
-                                        <input
-                                            type="text"
-                                            value={editingPost.metaTitle || ''}
-                                            onChange={(e) => setEditingPost({ ...editingPost, metaTitle: e.target.value })}
-                                            className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20"
-                                        />
+                                <div className="bg-muted/30 border border-border rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <h4 className="text-sm font-semibold text-muted-foreground">Tối ưu tìm kiếm (SEO)</h4>
+                                        <span className="group relative">
+                                            <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-72 bg-gray-900 text-white text-xs rounded-lg p-2 z-10">
+                                                <b>Meta Title</b>: Tiêu đề hiển thị trên Google (nên 50-60 ký tự).<br/>
+                                                <b>Meta Description</b>: Mô tả ngắn hiển thị dưới tiêu đề trên Google (nên 150-160 ký tự).<br/>
+                                                Nếu bỏ trống, hệ thống sẽ dùng tiêu đề và tóm tắt mặc định.
+                                            </span>
+                                        </span>
                                     </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="block text-sm font-semibold text-muted-foreground">Meta Title</label>
+                                                <span className={`text-xs ${(editingPost.metaTitle?.length || 0) > 60 ? 'text-red-400' : 'text-muted-foreground'}`}>
+                                                    {editingPost.metaTitle?.length || 0} / 60
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={editingPost.metaTitle || ''}
+                                                onChange={(e) => handleInputChange('metaTitle', e.target.value)}
+                                                maxLength={70}
+                                                className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20"
+                                            />
+                                        </div>
 
-                                    <div>
-                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Meta Description</label>
-                                        <input
-                                            type="text"
-                                            value={editingPost.metaDescription || ''}
-                                            onChange={(e) => setEditingPost({ ...editingPost, metaDescription: e.target.value })}
-                                            className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20"
-                                        />
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="block text-sm font-semibold text-muted-foreground">Meta Description</label>
+                                                <span className={`text-xs ${(editingPost.metaDescription?.length || 0) > 160 ? 'text-red-400' : 'text-muted-foreground'}`}>
+                                                    {editingPost.metaDescription?.length || 0} / 160
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={editingPost.metaDescription || ''}
+                                                onChange={(e) => handleInputChange('metaDescription', e.target.value)}
+                                                maxLength={200}
+                                                className={`w-full px-4 py-3 bg-muted border rounded-lg text-foreground focus:outline-none focus:ring-2 transition-all ${
+                                                    errors.metaDescription ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-border focus:border-green-600/50 focus:ring-green-600/20'
+                                                }`}
+                                                placeholder="Mô tả ngắn hiển thị trên Google..."
+                                            />
+                                            {errors.metaDescription && <p className="mt-1 text-xs text-red-500">{errors.metaDescription}</p>}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -657,6 +921,107 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             >
                                 Xóa
                             </motion.button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+
+            {/* Preview Modal */}
+            {showPreview && editingPost && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+                    onClick={() => setShowPreview(false)}
+                >
+                    <motion.div
+                        initial={{ scale: 0.95, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="relative bg-card border border-border rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+                    >
+                        {/* Preview Header */}
+                        <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between rounded-t-2xl z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-800 rounded-lg flex items-center justify-center">
+                                    <Eye className="w-5 h-5 text-foreground" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-foreground">Xem trước bài viết</h3>
+                                    <p className="text-xs text-muted-foreground">Đây là cách bài viết sẽ hiển thị với khách hàng</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowPreview(false)}
+                                className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            {/* Featured Image */}
+                            {editingPost.featuredImage ? (
+                                <div className="w-full aspect-video rounded-xl overflow-hidden mb-6 bg-muted">
+                                    <img src={editingPost.featuredImage} alt={editingPost.title} className="w-full h-full object-cover" />
+                                </div>
+                            ) : (
+                                <div className="w-full aspect-video rounded-xl bg-muted border-2 border-dashed border-border flex items-center justify-center mb-6">
+                                    <span className="text-muted-foreground text-sm">Chưa có ảnh đại diện</span>
+                                </div>
+                            )}
+
+                            {/* Status badge */}
+                            <div className="mb-4">
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium ${
+                                    editingPost.status === 'PUBLISHED'
+                                        ? 'bg-green-500/10 border border-green-500/50 text-green-400'
+                                        : 'bg-yellow-500/10 border border-yellow-500/50 text-yellow-400'
+                                }`}>
+                                    {editingPost.status === 'PUBLISHED' ? 'Đã xuất bản' : 'Bản nháp'}
+                                </span>
+                            </div>
+
+                            {/* Title */}
+                            <h1 className="text-2xl font-black text-foreground mb-3 leading-tight">
+                                {editingPost.title || <span className="text-muted-foreground italic">Chưa có tiêu đề</span>}
+                            </h1>
+
+                            {/* Excerpt */}
+                            {editingPost.excerpt && (
+                                <p className="text-muted-foreground text-base mb-4 leading-relaxed border-l-4 border-green-500/50 pl-4 italic">
+                                    {editingPost.excerpt}
+                                </p>
+                            )}
+
+                            {/* Content */}
+                            <div className="text-foreground leading-relaxed space-y-2">
+                                {editingPost.content ? (
+                                    editingPost.content.split('\n').map((line, i) => (
+                                        <p key={i} className={line.startsWith('- ') ? 'pl-4 text-muted-foreground' : ''}>
+                                            {line || <br />}
+                                        </p>
+                                    ))
+                                ) : (
+                                    <p className="text-muted-foreground italic">Chưa có nội dung</p>
+                                )}
+                            </div>
+
+                            {/* SEO Preview */}
+                            <div className="mt-8 pt-6 border-t border-border">
+                                <h4 className="text-sm font-semibold text-muted-foreground mb-3">Xem trước trên Google</h4>
+                                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                                    <p className="text-blue-600 text-sm truncate">
+                                        {(editingPost.metaTitle || editingPost.title || 'Tiêu đề bài viết')}
+                                    </p>
+                                    <p className="text-green-700 text-xs truncate">
+                                        {`https://vinpart.vn/${editingPost.slug || 'duong-dan-bai-viet'}`}
+                                    </p>
+                                    <p className="text-gray-600 text-sm leading-snug mt-1">
+                                        {editingPost.metaDescription || editingPost.excerpt || 'Mô tả bài viết sẽ hiển thị ở đây trên Google...'}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </motion.div>
                 </motion.div>
