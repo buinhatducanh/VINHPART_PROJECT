@@ -19,6 +19,7 @@ export interface Product {
   images?: string[]; // ✅ FIX: Support multiple images
   sku?: string;      // ✅ FIX: Support SKU
   tags: string[];
+  isFeatured?: boolean;
 }
 
 export interface CartItem {

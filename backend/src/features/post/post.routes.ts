@@ -12,7 +12,8 @@ router.get('/', async (req, res) => {
         let query = `
             SELECT id, title, slug, excerpt, content, "featuredImage",
                    "metaTitle", "metaDescription", "ogImage", status,
-                   "publishedAt", "viewCount", "authorId", "createdAt", "updatedAt"
+                   "publishedAt", "viewCount", "authorId", "createdAt", "updatedAt",
+                   "isPinned", "pinnedOrder"
             FROM posts
         `;
         const params: any[] = [];
@@ -22,7 +23,7 @@ router.get('/', async (req, res) => {
             params.push(status);
         }
 
-        query += ' ORDER BY "publishedAt" DESC NULLS LAST, "createdAt" DESC';
+        query += ' ORDER BY "isPinned" DESC, "pinnedOrder" ASC, "publishedAt" DESC NULLS LAST, "createdAt" DESC';
 
         if (limit) {
             query += ` LIMIT $${params.length + 1}`;
@@ -71,7 +72,8 @@ router.post('/', async (req, res) => {
 
         const {
             title, slug, excerpt, content, featuredImage,
-            metaTitle, metaDescription, ogImage, status = 'DRAFT'
+            metaTitle, metaDescription, ogImage, status = 'DRAFT',
+            isPinned = false, pinnedOrder = 0
         } = req.body;
 
         if (!title || !slug || !content) {
@@ -93,16 +95,17 @@ router.post('/', async (req, res) => {
             INSERT INTO posts (
                 id, title, slug, excerpt, content, "featuredImage",
                 "metaTitle", "metaDescription", "ogImage", status,
-                "publishedAt", "viewCount", "createdAt", "updatedAt"
+                "publishedAt", "viewCount", "createdAt", "updatedAt",
+                "isPinned", "pinnedOrder"
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             RETURNING *
         `;
 
         const { rows } = await client.query(insertQuery, [
             id, title, slug, excerpt || null, content, featuredImage || null,
             metaTitle || null, metaDescription || null, ogImage || null, status,
-            publishedAt, 0, now, now
+            publishedAt, 0, now, now, isPinned, pinnedOrder
         ]);
 
         await client.query('COMMIT');
@@ -124,7 +127,8 @@ router.put('/:id', async (req, res) => {
         const { id } = req.params;
         const {
             title, slug, excerpt, content, featuredImage,
-            metaTitle, metaDescription, ogImage, status
+            metaTitle, metaDescription, ogImage, status,
+            isPinned, pinnedOrder
         } = req.body;
 
         const existing = await client.query('SELECT * FROM posts WHERE id = $1', [id]);
@@ -161,6 +165,8 @@ router.put('/:id', async (req, res) => {
                 params.push(publishedAt);
             }
         }
+        if (isPinned !== undefined) { query += `, "isPinned" = $${idx++}`; params.push(isPinned); }
+        if (pinnedOrder !== undefined) { query += `, "pinnedOrder" = $${idx++}`; params.push(pinnedOrder); }
 
         query += ` WHERE id = $${idx} RETURNING *`;
         params.push(id);
