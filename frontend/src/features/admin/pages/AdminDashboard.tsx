@@ -10,6 +10,7 @@ import { CategoryPage as ManageCategoriesPage } from '../components/category';
 import { ManageReviewsPage } from '../components/ManageReviewsPage';
 import { ManageBodyKitPage } from '../components/ManageBodyKitPage';
 import { ManageAdminEmailsPage } from '../components/ManageAdminEmailsPage';
+import { ManageHomepageSectionsPage } from '../components/ManageHomepageSectionsPage';
 import { DashboardHome } from '../components/DashboardHome';
 import { LogoutModal } from '../components/LogoutModal';
 import { AdminPage } from '../types';
@@ -79,6 +80,10 @@ export function AdminDashboard({ onBackToHome, onLogout }: AdminDashboardProps) 
 
   if (currentPage === 'manageAdminEmails') {
     return <ManageAdminEmailsPage onBack={() => setCurrentPage('dashboard')} />;
+  }
+
+  if (currentPage === 'manageHomepageSections') {
+    return <ManageHomepageSectionsPage onBack={() => setCurrentPage('dashboard')} />;
   }
 
   return (

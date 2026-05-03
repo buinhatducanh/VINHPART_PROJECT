@@ -29,6 +29,7 @@ export interface ProductFilters {
     sortBy?: 'default' | 'price_asc' | 'price_desc';
     stock_status?: string;
     vehicle_type?: string;
+    isFeatured?: boolean;
 }
 
 // API Functions
@@ -47,6 +48,7 @@ export const productApi = {
         if (filters.sortBy && filters.sortBy !== 'default') params.append('sortBy', filters.sortBy);
         if (filters.stock_status) params.append('stock_status', filters.stock_status);
         if (filters.vehicle_type) params.append('vehicle_type', filters.vehicle_type);
+        if (filters.isFeatured) params.append('isFeatured', 'true');
 
         const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`);
 
@@ -303,6 +305,50 @@ export const bodykitApi = {
     removePart: async (vehicleId: string, productId: string): Promise<void> => {
         const response = await fetch(`${API_BASE_URL}/bodykit/vehicles/${vehicleId}/parts/${productId}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Failed to remove part');
+    },
+
+    reorderParts: async (vehicleId: string, orderedIds: string[]): Promise<void> => {
+        const response = await fetch(`${API_BASE_URL}/bodykit/vehicles/${vehicleId}/parts/reorder`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderedIds }),
+        });
+        if (!response.ok) throw new Error('Failed to reorder parts');
+    },
+};
+
+// Homepage Sections API
+export interface HomepageSection {
+    id: string;
+    key: string;
+    name: string;
+    isEnabled: boolean;
+    sortOrder: number;
+    config?: Record<string, unknown>;
+}
+
+export const homepageSectionsApi = {
+    getAll: async (): Promise<HomepageSection[]> => {
+        const r = await fetch(`${API_BASE_URL}/homepage-sections`);
+        if (!r.ok) throw new Error('Failed to fetch homepage sections');
+        return r.json();
+    },
+    update: async (id: string, data: Partial<HomepageSection>): Promise<HomepageSection> => {
+        const r = await fetch(`${API_BASE_URL}/homepage-sections/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!r.ok) throw new Error('Failed to update section');
+        return r.json();
+    },
+    reorder: async (orderedIds: string[]): Promise<void> => {
+        const r = await fetch(`${API_BASE_URL}/homepage-sections/reorder`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderedIds }),
+        });
+        if (!r.ok) throw new Error('Failed to reorder sections');
     },
 };
 
