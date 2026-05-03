@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find D:/LOOP_COMPANY/VINHPART_PROJECT/frontend/src -name *.tsx -path */ui/*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite:*)",
+      "Bash(gh pr:*)"
+    ]
+  }
+}

@@ -1,11 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'motion/react';
-import { ArrowLeft, Plus, Trash2, Car, Search, Package, X, Layers, Upload, Save, Edit } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Car, Search, Package, X, Layers, Upload, Save, Edit, GripVertical, Info } from 'lucide-react';
 import { bodykitApi, productApi } from '@/lib/api';
 import { Vehicle, Product } from '@/shared/types';
 import { toast } from 'sonner';
 import { AddProductPage } from './AddProductPage';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface ManageBodyKitPageProps {
     onBack: () => void;
@@ -201,7 +218,15 @@ export function ManageBodyKitPage({ onBack }: ManageBodyKitPageProps) {
                                 {/* Right column: Form Fields */}
                                 <div className="lg:col-span-2 space-y-5">
                                     <div>
-                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Tên xe <span className="text-red-500">*</span></label>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <label className="block text-sm font-semibold text-muted-foreground">Tên xe <span className="text-red-500">*</span></label>
+                                            <span className="group relative">
+                                                <Info className="w-3.5 h-3.5 text-blue-400 cursor-help" />
+                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg p-2 z-10 leading-relaxed">
+                                                    Tên đầy đủ của xe hiển thị trên website. VD: <b>Honda Wave Alpha 2024</b>. Nên ghi rõ hãng, dòng xe và năm nếu có.
+                                                </span>
+                                            </span>
+                                        </div>
                                         <input
                                             type="text"
                                             required
@@ -214,7 +239,15 @@ export function ManageBodyKitPage({ onBack }: ManageBodyKitPageProps) {
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-semibold text-muted-foreground mb-2">Hãng xe <span className="text-red-500">*</span></label>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <label className="block text-sm font-semibold text-muted-foreground">Hãng xe <span className="text-red-500">*</span></label>
+                                                <span className="group relative">
+                                                    <Info className="w-3.5 h-3.5 text-blue-400 cursor-help" />
+                                                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg p-2 z-10 leading-relaxed">
+                                                        Hãng sản xuất xe. VD: <b>Honda, Yamaha, Suzuki, Piaggio, SYM</b>. Thống nhất cách viết để nhóm xe đúng theo hãng.
+                                                    </span>
+                                                </span>
+                                            </div>
                                             <input
                                                 type="text"
                                                 required
@@ -225,7 +258,15 @@ export function ManageBodyKitPage({ onBack }: ManageBodyKitPageProps) {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-muted-foreground mb-2">Model <span className="text-red-500">*</span></label>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <label className="block text-sm font-semibold text-muted-foreground">Model <span className="text-red-500">*</span></label>
+                                                <span className="group relative">
+                                                    <Info className="w-3.5 h-3.5 text-blue-400 cursor-help" />
+                                                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg p-2 z-10 leading-relaxed">
+                                                        Dòng xe/mẫu xe. VD: <b>Wave Alpha, Future, Sirius, Grande, Vario</b>. Dùng để lọc và phân nhóm phụ tùng theo từng dòng xe.
+                                                    </span>
+                                                </span>
+                                            </div>
                                             <input
                                                 type="text"
                                                 required
@@ -238,7 +279,15 @@ export function ManageBodyKitPage({ onBack }: ManageBodyKitPageProps) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Năm sản xuất</label>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <label className="block text-sm font-semibold text-muted-foreground">Năm sản xuất</label>
+                                            <span className="group relative">
+                                                <Info className="w-3.5 h-3.5 text-blue-400 cursor-help" />
+                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg p-2 z-10 leading-relaxed">
+                                                    Năm sản xuất của xe. VD: <b>2024, 2023</b>. Nếu xe có nhiều đời, có thể bỏ trống để áp dụng cho tất cả các đời xe.
+                                                </span>
+                                            </span>
+                                        </div>
                                         <input
                                             type="number"
                                             value={formData.year}
@@ -251,12 +300,20 @@ export function ManageBodyKitPage({ onBack }: ManageBodyKitPageProps) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Mô tả chi tiết</label>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <label className="block text-sm font-semibold text-muted-foreground">Mô tả chi tiết</label>
+                                            <span className="group relative">
+                                                <Info className="w-3.5 h-3.5 text-blue-400 cursor-help" />
+                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-72 bg-gray-900 text-white text-xs rounded-lg p-2 z-10 leading-relaxed">
+                                                    Mô tả hiển thị trên trang chi tiết dàn áo xe. Gồm: <b>thiết kế</b> (body, yên, cốp), <b>động cơ</b>, <b>đặc điểm nổi bật</b>. Không bắt buộc.
+                                                </span>
+                                            </span>
+                                        </div>
                                         <textarea
                                             value={formData.description}
                                             onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
                                             className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-red-600/50 focus:ring-2 focus:ring-red-600/20 min-h-[140px] resize-y"
-                                            placeholder="Thêm các thông tin mô tả tổng quan về xe, thiết kế, động cơ (nếu có)..."
+                                            placeholder="VD: Xe thiết kế thể thao, body mềm mại, cốp rộng chứa 2 mũ bảo hiểm. Động cơ 110cc tiết kiệm xăng..."
                                         />
                                     </div>
 
@@ -402,6 +459,64 @@ interface VehicleDetailAdminProps {
     onBack: () => void;
 }
 
+function SortablePartRow({
+    part,
+    index,
+    onRemove,
+}: {
+    part: { bodyKitPartId: string; position: string | null; product: { product_id: string; product_name: string; product_image: string; price: number } };
+    index: number;
+    onRemove: () => void;
+}) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+        useSortable({ id: part.bodyKitPartId });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg hover:border-red-600/20 transition-all"
+        >
+            <button
+                {...attributes}
+                {...listeners}
+                className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded text-muted-foreground"
+            >
+                <GripVertical className="w-4 h-4" />
+            </button>
+            <span className="text-xs text-muted-foreground w-6 text-center">{index + 1}</span>
+            <div className="w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0">
+                {part.product.product_image ? (
+                    <img src={part.product.product_image} alt={part.product.product_name} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-5 h-5 text-muted-foreground/30" />
+                    </div>
+                )}
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground line-clamp-1">{part.product.product_name}</p>
+                {part.position && <span className="text-xs text-muted-foreground">{part.position}</span>}
+            </div>
+            <span className="text-sm text-red-600 font-bold flex-shrink-0">
+                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(part.product.price)}
+            </span>
+            <button
+                onClick={onRemove}
+                className="p-1.5 hover:bg-muted rounded-lg transition-colors group flex-shrink-0"
+            >
+                <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-red-600" />
+            </button>
+        </div>
+    );
+}
+
 function VehicleDetailAdmin({ vehicle, onBack }: VehicleDetailAdminProps) {
     const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState('');
@@ -437,6 +552,30 @@ function VehicleDetailAdmin({ vehicle, onBack }: VehicleDetailAdminProps) {
         },
         onError: () => toast.error('Không thể gỡ phụ tùng'),
     });
+
+    const reorderMutation = useMutation({
+        mutationFn: (orderedIds: string[]) => bodykitApi.reorderParts(vehicle.id, orderedIds),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-vehicle-detail', vehicle.id] });
+            toast.success('Đã cập nhật thứ tự');
+        },
+        onError: () => toast.error('Không thể cập nhật thứ tự'),
+    });
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+        const oldIndex = detail?.parts.findIndex(p => p.bodyKitPartId === active.id) ?? -1;
+        const newIndex = detail?.parts.findIndex(p => p.bodyKitPartId === over.id) ?? -1;
+        if (oldIndex === -1 || newIndex === -1) return;
+        const orderedIds = arrayMove(detail!.parts, oldIndex, newIndex).map(p => p.bodyKitPartId);
+        reorderMutation.mutate(orderedIds);
+    };
 
     const existingProductIds = new Set(detail?.parts.map(p => p.product.product_id) || []);
     const filteredResults = searchResults?.data.filter(p => !existingProductIds.has(p.product_id)) || [];
@@ -611,47 +750,33 @@ function VehicleDetailAdmin({ vehicle, onBack }: VehicleDetailAdminProps) {
                         <p className="text-muted-foreground">Chưa có phụ tùng nào trong dàn áo</p>
                     </div>
                 ) : (
-                    <div className="space-y-2">
-                        {detail?.parts.map((part, index) => (
-                            <motion.div
-                                key={part.bodyKitPartId}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.03 }}
-                                className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg hover:border-red-600/20 transition-all"
-                            >
-                                <span className="text-xs text-muted-foreground w-6 text-center">{index + 1}</span>
-                                <div className="w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0">
-                                    {part.product.product_image ? (
-                                        <img src={part.product.product_image} alt={part.product.product_name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <Package className="w-5 h-5 text-muted-foreground/30" />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-foreground line-clamp-1">{part.product.product_name}</p>
-                                    {part.position && (
-                                        <span className="text-xs text-muted-foreground">{part.position}</span>
-                                    )}
-                                </div>
-                                <span className="text-sm text-red-600 font-bold flex-shrink-0">
-                                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(part.product.price)}
-                                </span>
-                                <button
-                                    onClick={() => {
-                                        if (confirm('Gỡ phụ tùng này khỏi dàn áo?')) {
-                                            removePartMutation.mutate(part.product.product_id);
-                                        }
-                                    }}
-                                    className="p-1.5 hover:bg-muted rounded-lg transition-colors group flex-shrink-0"
-                                >
-                                    <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-red-600" />
-                                </button>
-                            </motion.div>
-                        ))}
-                    </div>
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext
+                            items={detail?.parts.map(p => p.bodyKitPartId) || []}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            <div className="space-y-2">
+                                {detail?.parts.map((part, index) => (
+                                    <motion.div
+                                        key={part.bodyKitPartId}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.03 }}
+                                    >
+                                        <SortablePartRow
+                                            part={part}
+                                            index={index}
+                                            onRemove={() => {
+                                                if (confirm('Gỡ phụ tùng này khỏi dàn áo?')) {
+                                                    removePartMutation.mutate(part.product.product_id);
+                                                }
+                                            }}
+                                        />
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </SortableContext>
+                    </DndContext>
                 )}
             </div>
         </div>

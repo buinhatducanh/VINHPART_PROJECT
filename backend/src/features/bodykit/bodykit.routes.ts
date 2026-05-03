@@ -336,6 +336,34 @@ router.delete('/vehicles/:vehicleId/parts/:productId', async (req, res) => {
     }
 });
 
+router.put('/vehicles/:vehicleId/parts/reorder', async (req, res) => {
+    const { vehicleId } = req.params;
+    const { orderedIds } = req.body;
+
+    if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+        return res.status(400).json({ error: 'orderedIds array is required' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        for (let i = 0; i < orderedIds.length; i++) {
+            await client.query(
+                `UPDATE body_kit_parts SET "sortOrder" = $1 WHERE id = $2 AND "vehicleId" = $3`,
+                [i, orderedIds[i], vehicleId]
+            );
+        }
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error reordering parts:', error);
+        res.status(500).json({ error: 'Failed to reorder parts' });
+    } finally {
+        client.release();
+    }
+});
+
 router.get('/vehicles-admin', async (_req, res) => {
     try {
         const { rows } = await pool.query(
