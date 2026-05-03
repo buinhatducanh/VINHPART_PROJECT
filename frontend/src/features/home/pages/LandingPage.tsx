@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Product } from '@/shared/types';
 import { Modal } from '@/shared/components/ui/Modal';
 import { modalContents, ModalContentType } from '@/shared/data/modalContent';
 import { useI18n } from '@/shared/lib/i18n';
-import { API_BASE_URL } from '@/lib/api';
 import {
   HeroSection,
   BenefitsSection,
@@ -14,6 +14,7 @@ import {
   FooterSection,
   BodyKitSection,
 } from '../sections';
+import { productApi, postsApi, homepageSectionsApi } from '@/lib/api';
 
 interface LandingPageProps {
   onShopNow: () => void;
@@ -39,45 +40,8 @@ export function LandingPage({
   onVehicleClick,
 }: LandingPageProps) {
   const { t } = useI18n();
-  // State for data from API
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [latestPosts, setLatestPosts] = useState<any[]>([]);
-  const [topReviews, setTopReviews] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch data from APIs
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch products (limit 10, can add filters later)
-        const productsRes = await fetch(`${API_BASE_URL}/products?limit=10`);
-        if (productsRes.ok) {
-          const productsData = await productsRes.json();
-          // Handle API response structure: {data: [], metadata: {...}}
-          const productsList = productsData.data || productsData.products || productsData || [];
-          setFeaturedProducts(Array.isArray(productsList) ? productsList : []);
-        }
-
-        // Fetch published blog posts (limit 3)
-        const postsRes = await fetch(`${API_BASE_URL}/posts?status=PUBLISHED&limit=3`);
-        if (postsRes.ok) {
-          const postsData = await postsRes.json();
-          // Safely check if postsData is an array to prevent "e.map is not a function"
-          setLatestPosts(Array.isArray(postsData) ? postsData : []);
-        }
-
-        // Reviews - keep empty for now (can implement later)
-        setTopReviews([]);
-      } catch (error) {
-        console.error('Failed to fetch landing page data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  // Modal State
+  // Modal State — MUST be before sectionMap (hooks must be called in consistent order)
   const [activeModal, setActiveModal] = useState<ModalContentType | null>(null);
 
   const handleModalOpen = (modalType: ModalContentType) => (e: React.MouseEvent) => {
@@ -88,6 +52,55 @@ export function LandingPage({
   const handleModalClose = () => {
     setActiveModal(null);
   };
+
+  const { data: productsData, isLoading: productsLoading } = useQuery({
+    queryKey: ['featured-products'],
+    queryFn: () => productApi.getProducts({ limit: 10, isFeatured: true }),
+  });
+
+  const { data: postsData, isLoading: postsLoading } = useQuery({
+    queryKey: ['latest-posts'],
+    queryFn: () => postsApi.getPosts('PUBLISHED', 3),
+  });
+
+  const { data: sections, isLoading: sectionsLoading } = useQuery({
+    queryKey: ['homepage-sections'],
+    queryFn: homepageSectionsApi.getAll,
+  });
+
+  const featuredProducts = productsData?.data || [];
+  const latestPosts = Array.isArray(postsData) ? postsData : [];
+
+  const sectionMap: Record<string, React.ReactNode> = {
+    hero: <HeroSection onShopNow={onShopNow} onViewCatalog={onViewCatalog} />,
+    benefits: <BenefitsSection />,
+    body_kit: <BodyKitSection onVehicleClick={onVehicleClick} />,
+    featured_products: (
+      <FeaturedProductsSection
+        products={featuredProducts}
+        onAddToCart={onAddToCart}
+        onBuyNow={onBuyNow}
+        isLoading={productsLoading}
+        onProductClick={onProductClick}
+      />
+    ),
+    latest_posts: (
+      <LatestPostsSection
+        posts={latestPosts}
+        onBlogPostClick={onBlogPostClick}
+        onViewAllPosts={onViewAllPosts}
+        isLoading={postsLoading}
+      />
+    ),
+    reviews: <CustomerReviewsSection reviews={[]} />,
+    cta: <CTASection onShopNow={onShopNow} />,
+    footer: <FooterSection onAdminClick={onAdminClick} onModalOpen={handleModalOpen} />,
+  };
+
+  const defaultSectionOrder = [
+    'hero', 'benefits', 'body_kit', 'featured_products',
+    'latest_posts', 'reviews', 'cta', 'footer',
+  ];
 
   return (
     <div className="pt-16 lg:pt-20">
@@ -103,25 +116,17 @@ export function LandingPage({
       )}
 
       {/* Section Components */}
-      <HeroSection onShopNow={onShopNow} onViewCatalog={onViewCatalog} />
-      <BenefitsSection />
-      <BodyKitSection onVehicleClick={onVehicleClick} />
-      <FeaturedProductsSection
-        products={featuredProducts}
-        onAddToCart={onAddToCart}
-        onBuyNow={onBuyNow}
-        isLoading={loading}
-        onProductClick={onProductClick}
-      />
-      <LatestPostsSection
-        posts={latestPosts}
-        onBlogPostClick={onBlogPostClick}
-        onViewAllPosts={onViewAllPosts}
-        isLoading={loading}
-      />
-      <CustomerReviewsSection reviews={topReviews} />
-      <CTASection onShopNow={onShopNow} />
-      <FooterSection onAdminClick={onAdminClick} onModalOpen={handleModalOpen} />
+      {sectionsLoading ? (
+        <div className="min-h-screen bg-background" />
+      ) : sections && sections.length > 0 ? (
+        sections.filter(s => s.isEnabled).map(section => (
+          <div key={section.id}>{sectionMap[section.key]}</div>
+        ))
+      ) : (
+        defaultSectionOrder.map(key => (
+          <div key={key}>{sectionMap[key]}</div>
+        ))
+      )}
     </div>
   );
 }

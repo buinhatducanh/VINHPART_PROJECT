@@ -1,6 +1,6 @@
 import { LucideIcon } from 'lucide-react';
 
-export type AdminPage = 'dashboard' | 'addProduct' | 'manageProducts' | 'manageOrders' | 'statistics' | 'settings' | 'manageSEO' | 'manageCategories' | 'manageReviews' | 'managePosts' | 'manageBodyKit' | 'manageAdminEmails';
+export type AdminPage = 'dashboard' | 'addProduct' | 'manageProducts' | 'manageOrders' | 'statistics' | 'settings' | 'manageSEO' | 'manageCategories' | 'manageReviews' | 'managePosts' | 'manageBodyKit' | 'manageAdminEmails' | 'manageHomepageSections';
 
 export interface DashboardStats {
     products: number;

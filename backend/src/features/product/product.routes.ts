@@ -115,7 +115,8 @@ router.get('/', async (req, res) => {
             minPrice,
             maxPrice,
             search,
-            stock_status
+            stock_status,
+            isFeatured
         } = req.query;
 
         const offset = (Number(page) - 1) * Number(limit);
@@ -168,15 +169,19 @@ router.get('/', async (req, res) => {
             }
         }
 
+        if (isFeatured === 'true') {
+            baseQuery += ` AND p."isFeatured" = true`;
+        }
+
         const countResult = await pool.query(`SELECT COUNT(*) ${baseQuery}`, params);
         const total = parseInt(countResult.rows[0].count);
 
         const dataQuery = `
             SELECT p.id, p.name, p."categoryId", p.brand, p.price, p."salePrice", p.stock, p.images, p.description,
-                   p.sku, p."discountStartDate", p."discountEndDate",
+                   p.sku, p."discountStartDate", p."discountEndDate", p."isFeatured",
                    c.name as category_name, c.slug as category_slug
             ${baseQuery}
-            ORDER BY p."createdAt" DESC
+            ORDER BY p."isFeatured" DESC, p."createdAt" DESC
             LIMIT $${paramIndex++} OFFSET $${paramIndex++}
         `;
 
@@ -212,7 +217,8 @@ router.get('/', async (req, res) => {
                 stock_status: status,
                 description: p.description || '',
                 product_image: p.images && p.images.length > 0 ? p.images[0] : '',
-                tags: []
+                tags: [],
+                isFeatured: p.isFeatured || false
             };
         });
 

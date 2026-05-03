@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useFirstVisit } from '@/shared/hooks/useFirstVisit';
 import { NotificationBell } from '@/features/notification/components/NotificationBell';
 import { API_BASE_URL } from '@/lib/api';
+import { Switch } from '@/shared/components/ui/switch';
 
 const DRAFT_STORAGE_KEY = 'vinhpart_post_draft';
 const AUTO_SAVE_INTERVAL = 30000; // 30s
@@ -24,6 +25,8 @@ interface Post {
     viewCount: number;
     createdAt: string;
     updatedAt: string;
+    isPinned?: boolean;
+    pinnedOrder?: number;
 }
 
 interface ManagePostsPageProps {
@@ -284,6 +287,24 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
         }
     };
 
+    const handleTogglePin = async (id: string, isPinned: boolean) => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/posts/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isPinned, pinnedOrder: isPinned ? 999 : 0 }),
+            });
+            if (res.ok) {
+                setPosts(posts.map(p => p.id === id ? { ...p, isPinned } : p));
+                toast.success(isPinned ? 'Đã ghim bài viết' : 'Đã bỏ ghim bài viết');
+            } else {
+                toast.error('Không thể cập nhật');
+            }
+        } catch {
+            toast.error('Lỗi kết nối');
+        }
+    };
+
     const handleSaveEdit = async () => {
         if (!editingPost) return;
         if (!validateForm()) {
@@ -306,7 +327,9 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                     metaTitle: editingPost.metaTitle,
                     metaDescription: editingPost.metaDescription,
                     ogImage: editingPost.ogImage,
-                    status: editingPost.status
+                    status: editingPost.status,
+                    isPinned: editingPost.isPinned ?? false,
+                    pinnedOrder: editingPost.pinnedOrder ?? 0,
                 })
             });
 
@@ -356,7 +379,9 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
             status: 'DRAFT',
             viewCount: 0,
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
+            isPinned: false,
+            pinnedOrder: 0
         });
     };
 
@@ -481,6 +506,9 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Trạng thái
                                     </th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Ghim
+                                    </th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Lượt xem
                                     </th>
@@ -513,8 +541,13 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <p className="text-foreground font-semibold line-clamp-2">
+                                                    <p className="text-foreground font-semibold line-clamp-2 flex items-center gap-2">
                                                         {post.title}
+                                                        {post.isPinned && (
+                                                            <span className="px-1.5 py-0.5 bg-red-500/20 border border-red-500/50 text-red-400 text-xs rounded">
+                                                                GHIM
+                                                            </span>
+                                                        )}
                                                     </p>
                                                     <p className="text-muted-foreground text-sm">/{post.slug}</p>
                                                 </div>
@@ -528,6 +561,15 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                                 }`}>
                                                 {post.status === 'PUBLISHED' ? 'Published' : 'Draft'}
                                             </span>
+                                        </td>
+
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-center">
+                                                <Switch
+                                                    checked={post.isPinned || false}
+                                                    onCheckedChange={(checked) => handleTogglePin(post.id, checked)}
+                                                />
+                                            </div>
                                         </td>
 
                                         <td className="px-6 py-4">
@@ -641,7 +683,15 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             <div className="lg:col-span-1 space-y-4">
                                 {/* Featured Image */}
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">Ảnh đại diện</label>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <label className="block text-sm font-medium text-muted-foreground">Ảnh đại diện</label>
+                                        <span className="group relative">
+                                            <Info className="w-3.5 h-3.5 text-blue-400 cursor-help" />
+                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg p-2 z-10 leading-relaxed">
+                                                Ảnh hiển thị khi chia sẻ bài viết lên mạng xã hội (Facebook, Zalo). Kích thước khuyến nghị: <b>1200x630px</b>.
+                                            </span>
+                                        </span>
+                                    </div>
                                     <div className="aspect-video bg-muted rounded-xl overflow-hidden border-2 border-dashed border-border flex items-center justify-center">
                                         {editingPost.featuredImage ? (
                                             <img
@@ -708,9 +758,15 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                             <div className="lg:col-span-2 space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
-                                            Tiêu đề <span className="text-red-500">*</span>
-                                        </label>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <label className="block text-sm font-semibold text-muted-foreground">Tiêu đề <span className="text-red-500">*</span></label>
+                                            <span className="group relative">
+                                                <Info className="w-3.5 h-3.5 text-blue-400 cursor-help" />
+                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg p-2 z-10 leading-relaxed">
+                                                    Tiêu đề bài viết. Dùng <b>từ khóa chính</b> và hấp dẫn để thu hút người đọc. VD: <b>5 phụ kiện Honda Wave Alpha phổ biến nhất 2024</b>.
+                                                </span>
+                                            </span>
+                                        </div>
                                         <input
                                             type="text"
                                             value={editingPost.title}
@@ -718,7 +774,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                             className={`w-full px-4 py-3 bg-muted border rounded-lg text-foreground focus:outline-none focus:ring-2 transition-all ${
                                                 errors.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-border focus:border-green-600/50 focus:ring-green-600/20'
                                             }`}
-                                            placeholder="Nhập tiêu đề bài viết..."
+                                            placeholder="VD: 5 phụ kiện Honda Wave Alpha phổ biến nhất 2024"
                                         />
                                         {errors.title && <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.title}</p>}
                                     </div>
@@ -756,7 +812,16 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-muted-foreground mb-2">Trạng thái</label>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <label className="block text-sm font-semibold text-muted-foreground">Trạng thái</label>
+                                        <span className="group relative">
+                                            <Info className="w-3.5 h-3.5 text-blue-400 cursor-help" />
+                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg p-2 z-10 leading-relaxed">
+                                                <b>Draft</b>: Bài chưa xuất bản, chỉ admin thấy.<br/>
+                                                <b>Published</b>: Bài hiển thị công khai trên website và được SEO index.
+                                            </span>
+                                        </span>
+                                    </div>
                                     <select
                                         value={editingPost.status}
                                         onChange={(e) => setEditingPost({ ...editingPost, status: e.target.value as 'DRAFT' | 'PUBLISHED' })}
@@ -770,7 +835,15 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
                                         <label className="block text-sm font-semibold text-muted-foreground">Tóm tắt</label>
-                                        <span className="text-xs text-muted-foreground">{editingPost.excerpt?.length || 0} / 200</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-muted-foreground">{editingPost.excerpt?.length || 0} / 200</span>
+                                            <span className="group relative">
+                                                <Info className="w-3.5 h-3.5 text-blue-400 cursor-help" />
+                                                <span className="absolute bottom-full right-0 mb-1 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg p-2 z-10 leading-relaxed">
+                                                    Đoạn mô tả ngắn hiển thị trên danh sách bài viết và trong kết quả Google. Nên viết <b>1-2 câu ngắn gọn</b>, chứa từ khóa chính, không quá 200 ký tự.
+                                                </span>
+                                            </span>
+                                        </div>
                                     </div>
                                     <textarea
                                         value={editingPost.excerpt || ''}
@@ -778,7 +851,7 @@ export function ManagePostsPage({ onBack }: ManagePostsPageProps) {
                                         rows={2}
                                         maxLength={200}
                                         className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:border-green-600/50 focus:ring-2 focus:ring-green-600/20 resize-none"
-                                        placeholder="Mô tả ngắn về bài viết, hiển thị trên danh sách bài viết..."
+                                        placeholder="VD: Tổng hợp các phụ kiện phổ biến nhất cho Honda Wave Alpha 2024, giá cả hợp lý và dễ lắp đặt."
                                     />
                                 </div>
 

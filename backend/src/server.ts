@@ -16,6 +16,7 @@ import uploadRoutes from './features/upload/upload.routes';
 import notificationRoutes from './features/notification/notification.routes';
 import bodykitRoutes from './features/bodykit/bodykit.routes';
 import adminEmailsRoutes from './features/admin/admin-emails.routes';
+import homepageSectionRoutes from './features/homepage-section/homepage-section.routes';
 import { notificationQueue } from './features/notification/notification-queue';
 
 // Use process.cwd() instead of import.meta.url for better Vercel compatibility
@@ -59,6 +60,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/bodykit', bodykitRoutes);
 app.use('/api/admin/emails', adminEmailsRoutes);
+app.use('/api/homepage-sections', homepageSectionRoutes);
 
 // Startup migration (non-fatal)
 async function migrate() {
@@ -140,6 +142,42 @@ async function migrate() {
             INSERT INTO admin_emails (email, "addedBy")
             VALUES ('admin@vinpart.vn', 'system')
             ON CONFLICT (email) DO NOTHING
+        `);
+
+        // Posts pinning columns
+        await client.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS "isPinned" BOOLEAN DEFAULT false`);
+        await client.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS "pinnedOrder" INTEGER DEFAULT 0`);
+
+        // Homepage sections table
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS homepage_sections (
+                id TEXT PRIMARY KEY,
+                key TEXT UNIQUE NOT NULL,
+                name TEXT NOT NULL,
+                "isEnabled" BOOLEAN DEFAULT true,
+                "sortOrder" INTEGER DEFAULT 0,
+                config JSONB,
+                "createdAt" TIMESTAMP DEFAULT NOW(),
+                "updatedAt" TIMESTAMP DEFAULT NOW()
+            )
+        `);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_hs_sort ON homepage_sections("sortOrder")`);
+
+        // Seed default homepage sections
+        await client.query(`
+            INSERT INTO homepage_sections (id, key, name, "sortOrder", "isEnabled")
+            SELECT gen_random_uuid()::text, key, name, sort_order, true
+            FROM (VALUES
+                ('hero', 'Banner chính', 0),
+                ('benefits', 'Lợi ích', 1),
+                ('body_kit', 'Dàn áo xe', 2),
+                ('featured_products', 'Sản phẩm nổi bật', 3),
+                ('latest_posts', 'Bài viết mới nhất', 4),
+                ('reviews', 'Đánh giá khách hàng', 5),
+                ('cta', 'Call to Action', 6),
+                ('footer', 'Footer', 7)
+            ) AS t(key, name, sort_order)
+            ON CONFLICT (key) DO NOTHING
         `);
     } catch (e) {
         console.error('Startup migration error:', e);
