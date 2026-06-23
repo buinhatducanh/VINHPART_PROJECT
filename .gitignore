@@ -123,3 +123,5 @@ Thumbs.db
 
 # generated prisma
 /src/generated/prisma
+.env
+.env
