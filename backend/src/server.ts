@@ -1,8 +1,36 @@
-
+// backend/src/server.ts
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
 import { pool } from './shared/database';
+
+// Load .env từ root TRƯỚC KHI import các routes
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Try to load .env from multiple locations
+const envPaths = [
+    path.resolve(__dirname, '../../.env'), // root directory (D:\VINHPART_PROJECT\.env)
+    path.resolve(process.cwd(), '.env'),   // current working directory
+];
+
+let envLoaded = false;
+for (const envPath of envPaths) {
+    const result = dotenv.config({ path: envPath });
+    if (!result.error) {
+        console.log(`✅ Loaded .env from: ${envPath}`);
+        envLoaded = true;
+        break;
+    }
+}
+
+if (!envLoaded) {
+    console.warn('⚠️ No .env file found, using system environment variables');
+    console.log('📝 Current directory:', process.cwd());
+    console.log('📝 Looking for .env at:', envPaths);
+}
 
 // Feature routes
 import authRoutes from './features/auth/auth.routes';
@@ -23,7 +51,7 @@ import { notificationQueue } from './features/notification/notification-queue';
 const rootDir = process.cwd();
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 app.use(cors({
     origin: [
@@ -42,9 +70,18 @@ app.use('/uploads', express.static(path.join(rootDir, 'uploads')));
 app.get('/api/health', async (_req, res) => {
     try {
         const result = await pool.query('SELECT now() as server_time');
-        res.json({ status: 'ok', server_time: result.rows[0]?.server_time });
+        res.json({ 
+            status: 'ok', 
+            server_time: result.rows[0]?.server_time,
+            database: 'connected',
+            env: process.env.NODE_ENV || 'development'
+        });
     } catch (err: any) {
-        res.status(503).json({ status: 'error', message: err.message });
+        res.status(503).json({ 
+            status: 'error', 
+            message: err.message,
+            database: 'disconnected'
+        });
     }
 });
 
@@ -195,7 +232,11 @@ migrate()
     .catch((err) => console.error('Migration failed (non-fatal):', err));
 
 app.listen(port, () => {
-    console.log(`API Server running at http://localhost:${port}`);
+    console.log(`🚀 API Server running at http://localhost:${port}`);
+    console.log(`🔍 Health check: http://localhost:${port}/api/health`);
+    console.log(`📡 API Base: http://localhost:${port}/api`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📁 Working directory: ${process.cwd()}`);
 });
 
 export default app;

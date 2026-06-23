@@ -3,9 +3,13 @@ import { pool } from '../../shared/database';
 import { hashPassword, verifyPassword } from '../../shared/auth-helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { OAuth2Client } from 'google-auth-library';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 const googleClient = new OAuth2Client();
+
+// JWT Secret
+const JWT_SECRET = process.env.JWT_SECRET || 'vinhpart_dev_jwt_secret_key_2026';
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -81,12 +85,27 @@ router.post('/login', async (req, res) => {
             return;
         }
 
+        // Tạo JWT token
+        const token = jwt.sign(
+            { 
+                id: user.id, 
+                email: user.email, 
+                role: user.role 
+            },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
         res.json({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role.toLowerCase(),
-            avatar: user.avatar || null
+            success: true,
+            token: token,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role.toLowerCase(),
+                avatar: user.avatar || null
+            }
         });
     } catch (error) {
         console.error('Login error:', error);
@@ -184,12 +203,27 @@ router.post('/google', async (req, res) => {
 
         await client.query('COMMIT');
 
+        // Tạo JWT token cho Google login
+        const token = jwt.sign(
+            { 
+                id: user.id, 
+                email: user.email, 
+                role: user.role 
+            },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
         res.json({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role.toLowerCase(),
-            avatar: user.avatar || null
+            success: true,
+            token: token,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role.toLowerCase(),
+                avatar: user.avatar || null
+            }
         });
     } catch (error) {
         await client.query('ROLLBACK');

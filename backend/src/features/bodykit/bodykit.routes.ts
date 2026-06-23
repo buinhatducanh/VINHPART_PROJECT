@@ -4,6 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
 
+// ============================================
+// PUBLIC ROUTES
+// ============================================
+
+// GET /api/bodykit/vehicles - Lấy danh sách xe (có filter)
 router.get('/vehicles', async (req, res) => {
     try {
         const { page = 1, limit = 12, brand, search } = req.query;
@@ -77,9 +82,13 @@ router.get('/vehicles', async (req, res) => {
     }
 });
 
+// GET /api/bodykit/vehicles/:id - Chi tiết xe
 router.get('/vehicles/:id', async (req, res) => {
     const { id } = req.params;
+    console.log(`🔍 Fetching vehicle detail for ID: ${id}`);
+    
     try {
+        // Kiểm tra vehicle tồn tại
         const vehicleResult = await pool.query(
             `SELECT * FROM vehicles WHERE id = $1 AND "isActive" = true`,
             [id]
@@ -91,19 +100,19 @@ router.get('/vehicles/:id', async (req, res) => {
 
         const vehicle = vehicleResult.rows[0];
 
+        // Lấy parts - CHỈ dùng các cột tồn tại trong bảng products
         const partsResult = await pool.query(
             `SELECT bkp.id AS body_kit_part_id,
                     bkp.position,
                     bkp."sortOrder",
                     p.id AS product_id,
-                    p.name,
+                    p.name AS product_name,
                     p.price,
-                    p."salePrice",
-                    p.stock,
+                    p."stockQuantity" AS stock,
                     p.images,
-                    p.description,
-                    p.brand,
-                    p.sku
+                    p.description AS product_description,
+                    p."isActive" AS product_active,
+                    p."isFeatured" AS product_featured
              FROM body_kit_parts bkp
              JOIN products p ON p.id = bkp."productId"
              WHERE bkp."vehicleId" = $1
@@ -111,16 +120,33 @@ router.get('/vehicles/:id', async (req, res) => {
             [id]
         );
 
-        const parts = partsResult.rows.map(p => {
-            const actualPrice = p.salePrice ? Number(p.salePrice) : Number(p.price);
-            const originalPrice = Number(p.price);
-            const discountPercent = p.salePrice
-                ? Math.round(((originalPrice - Number(p.salePrice)) / originalPrice) * 100)
-                : 0;
+        console.log(`📊 Found ${partsResult.rows.length} parts for vehicle`);
 
+        const parts = partsResult.rows.map(p => {
+            const price = Number(p.price);
+            const stock = p.stock || 0;
+            
             let stockStatus = 'out_of_stock';
-            if (p.stock > 10) stockStatus = 'in_stock';
-            else if (p.stock > 0) stockStatus = 'low_stock';
+            if (stock > 10) stockStatus = 'in_stock';
+            else if (stock > 0) stockStatus = 'low_stock';
+
+            // Xử lý images array
+            let images: string[] = [];
+            let productImage = '';
+            if (p.images) {
+                try {
+                    if (typeof p.images === 'string') {
+                        images = JSON.parse(p.images);
+                    } else if (Array.isArray(p.images)) {
+                        images = p.images;
+                    }
+                    if (images.length > 0) {
+                        productImage = images[0];
+                    }
+                } catch (e) {
+                    images = [];
+                }
+            }
 
             return {
                 bodyKitPartId: p.body_kit_part_id,
@@ -128,17 +154,17 @@ router.get('/vehicles/:id', async (req, res) => {
                 sortOrder: p.sortOrder,
                 product: {
                     product_id: p.product_id,
-                    product_name: p.name,
-                    price: actualPrice,
-                    original_price: originalPrice,
-                    discount_percentage: discountPercent,
-                    stock: p.stock,
+                    product_name: p.product_name,
+                    price: price,
+                    original_price: price,
+                    discount_percentage: 0,
+                    stock: stock,
                     stock_status: stockStatus,
-                    product_image: p.images && p.images.length > 0 ? p.images[0] : '',
-                    images: p.images || [],
-                    description: p.description || '',
-                    brand: p.brand || '',
-                    sku: p.sku,
+                    product_image: productImage,
+                    images: images,
+                    description: p.product_description || '',
+                    brand: vehicle.brand || '',
+                    sku: null,
                 },
             };
         });
@@ -160,11 +186,53 @@ router.get('/vehicles/:id', async (req, res) => {
             totalPrice,
         });
     } catch (error) {
-        console.error('Error fetching bodykit detail:', error);
-        res.status(500).json({ error: 'Failed to fetch bodykit detail' });
+        console.error('❌ Error fetching bodykit detail:', error);
+        const details = error instanceof Error ? error.message : String(error);
+        res.status(500).json({ 
+            error: 'Failed to fetch bodykit detail',
+            details
+        });
     }
 });
 
+// ============================================
+// ADMIN ROUTES (Require Authentication)
+// ============================================
+
+// GET /api/bodykit/vehicles-admin - Lấy danh sách xe cho Admin
+router.get('/vehicles-admin', async (_req, res) => {
+    try {
+        const { rows } = await pool.query(
+            `SELECT v.*,
+                    COUNT(bkp.id)::int AS parts_count
+             FROM vehicles v
+             LEFT JOIN body_kit_parts bkp ON bkp."vehicleId" = v.id
+             GROUP BY v.id
+             ORDER BY v."createdAt" DESC`
+        );
+
+        const vehicles = rows.map(v => ({
+            id: v.id,
+            name: v.name,
+            slug: v.slug,
+            brand: v.brand,
+            model: v.model,
+            year: v.year,
+            image: v.image,
+            description: v.description,
+            isActive: v.isActive,
+            partsCount: v.parts_count,
+            createdAt: v.createdAt,
+        }));
+
+        res.json(vehicles);
+    } catch (error) {
+        console.error('Error fetching admin vehicles:', error);
+        res.status(500).json({ error: 'Failed to fetch vehicles' });
+    }
+});
+
+// POST /api/bodykit/vehicles - Tạo xe mới (Admin)
 router.post('/vehicles', async (req, res) => {
     const client = await pool.connect();
     try {
@@ -177,15 +245,17 @@ router.post('/vehicles', async (req, res) => {
 
         const id = uuidv4();
         const now = new Date();
-        const slug = `${brand}-${model}-${name}`
+        
+        const baseSlug = `${brand}-${model}-${name}`
             .toLowerCase()
             .replace(/đ/g, 'd')
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
             .replace(/[^a-z0-9]/g, '-')
             .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '')
-            + '-' + Date.now();
+            .replace(/^-|-$/g, '');
+        
+        const slug = `${baseSlug}-${Date.now()}`;
 
         const { rows } = await client.query(
             `INSERT INTO vehicles (id, name, slug, brand, model, year, image, description, "isActive", "createdAt", "updatedAt")
@@ -205,6 +275,7 @@ router.post('/vehicles', async (req, res) => {
     }
 });
 
+// PUT /api/bodykit/vehicles/:id - Cập nhật xe (Admin)
 router.put('/vehicles/:id', async (req, res) => {
     const { id } = req.params;
     const client = await pool.connect();
@@ -248,6 +319,7 @@ router.put('/vehicles/:id', async (req, res) => {
     }
 });
 
+// DELETE /api/bodykit/vehicles/:id - Xóa xe (Admin)
 router.delete('/vehicles/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -262,6 +334,11 @@ router.delete('/vehicles/:id', async (req, res) => {
     }
 });
 
+// ============================================
+// BODY KIT PARTS ROUTES (Admin)
+// ============================================
+
+// POST /api/bodykit/vehicles/:vehicleId/parts - Thêm parts vào xe (Admin)
 router.post('/vehicles/:vehicleId/parts', async (req, res) => {
     const { vehicleId } = req.params;
     const { productIds, position } = req.body;
@@ -289,13 +366,19 @@ router.post('/vehicles/:vehicleId/parts', async (req, res) => {
         const inserted: any[] = [];
         for (const productId of productIds) {
             const productCheck = await client.query('SELECT id FROM products WHERE id = $1', [productId]);
-            if (productCheck.rows.length === 0) continue;
+            if (productCheck.rows.length === 0) {
+                console.log(`⚠️ Product ${productId} not found, skipping`);
+                continue;
+            }
 
             const existsCheck = await client.query(
                 `SELECT id FROM body_kit_parts WHERE "vehicleId" = $1 AND "productId" = $2`,
                 [vehicleId, productId]
             );
-            if (existsCheck.rows.length > 0) continue;
+            if (existsCheck.rows.length > 0) {
+                console.log(`⚠️ Product ${productId} already exists in this vehicle, skipping`);
+                continue;
+            }
 
             const id = uuidv4();
             const now = new Date();
@@ -319,6 +402,7 @@ router.post('/vehicles/:vehicleId/parts', async (req, res) => {
     }
 });
 
+// DELETE /api/bodykit/vehicles/:vehicleId/parts/:productId - Xóa part khỏi xe (Admin)
 router.delete('/vehicles/:vehicleId/parts/:productId', async (req, res) => {
     const { vehicleId, productId } = req.params;
     try {
@@ -336,6 +420,7 @@ router.delete('/vehicles/:vehicleId/parts/:productId', async (req, res) => {
     }
 });
 
+// PUT /api/bodykit/vehicles/:vehicleId/parts/reorder - Sắp xếp lại parts (Admin)
 router.put('/vehicles/:vehicleId/parts/reorder', async (req, res) => {
     const { vehicleId } = req.params;
     const { orderedIds } = req.body;
@@ -361,38 +446,6 @@ router.put('/vehicles/:vehicleId/parts/reorder', async (req, res) => {
         res.status(500).json({ error: 'Failed to reorder parts' });
     } finally {
         client.release();
-    }
-});
-
-router.get('/vehicles-admin', async (_req, res) => {
-    try {
-        const { rows } = await pool.query(
-            `SELECT v.*,
-                    COUNT(bkp.id)::int AS parts_count
-             FROM vehicles v
-             LEFT JOIN body_kit_parts bkp ON bkp."vehicleId" = v.id
-             GROUP BY v.id
-             ORDER BY v."createdAt" DESC`
-        );
-
-        const vehicles = rows.map(v => ({
-            id: v.id,
-            name: v.name,
-            slug: v.slug,
-            brand: v.brand,
-            model: v.model,
-            year: v.year,
-            image: v.image,
-            description: v.description,
-            isActive: v.isActive,
-            partsCount: v.parts_count,
-            createdAt: v.createdAt,
-        }));
-
-        res.json(vehicles);
-    } catch (error) {
-        console.error('Error fetching admin vehicles:', error);
-        res.status(500).json({ error: 'Failed to fetch vehicles' });
     }
 });
 
