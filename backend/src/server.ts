@@ -5,15 +5,16 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { pool } from './shared/database';
+import { securityHeaders, corsOptions } from './shared/middleware/security';
+import { apiLimiter } from './shared/middleware/rate-limiter';
 
-// Load .env từ root TRƯỚC KHI import các routes
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Try to load .env from multiple locations
+// Load .env
 const envPaths = [
-    path.resolve(__dirname, '../../.env'), // root directory (D:\VINHPART_PROJECT\.env)
-    path.resolve(process.cwd(), '.env'),   // current working directory
+    path.resolve(__dirname, '../../.env'),
+    path.resolve(process.cwd(), '.env'),
 ];
 
 let envLoaded = false;
@@ -28,8 +29,6 @@ for (const envPath of envPaths) {
 
 if (!envLoaded) {
     console.warn('⚠️ No .env file found, using system environment variables');
-    console.log('📝 Current directory:', process.cwd());
-    console.log('📝 Looking for .env at:', envPaths);
 }
 
 // Feature routes
@@ -47,26 +46,23 @@ import adminEmailsRoutes from './features/admin/admin-emails.routes';
 import homepageSectionRoutes from './features/homepage-section/homepage-section.routes';
 import { notificationQueue } from './features/notification/notification-queue';
 
-// Use process.cwd() instead of import.meta.url for better Vercel compatibility
 const rootDir = process.cwd();
-
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:3000',
-        /^http:\/\/localhost:\d+$/,
-        /\.vercel\.app$/,
-    ],
-    credentials: true,
-}));
-app.use(express.json());
+// ============ SECURITY MIDDLEWARE ============
+app.use(securityHeaders);
+app.use(cors(corsOptions));
+
+// ============ RATE LIMITING ============
+app.use('/api', apiLimiter);
+
+// ============ BODY PARSING ============
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(rootDir, 'uploads')));
 
-// Health check
+// ============ HEALTH CHECK ============
 app.get('/api/health', async (_req, res) => {
     try {
         const result = await pool.query('SELECT now() as server_time');
@@ -85,7 +81,7 @@ app.get('/api/health', async (_req, res) => {
     }
 });
 
-// Register feature routes
+// ============ REGISTER ROUTES ============
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -99,14 +95,66 @@ app.use('/api/bodykit', bodykitRoutes);
 app.use('/api/admin/emails', adminEmailsRoutes);
 app.use('/api/homepage-sections', homepageSectionRoutes);
 
-// Startup migration (non-fatal)
+// ============ MIGRATIONS ============
 async function migrate() {
     const client = await pool.connect();
     try {
+        // Users table columns
         await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "googleId" TEXT UNIQUE`);
         await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "isVerified" BOOLEAN DEFAULT false`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "verificationToken" TEXT`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "resetToken" TEXT`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "resetTokenExpires" TIMESTAMP`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "lastLogin" TIMESTAMP`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "isLocked" BOOLEAN DEFAULT false`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "lockUntil" TIMESTAMP`);
         await client.query(`ALTER TABLE users ALTER COLUMN password DROP NOT NULL`);
 
+        // Refresh tokens table
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS refresh_tokens (
+                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token TEXT NOT NULL UNIQUE,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                revoked BOOLEAN DEFAULT false
+            )
+        `);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id)`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token)`);
+
+        // Login attempts table
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS login_attempts (
+                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                email TEXT NOT NULL,
+                ip_address TEXT,
+                user_agent TEXT,
+                success BOOLEAN DEFAULT false,
+                attempted_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON login_attempts(email)`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip_address)`);
+
+        // Audit logs table
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS audit_logs (
+                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                user_id TEXT REFERENCES users(id),
+                action TEXT NOT NULL,
+                ip_address TEXT,
+                user_agent TEXT,
+                details JSONB,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id)`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at)`);
+
+        // Vehicles table
         await client.query(`
             CREATE TABLE IF NOT EXISTS vehicles (
                 id TEXT PRIMARY KEY,
@@ -126,6 +174,7 @@ async function migrate() {
         await client.query(`CREATE INDEX IF NOT EXISTS idx_vehicles_brand ON vehicles(brand)`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_vehicles_active ON vehicles("isActive")`);
 
+        // Body kit parts table
         await client.query(`
             CREATE TABLE IF NOT EXISTS body_kit_parts (
                 id TEXT PRIMARY KEY,
@@ -140,7 +189,7 @@ async function migrate() {
         await client.query(`CREATE INDEX IF NOT EXISTS idx_bkp_vehicle ON body_kit_parts("vehicleId")`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_bkp_product ON body_kit_parts("productId")`);
 
-        // Notifications queue table (persistent message queue)
+        // Notifications table
         await client.query(`
             CREATE TABLE IF NOT EXISTS notifications (
                 id TEXT PRIMARY KEY,
@@ -163,9 +212,8 @@ async function migrate() {
         await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_email ON notifications("targetEmail")`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_status ON notifications(status)`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_created ON notifications("createdAt")`);
-        await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_email_status ON notifications("targetEmail", status)`);
 
-        // Admin emails table for dynamic admin role management
+        // Admin emails table
         await client.query(`
             CREATE TABLE IF NOT EXISTS admin_emails (
                 id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -174,14 +222,13 @@ async function migrate() {
                 "createdAt" TIMESTAMP DEFAULT NOW()
             )
         `);
-        // Seed default admin email if not exists
         await client.query(`
             INSERT INTO admin_emails (email, "addedBy")
-            VALUES ('admin@vinpart.vn', 'system')
+            VALUES ('admin@vinhpart.com', 'system')
             ON CONFLICT (email) DO NOTHING
         `);
 
-        // Posts pinning columns
+        // Posts columns
         await client.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS "isPinned" BOOLEAN DEFAULT false`);
         await client.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS "pinnedOrder" INTEGER DEFAULT 0`);
 
@@ -200,7 +247,7 @@ async function migrate() {
         `);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_hs_sort ON homepage_sections("sortOrder")`);
 
-        // Seed default homepage sections
+        // Seed homepage sections
         await client.query(`
             INSERT INTO homepage_sections (id, key, name, "sortOrder", "isEnabled")
             SELECT gen_random_uuid()::text, key, name, sort_order, true
@@ -226,7 +273,6 @@ async function migrate() {
 migrate()
     .then(() => {
         console.log('Migrations completed');
-        // Start notification queue processor after migrations
         notificationQueue.start();
     })
     .catch((err) => console.error('Migration failed (non-fatal):', err));
