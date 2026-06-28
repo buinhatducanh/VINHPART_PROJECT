@@ -79,8 +79,8 @@ async function main() {
   const prodRaw = fs.readFileSync(prodPath, 'utf-8');
   const lines = prodRaw.split(/\r?\n/).filter(l => l.trim());
 
-  // Skip header + 605 already imported products
-  const ALREADY_IMPORTED = 971;
+  // Skip header + 0 already imported products
+  const ALREADY_IMPORTED = 0;
   const dataLines = lines.slice(1 + ALREADY_IMPORTED);
   console.log(`  Found ${dataLines.length} products remaining to import (skipped ${ALREADY_IMPORTED})`);
 

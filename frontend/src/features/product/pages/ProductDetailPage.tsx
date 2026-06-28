@@ -6,6 +6,7 @@ import { ProductDescriptionSection } from '../components/organisms/ProductDescri
 import { RelatedProductsSection } from '../components/organisms/RelatedProductsSection';
 import { SEO } from '@/shared/components/SEO';
 import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 // import { toast } from 'sonner';
 
 interface ProductDetailPageProps {
@@ -80,6 +81,31 @@ export function ProductDetailPage({
                 description={product.description?.slice(0, 160)}
                 image={product.product_image}
             />
+            
+            <Helmet>
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org/",
+                        "@type": "Product",
+                        "name": product.product_name,
+                        "image": product.product_image,
+                        "description": product.description,
+                        "sku": product.sku || product.product_id,
+                        "brand": {
+                            "@type": "Brand",
+                            "name": product.compatible_brand || "OEM"
+                        },
+                        "offers": {
+                            "@type": "Offer",
+                            "url": window.location.href,
+                            "priceCurrency": "VND",
+                            "price": product.price,
+                            "itemCondition": "https://schema.org/NewCondition",
+                            "availability": product.stock_status === 'in_stock' ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+                        }
+                    })}
+                </script>
+            </Helmet>
 
             <div className="container mx-auto px-4 pt-24 lg:pt-32">
                 {/* Breadcrumb */}
