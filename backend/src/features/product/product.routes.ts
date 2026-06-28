@@ -173,21 +173,27 @@ router.get('/', async (req, res) => {
             baseQuery += ` AND p."isFeatured" = true`;
         }
 
-        const countResult = await pool.query(`SELECT COUNT(*) ${baseQuery}`, params);
-        const total = parseInt(countResult.rows[0].count);
-
-        const dataQuery = `
-            SELECT p.id, p.name, p."categoryId", p.brand, p.price, p."salePrice", p.stock, p.images, p.description,
-                   p.sku, p."discountStartDate", p."discountEndDate", p."isFeatured",
-                   c.name as category_name, c.slug as category_slug
-            ${baseQuery}
-            ORDER BY p."isFeatured" DESC, p."createdAt" DESC
+        const cteQuery = `
+            WITH FilteredProducts AS (
+                SELECT p.id, p.name, p."categoryId", p.brand, p.price, p."salePrice", p.stock, p.images, p.description,
+                       p.sku, p."discountStartDate", p."discountEndDate", p."isFeatured", p."createdAt",
+                       c.name as category_name, c.slug as category_slug
+                ${baseQuery}
+            ),
+            TotalCount AS (
+                SELECT COUNT(*) as total FROM FilteredProducts
+            )
+            SELECT fp.*, tc.total as total_count
+            FROM FilteredProducts fp
+            CROSS JOIN TotalCount tc
+            ORDER BY fp."isFeatured" DESC, fp."createdAt" DESC
             LIMIT $${paramIndex++} OFFSET $${paramIndex++}
         `;
 
         params.push(Number(limit), offset);
 
-        const { rows: products } = await pool.query(dataQuery, params);
+        const { rows: products } = await pool.query(cteQuery, params);
+        const total = products.length > 0 ? parseInt(products[0].total_count) : 0;
 
         const mappedProducts = products.map(p => {
             let status = 'out_of_stock';

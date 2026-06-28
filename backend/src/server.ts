@@ -139,8 +139,8 @@ async function migrate() {
         `);
         // Seed default admin email if not exists
         await client.query(`
-            INSERT INTO admin_emails (email, "addedBy")
-            VALUES ('admin@vinpart.vn', 'system')
+            INSERT INTO admin_emails (id, email, "addedBy")
+            VALUES (gen_random_uuid()::text, 'admin@vinpart.vn', 'system')
             ON CONFLICT (email) DO NOTHING
         `);
 
@@ -191,11 +191,17 @@ migrate()
         console.log('Migrations completed');
         // Start notification queue processor after migrations
         notificationQueue.start();
+        
+        app.listen(port, () => {
+            console.log(`API Server running at http://localhost:${port}`);
+        });
     })
-    .catch((err) => console.error('Migration failed (non-fatal):', err));
-
-app.listen(port, () => {
-    console.log(`API Server running at http://localhost:${port}`);
-});
+    .catch((err) => {
+        console.error('Migration failed (non-fatal):', err);
+        // Still start server even if migrations fail, though they shouldn't
+        app.listen(port, () => {
+            console.log(`API Server running at http://localhost:${port}`);
+        });
+    });
 
 export default app;

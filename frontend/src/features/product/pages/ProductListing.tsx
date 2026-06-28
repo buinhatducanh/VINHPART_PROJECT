@@ -6,8 +6,10 @@ import { PriceRangeSlider } from '@/features/product/components/PriceRangeSlider
 import { Product, Category } from '@/shared/types';
 import { API_BASE_URL } from '@/lib/api';
 import { useProducts, useMaxPrice } from '@/hooks/useQueries';
+import { Helmet } from 'react-helmet-async';
 import { ProductCardSkeleton } from '@/shared/components/skeletons/ProductCardSkeleton';
 import { useI18n } from '@/shared/lib/i18n';
+import { SEO } from '@/shared/components/SEO';
 
 interface ProductListingProps {
   selectedCategory: string;
@@ -271,9 +273,31 @@ export function ProductListing({
   // Generate skeleton items
   const skeletonItems = Array(8).fill(0);
 
+  const activeCategory = categories.find(c => c.slug === selectedCategory || c.id === selectedCategory);
+  const pageTitle = searchQuery ? `Tìm kiếm: ${searchQuery}` : activeCategory ? activeCategory.name : 'Danh sách sản phẩm';
+  const pageDescription = searchQuery 
+    ? `Kết quả tìm kiếm cho ${searchQuery}` 
+    : `Danh sách sản phẩm phụ tùng ${activeCategory ? activeCategory.name.toLowerCase() : 'ô tô, xe máy'} chính hãng, chất lượng cao tại VinhPart.`;
+
   return (
-    <div className="pt-20 min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <>
+      <SEO title={pageTitle} description={pageDescription} />
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "itemListElement": products.map((p, index) => ({
+              "@type": "ListItem",
+              "position": index + 1,
+              "url": `${window.location.origin}/products/${p.slug || p.product_id}`,
+              "name": p.product_name
+            }))
+          })}
+        </script>
+      </Helmet>
+      <div className="pt-20 min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -364,7 +388,7 @@ export function ProductListing({
           {/* Products Grid */}
           <div className="flex-1">
             {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-8">
                 {skeletonItems.map((_, index) => (
                   <ProductCardSkeleton key={`skeleton-${index}`} />
                 ))}
@@ -387,7 +411,7 @@ export function ProductListing({
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-8">
                   {products.map((product, index) => (
                     <motion.div
                       key={product.product_id}
@@ -489,5 +513,6 @@ export function ProductListing({
         </div>
       </div>
     </div>
+    </>
   );
 }
