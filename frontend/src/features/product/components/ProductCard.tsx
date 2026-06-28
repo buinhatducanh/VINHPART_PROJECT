@@ -105,55 +105,55 @@ export function ProductCard({ product, onAddToCart, onBuyNow, onProductClick }: 
         </div>
 
         {/* Vehicle Type Badge */}
-        <div className="absolute bottom-3 left-3 z-10">
-          <span className="px-3 py-1.5 bg-background/80 backdrop-blur-md text-foreground text-xs font-bold rounded-full border border-red-600/30 shadow-lg">
+        <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 z-10">
+          <span className="px-2 sm:px-3 py-1 sm:py-1.5 bg-background/80 backdrop-blur-md text-foreground text-[10px] sm:text-xs font-bold rounded-full border border-red-600/30 shadow-lg">
             {product.vehicle_type === 'Motorbike' ? `🏍️ ${t('product.motorbike')}` : `🚗 ${t('product.car')}`}
           </span>
         </div>
       </div>
 
       {/* Product Info */}
-      <div className="p-4 relative z-10">
-        <h3 className="text-foreground font-bold mb-2 line-clamp-2 min-h-[3rem] group-hover:text-red-400 transition-colors">
+      <div className="p-2.5 sm:p-4 relative z-10">
+        <h3 className="text-foreground font-bold mb-1.5 sm:mb-2 line-clamp-2 text-sm sm:text-base min-h-[2.5rem] sm:min-h-[3rem] group-hover:text-red-400 transition-colors">
           {product.product_name}
         </h3>
 
-        <div className="space-y-1 mb-3">
-          <p className="text-muted-foreground text-sm font-medium">
+        <div className="space-y-0.5 sm:space-y-1 mb-2 sm:mb-3">
+          <p className="text-muted-foreground text-xs sm:text-sm font-medium line-clamp-1">
             {product.compatible_brand} {product.compatible_model}
           </p>
-          <p className="text-muted-foreground text-xs">
+          <p className="text-muted-foreground text-[10px] sm:text-xs line-clamp-1">
             {product.engine_capacity}
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-red-600/20 to-transparent border-l-4 border-red-600 pl-3 py-2 mb-4 min-h-[76px] flex items-center">
+        <div className="bg-gradient-to-r from-red-600/20 to-transparent border-l-2 sm:border-l-4 border-red-600 pl-2 sm:pl-3 py-1.5 sm:py-2 mb-2 sm:mb-4 min-h-[50px] sm:min-h-[76px] flex items-center">
           {product.discount_percentage ? (
-            <div className="flex flex-col gap-1">
-              <div className="text-muted-foreground text-sm line-through">
+            <div className="flex flex-col gap-0.5 sm:gap-1">
+              <div className="text-muted-foreground text-[10px] sm:text-sm line-through">
                 {formatPrice(product.original_price || (product.price / (1 - product.discount_percentage / 100)))}
               </div>
-              <div className="text-red-500 text-xl font-black">
+              <div className="text-red-500 text-sm sm:text-xl font-black">
                 {formatPrice(product.price)}
               </div>
             </div>
           ) : (
-            <div className="text-red-500 text-xl font-black">
+            <div className="text-red-500 text-sm sm:text-xl font-black">
               {formatPrice(product.price)}
             </div>
           )}
         </div>
 
         {/* Action Buttons - Improved responsive layout */}
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-1.5 sm:gap-2">
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onBuyNow(product)}
             disabled={product.stock_status === 'out_of_stock'}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-foreground font-bold rounded-lg transition-all text-xs sm:text-sm shadow-lg shadow-red-600/30 hover:shadow-red-600/50 whitespace-nowrap touch-manipulation"
+            className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-1.5 sm:py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-foreground font-bold rounded-lg transition-all text-[10px] sm:text-sm shadow-lg shadow-red-600/30 hover:shadow-red-600/50 whitespace-nowrap touch-manipulation"
           >
-            <Zap className="w-4 h-4 flex-shrink-0" />
+            <Zap className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             <span className="truncate">{t('product.buyNow')}</span>
           </motion.button>
 
@@ -176,7 +176,7 @@ export function ProductCard({ product, onAddToCart, onBuyNow, onProductClick }: 
               }, 600);
             }}
             disabled={product.stock_status === 'out_of_stock'}
-            className="relative overflow-hidden flex items-center justify-center gap-1 px-2 sm:px-3 py-2.5 sm:py-3 w-auto sm:min-w-[80px] bg-transparent border-2 border-red-600 hover:bg-red-600 disabled:border-border disabled:cursor-not-allowed text-red-600 hover:text-foreground disabled:text-muted-foreground font-bold rounded-lg transition-all text-xs sm:text-sm touch-manipulation"
+            className="relative overflow-hidden flex items-center justify-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2.5 w-full sm:w-auto sm:min-w-[80px] bg-transparent border sm:border-2 border-red-600 hover:bg-red-600 disabled:border-border disabled:cursor-not-allowed text-red-600 hover:text-foreground disabled:text-muted-foreground font-bold rounded-lg transition-all text-[10px] sm:text-sm touch-manipulation"
           >
             {/* Ripple effects */}
             {ripples.map(ripple => (
