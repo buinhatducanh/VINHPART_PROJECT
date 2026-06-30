@@ -1,3 +1,4 @@
+// frontend/src/App.tsx
 import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { productApi, API_BASE_URL } from '@/lib/api';
@@ -17,15 +18,15 @@ import { ProductDetailPage } from '@/features/product/pages/ProductDetailPage';
 import { BodyKitLandingPage } from '@/features/bodykit/pages/BodyKitLandingPage';
 import { BodyKitDetailPage } from '@/features/bodykit/pages/BodyKitDetailPage';
 import { useI18n } from '@/shared/lib/i18n';
+import { AuthModal } from '@/features/auth/components/AuthModal';
 
-// Create QueryClient with default options
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes default
-      gcTime: 10 * 60 * 1000, // 10 minutes cache
-      refetchOnWindowFocus: false, // Disable refetch on window focus
-      retry: 2, // Retry failed requests twice
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 2,
     },
   },
 });
@@ -43,33 +44,58 @@ export default function App() {
   const [toastProductName, setToastProductName] = useState('');
   const [user, setUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot' | 'reset'>('login');
+  const [resetToken, setResetToken] = useState<string>('');
 
   // Always force dark mode
   useEffect(() => {
     document.documentElement.classList.add('dark');
   }, []);
 
-  // ✅ FIX: Restore user from localStorage on mount + re-validate role from server
+  // Check for reset token in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      setResetToken(token);
+      setAuthMode('reset');
+      setShowAuthModal(true);
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  // Check for verification token in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const verifyToken = params.get('verifyToken');
+    if (verifyToken) {
+      handleVerifyEmail(verifyToken);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  // Restore user from localStorage
   useEffect(() => {
     const savedUser = localStorage.getItem('vinhpart_user');
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
-        console.log('Restored user from localStorage:', parsedUser.email);
 
-        // Re-validate user role from server (in case admin_emails changed)
-        fetch(`${API_BASE_URL}/auth/me?userId=${parsedUser.id}`)
+        // Re-validate user role from server
+        fetch(`${API_BASE_URL}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        })
           .then(res => res.ok ? res.json() : null)
           .then(freshUser => {
             if (freshUser) {
-              // Update with fresh data from server (especially role)
               const updatedUser = { ...parsedUser, ...freshUser };
               setUser(updatedUser);
               localStorage.setItem('vinhpart_user', JSON.stringify(updatedUser));
-              if (parsedUser.role !== freshUser.role) {
-                console.log(`User role updated: ${parsedUser.role} → ${freshUser.role}`);
-              }
             }
           })
           .catch(err => console.error('Failed to re-validate user:', err));
@@ -80,17 +106,34 @@ export default function App() {
     }
   }, []);
 
+  const handleVerifyEmail = async (token: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify/${token}`);
+      const data = await response.json();
+      if (response.ok) {
+        toast.success('Email verified successfully! Please login.');
+        setAuthMode('login');
+        setShowAuthModal(true);
+      } else {
+        toast.error(data.error || 'Verification failed');
+      }
+    } catch (error) {
+      toast.error('Verification failed');
+    }
+  };
+
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser);
-    // ✅ FIX: Save user to localStorage
     localStorage.setItem('vinhpart_user', JSON.stringify(loggedInUser));
     toast.success(t('auth.welcomeBack', { name: loggedInUser.name }));
+    setShowAuthModal(false);
   };
 
   const handleLogout = () => {
     setUser(null);
-    // ✅ FIX: Clear user from localStorage
     localStorage.removeItem('vinhpart_user');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     setCurrentPage('landing');
     toast.info(t('auth.logoutSuccess'));
   };
@@ -105,10 +148,9 @@ export default function App() {
 
   const handleSearch = async (query: string) => {
     try {
-      // Check if products exist for this query
       const response = await productApi.getProducts({
         search: query,
-        limit: 1 // We only need to know if ANY exist
+        limit: 1
       });
 
       if (response.metadata.total > 0) {
@@ -136,7 +178,6 @@ export default function App() {
       return [...prev, { product, quantity }];
     });
 
-    // Show toast notification
     setToastProductName(product.product_name);
     setShowToast(true);
   };
@@ -182,10 +223,14 @@ export default function App() {
 
   const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
+  const handleOpenAuth = (mode: 'login' | 'signup' | 'forgot' = 'login') => {
+    setAuthMode(mode);
+    setShowAuthModal(true);
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-background text-foreground">
-        {/* Only show Header for non-admin pages */}
         {currentPage !== 'admin' && (
           <Header
             cartCount={totalCartItems}
@@ -199,8 +244,20 @@ export default function App() {
             onLogout={handleLogout}
             onSearch={handleSearch}
             onAdminClick={handleAdminClick}
+            onOpenAuth={handleOpenAuth}
           />
         )}
+
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => {
+            setShowAuthModal(false);
+            setAuthMode('login');
+          }}
+          initialMode={authMode}
+          onLogin={handleLogin}
+          resetToken={resetToken}
+        />
 
         <AddToCartToast
           show={showToast}

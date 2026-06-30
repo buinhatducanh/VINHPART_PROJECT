@@ -1,22 +1,32 @@
 // backend/src/shared/auth-helpers.ts
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'vinhpart_dev_jwt_secret_key_2026';
 const REFRESH_SECRET = process.env.REFRESH_SECRET || 'vinhpart_refresh_secret_key_2026';
 
 // ============ PASSWORD HASHING ============
 export const hashPassword = (password: string): string => {
-    const salt = crypto.randomBytes(16).toString('hex');
-    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
-    return `${salt}:${hash}`;
+    return bcrypt.hashSync(password, 10);
 };
 
 export const verifyPassword = (password: string, storedHash: string): boolean => {
-    if (!storedHash || !storedHash.includes(':')) return false;
-    const [salt, hash] = storedHash.split(':');
-    const verifyHash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
-    return hash === verifyHash;
+    if (!storedHash) return false;
+
+    // Support bcrypt hashes for seeded/admin users and existing bcrypt-based scripts.
+    if (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$') || storedHash.startsWith('$2y$')) {
+        return bcrypt.compareSync(password, storedHash);
+    }
+
+    // Support legacy PBKDF2 hashes stored as salt:hash
+    if (storedHash.includes(':')) {
+        const [salt, hash] = storedHash.split(':');
+        const verifyHash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+        return hash === verifyHash;
+    }
+
+    return false;
 };
 
 // ============ JWT TOKENS ============

@@ -114,7 +114,7 @@ async function migrate() {
         // Refresh tokens table
         await client.query(`
             CREATE TABLE IF NOT EXISTS refresh_tokens (
-                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                id TEXT PRIMARY KEY DEFAULT (gen_random_uuid()::text),
                 user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 token TEXT NOT NULL UNIQUE,
                 expires_at TIMESTAMP NOT NULL,
@@ -128,7 +128,7 @@ async function migrate() {
         // Login attempts table
         await client.query(`
             CREATE TABLE IF NOT EXISTS login_attempts (
-                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                id TEXT PRIMARY KEY DEFAULT (gen_random_uuid()::text),
                 email TEXT NOT NULL,
                 ip_address TEXT,
                 user_agent TEXT,
@@ -142,7 +142,7 @@ async function migrate() {
         // Audit logs table
         await client.query(`
             CREATE TABLE IF NOT EXISTS audit_logs (
-                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                id TEXT PRIMARY KEY DEFAULT (gen_random_uuid()::text),
                 user_id TEXT REFERENCES users(id),
                 action TEXT NOT NULL,
                 ip_address TEXT,
@@ -213,10 +213,10 @@ async function migrate() {
         await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_status ON notifications(status)`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_notif_created ON notifications("createdAt")`);
 
-        // Admin emails table
+        // Admin emails table - FIXED: added parentheses around gen_random_uuid()::text
         await client.query(`
             CREATE TABLE IF NOT EXISTS admin_emails (
-                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                id TEXT PRIMARY KEY DEFAULT (gen_random_uuid()::text),
                 email TEXT NOT NULL UNIQUE,
                 "addedBy" TEXT,
                 "createdAt" TIMESTAMP DEFAULT NOW()
@@ -250,7 +250,7 @@ async function migrate() {
         // Seed homepage sections
         await client.query(`
             INSERT INTO homepage_sections (id, key, name, "sortOrder", "isEnabled")
-            SELECT gen_random_uuid()::text, key, name, sort_order, true
+            SELECT (gen_random_uuid()::text), key, name, sort_order, true
             FROM (VALUES
                 ('hero', 'Banner chính', 0),
                 ('benefits', 'Lợi ích', 1),

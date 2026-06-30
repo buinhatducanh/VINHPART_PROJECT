@@ -14,7 +14,8 @@ import { OAuth2Client } from 'google-auth-library';
 import { 
     registerLimiter, 
     loginLimiter, 
-    forgotPasswordLimiter 
+    forgotPasswordLimiter,
+    refreshLimiter
 } from '../../shared/middleware/rate-limiter';
 import { authenticate } from '../../shared/middleware/auth';
 
@@ -139,16 +140,16 @@ router.post('/login', loginLimiter, async (req, res) => {
 
         console.log(`Login attempt for: '${cleanEmail}' from IP: ${ipAddress}`);
 
-        // Check too many failed attempts
+        // Check too many failed attempts - GIẢM XUỐNG 3 PHÚT
         const recentAttempts = await client.query(
             `SELECT COUNT(*) FROM login_attempts 
-             WHERE email = $1 AND success = false AND attempted_at > NOW() - INTERVAL '15 minutes'`,
+             WHERE email = $1 AND success = false AND attempted_at > NOW() - INTERVAL '3 minutes'`,
             [cleanEmail]
         );
         
         if (parseInt(recentAttempts.rows[0].count) >= 5) {
             return res.status(429).json({ 
-                error: 'Too many failed attempts. Please try again later.' 
+                error: 'Too many failed attempts. Please try again after 3 minutes.' 
             });
         }
 
@@ -165,10 +166,11 @@ router.post('/login', loginLimiter, async (req, res) => {
 
         const user = result.rows[0];
 
-        // Check if locked
+        // Check if locked - GIẢM XUỐNG 3 PHÚT
         if (user.isLocked && user.lockUntil > new Date()) {
+            const remainingMinutes = Math.ceil((new Date(user.lockUntil).getTime() - Date.now()) / 60000);
             return res.status(423).json({ 
-                error: 'Account is temporarily locked. Please try again later.' 
+                error: `Account is temporarily locked. Please try again after ${remainingMinutes} minutes.` 
             });
         }
 
@@ -187,6 +189,26 @@ router.post('/login', loginLimiter, async (req, res) => {
                 'INSERT INTO login_attempts (email, ip_address, user_agent, success) VALUES ($1, $2, $3, false)',
                 [cleanEmail, ipAddress, userAgent]
             );
+            
+            // Lock account after 5 failed attempts - KHÓA 3 PHÚT
+            const failedCount = await client.query(
+                `SELECT COUNT(*) FROM login_attempts 
+                 WHERE email = $1 AND success = false AND attempted_at > NOW() - INTERVAL '3 minutes'`,
+                [cleanEmail]
+            );
+            
+            if (parseInt(failedCount.rows[0].count) >= 5) {
+                const lockUntil = new Date();
+                lockUntil.setMinutes(lockUntil.getMinutes() + 3);
+                await client.query(
+                    'UPDATE users SET "isLocked" = true, "lockUntil" = $1 WHERE id = $2',
+                    [lockUntil, user.id]
+                );
+                return res.status(423).json({ 
+                    error: 'Account locked due to multiple failed attempts. Please try again after 3 minutes.' 
+                });
+            }
+            
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
@@ -210,7 +232,7 @@ router.post('/login', loginLimiter, async (req, res) => {
             [tokenId, user.id, refreshToken, expiresAt]
         );
 
-        // Update last login
+        // Update last login và mở khóa tài khoản
         await client.query(
             'UPDATE users SET "lastLogin" = NOW(), "isLocked" = false, "lockUntil" = NULL WHERE id = $1',
             [user.id]
@@ -240,7 +262,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 // ============================================
 // REFRESH TOKEN
 // ============================================
-router.post('/refresh', async (req, res) => {
+router.post('/refresh', refreshLimiter, async (req, res) => {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
